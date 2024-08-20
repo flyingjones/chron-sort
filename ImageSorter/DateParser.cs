@@ -20,7 +20,7 @@ public static partial class DateParser
         DateTimeTag
     };
     
-    public static async Task<DateTime?> GetDateTaken(string filePath)
+    public static async Task<DateTime> GetDateTaken(string filePath)
     {
         await using FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 
@@ -65,9 +65,6 @@ public static partial class DateParser
         var lastModifiedDateFromFileSystem = File.GetLastWriteTime(filePath);
 
         return lastModifiedDateFromFileSystem;
-        
-
-        return null;
     }
 
     [GeneratedRegex(".*(20[0-9]{2}|19[0-9]{2})-?(0[0-9]|1[0-9])-?(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*")]

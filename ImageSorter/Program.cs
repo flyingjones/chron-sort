@@ -43,7 +43,9 @@ rootCommand.SetHandler(async (context) =>
         Console.WriteLine(fileEnding);
     }
 
-    var filesToProcess = files.Where(x => fileEndingsToSupport.Contains(x.FileEnding())).ToArray();
+    var filesToProcess = fileEndingsToSupport == null || fileEndingsToSupport.Length == 0 ? 
+        files : 
+        files.Where(x => fileEndingsToSupport.Contains(x.FileEnding())).ToArray();
     
     Console.WriteLine($"Sorting {filesToProcess.Length} files");
 
@@ -51,20 +53,18 @@ rootCommand.SetHandler(async (context) =>
 
     var unsortedFiles = new ConcurrentStack<string>();
 
+    var writeQueue = new ConcurrentQueue<WriteQueueItem>();
+
     await Parallel.ForEachAsync(filesToProcess, context.GetCancellationToken(), async (filePath, cancellationToken ) =>
     {
         try
         {
             var dateTaken = await DateParser.GetDateTaken(filePath);
-
-            if (dateTaken != null)
+            writeQueue.Enqueue(new WriteQueueItem
             {
-                destinationWriter.CopyFile(filePath, dateTaken.Value);
-            }
-            else
-            {
-                unsortedFiles.Push(filePath);
-            }
+                DateTaken = dateTaken,
+                FilePath = filePath
+            });
         }
         catch (Exception exception)
         {
@@ -74,11 +74,22 @@ rootCommand.SetHandler(async (context) =>
         }
     });
     
-    Console.WriteLine($"unsorted file count: {unsortedFiles.Count}");
+    Console.WriteLine($"Scanned {writeQueue.Count} files successfully");
+
+    var yearGroups = writeQueue.OrderBy(x => x.DateTaken).GroupBy(x => x.DateTaken.Year);
+
+    foreach (var yearGroup in yearGroups)
+    {
+        Console.WriteLine($"Writing year {yearGroup.Key}");
+        foreach (var item in yearGroup)
+        {
+            destinationWriter.CopyFile(item.FilePath, item.DateTaken);
+        }
+    }
     
-    Directory.GetFiles(destPath!.FullName, "*", searchOption: SearchOption.AllDirectories);
+    var foundFiles = Directory.GetFiles(destPath!.FullName, "*", searchOption: SearchOption.AllDirectories);
     
-    Console.WriteLine($"Found {filesToProcess.Length} files in output dir");
+    Console.WriteLine($"Found {foundFiles.Length} files in output dir");
 });
 
 await rootCommand.InvokeAsync(args);
