@@ -3,6 +3,7 @@
 
 using System.Collections.Concurrent;
 using System.CommandLine;
+using System.Diagnostics;
 using System.Drawing;
 using System.Net.Mime;
 using ImageSorter;
@@ -10,6 +11,11 @@ using System.Drawing.Imaging;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using ImageSorter.Services.DateParser;
+using ImageSorter.Services.DateParser.MetaData;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using DateParser = ImageSorter.DateParser;
 
 var rootCommand = new RootCommand(description: "sorts images based on the taken date from their meta data");
 var sourcePathOption =
@@ -25,41 +31,88 @@ Regex r = new Regex(":");
 
 rootCommand.SetHandler(async (context) =>
 {
+    var stopWatch = new Stopwatch();
+    stopWatch.Start();
+    
     var sourcePath = context.ParseResult.GetValueForOption(sourcePathOption);
     var destPath = context.ParseResult.GetValueForOption(destinationPathOption);
     var fileEndingsToSupport = context.ParseResult.GetValueForOption(fileEndingsOption);
-    
-    Console.WriteLine("--- Started sorting images");
-    Console.WriteLine($"src: {sourcePath!.FullName}");
-    Console.WriteLine($"dest: {destPath!.FullName}");
 
-    var files = Directory.GetFiles(sourcePath!.FullName, "*", searchOption: SearchOption.AllDirectories);
+    var serviceCollection = new ServiceCollection();
+
+    serviceCollection.AddMetaDataParsing();
+    serviceCollection.AddSingleton<IFileNameDateParser>(
+        new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})-(0[0-9]|1[0-9])-(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*", 0));
+    serviceCollection.AddSingleton<IFileNameDateParser>(
+        new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})(0[0-9]|1[0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*", 1));
+    serviceCollection.AddDateParsing();
+    serviceCollection.AddLogging(builder => builder
+        .AddConsole(opt => opt.FormatterName = "stopwatchLogFormatter")
+        .AddConsoleFormatter<StopwatchLogFormatter, StopwatchLogFormatterOptions>(opt => opt.Stopwatch = stopWatch));
+
+    var serviceProvider = serviceCollection.BuildServiceProvider();
+    var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
     
-    
-    Console.WriteLine("--- File Endings Found:");
-    var fileEndings = files.Select(x => x.Split(".")[^1]).Distinct().ToArray();
-    foreach (var fileEnding in fileEndings)
+    logger.LogInformation("Starting image sort");
+    logger.LogInformation("source: {sourcePath}, destination: {destPath}", sourcePath!.FullName, destPath!.FullName);
+
+    if (fileEndingsToSupport?.Length > 0)
     {
-        Console.WriteLine(fileEnding);
+        var fileEndingString = string.Join(", ", fileEndingsToSupport);
+        logger.LogInformation("Sorting only files with endings [{fileEndingString}]", fileEndingString);
     }
+    
+    var files = Directory.GetFiles(sourcePath.FullName, "*", searchOption: SearchOption.AllDirectories);
+
+    
+    // Console.WriteLine("--- File Endings Found:");
+    // var fileEndings = files.Select(x => x.Split(".")[^1]).Distinct().ToArray();
+    // foreach (var fileEnding in fileEndings)
+    // {
+    //     Console.WriteLine(fileEnding);
+    // }
 
     var filesToProcess = fileEndingsToSupport == null || fileEndingsToSupport.Length == 0 ? 
         files : 
         files.Where(x => fileEndingsToSupport.Contains(x.FileEnding())).ToArray();
     
-    Console.WriteLine($"Sorting {filesToProcess.Length} files");
+    logger.LogInformation("Found {fileCount} files to sort", filesToProcess.Length);
 
+    // TODO clean up
+    
     var destinationWriter = new DestinationWriter(destPath.FullName);
 
     var unsortedFiles = new ConcurrentStack<string>();
 
     var writeQueue = new ConcurrentQueue<WriteQueueItem>();
+    
+    logger.LogInformation("Starting scan of all files");
 
+    var dateParser = serviceProvider.GetRequiredService<IDateParser>();
+    // foreach (var filePath in filesToProcess)
+    // {
+    //     try
+    //     {
+    //         var dateTaken = await dateParser.ParseDate(filePath);
+    //         writeQueue.Enqueue(new WriteQueueItem
+    //         {
+    //             DateTaken = dateTaken,
+    //             FilePath = filePath
+    //         });
+    //     }
+    //     catch (Exception exception)
+    //     {
+    //         Console.WriteLine(filePath);
+    //         Console.WriteLine($"Something went wrong: {exception.Message}");
+    //         unsortedFiles.Push(filePath);
+    //     }
+    // }
+    //
     await Parallel.ForEachAsync(filesToProcess, context.GetCancellationToken(), async (filePath, cancellationToken ) =>
     {
         try
         {
-            var dateTaken = await DateParser.GetDateTaken(filePath);
+            var dateTaken = await dateParser.ParseDate(filePath);
             writeQueue.Enqueue(new WriteQueueItem
             {
                 DateTaken = dateTaken,
@@ -74,13 +127,15 @@ rootCommand.SetHandler(async (context) =>
         }
     });
     
-    Console.WriteLine($"Scanned {writeQueue.Count} files successfully");
+    logger.LogInformation("Scanned {writeQueueCount} files successfully", writeQueue.Count);
 
     var yearGroups = writeQueue.OrderBy(x => x.DateTaken).GroupBy(x => x.DateTaken.Year);
+    
+    logger.LogInformation("Sorted {writeQueueCount} files in memory", writeQueue.Count);
 
     foreach (var yearGroup in yearGroups)
     {
-        Console.WriteLine($"Writing year {yearGroup.Key}");
+        logger.LogInformation("Writing year {year} ({fileCount} files)", yearGroup.Key, yearGroup.Count());
         foreach (var item in yearGroup)
         {
             destinationWriter.CopyFile(item.FilePath, item.DateTaken);
@@ -89,7 +144,7 @@ rootCommand.SetHandler(async (context) =>
     
     var foundFiles = Directory.GetFiles(destPath!.FullName, "*", searchOption: SearchOption.AllDirectories);
     
-    Console.WriteLine($"Found {foundFiles.Length} files in output dir");
+    logger.LogInformation("Found {foundFilesCount} files in output dir", foundFiles.Length);
 });
 
 await rootCommand.InvokeAsync(args);
