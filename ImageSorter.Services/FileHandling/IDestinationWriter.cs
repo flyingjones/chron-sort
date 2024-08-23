@@ -1,12 +1,13 @@
 namespace ImageSorter.Services.FileHandling;
 
+/// <summary>
+/// Service for writing the sorting to disk
+/// </summary>
+/// <remarks>
+/// Is configured by <see cref="DestinationWriterOptions"/>
+/// </remarks>
 public interface IDestinationWriter
 {
-    /// <summary>
-    /// Copy a file to the destination year/month directory
-    /// </summary>
-    Task CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken);
-
     /// <summary>
     /// Copy the <paramref name="writeQueueItems"/> to the destination in the directory structure year/month
     /// </summary>

@@ -1,49 +1,35 @@
-using System.Collections.Concurrent;
 using System.Text;
 using ImageSorter.Services.FileWrapper;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.FileHandling;
 
+/// <inheritdoc cref="IDestinationWriter"/>
 public partial class DestinationWriter : IDestinationWriter
 {
     private readonly DestinationWriterOptions _options;
     private readonly ILogger<DestinationWriter> _logger;
-    private readonly IDictionary<int, IDictionary<int, bool>> _filePaths;
     private readonly IFileWrapper _fileWrapper;
     private readonly IDirectoryWrapper _directoryWrapper;
     private readonly IFileStreamService _fileStreamService;
+    private readonly IDateDirectory _dateDirectory;
 
     public DestinationWriter(DestinationWriterOptions options, ILogger<DestinationWriter> logger,
-        IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper, IFileStreamService fileStreamService)
+        IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper, IFileStreamService fileStreamService,
+        IDateDirectory dateDirectory)
     {
-        _filePaths = new ConcurrentDictionary<int, IDictionary<int, bool>>();
         _options = options;
         _logger = logger;
         _fileWrapper = fileWrapper;
         _directoryWrapper = directoryWrapper;
         _fileStreamService = fileStreamService;
+        _dateDirectory = dateDirectory;
         _directoryWrapper.CreateDirectory(options.DestinationPath);
     }
 
     public async Task CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
     {
-        var year = dateTime.Year;
-        var month = dateTime.Month;
-        var yearPath = $"{_options.DestinationPath}/{year:0000}";
-        var monthPath = $"{yearPath}/{month:00}";
-        if (!_filePaths.ContainsKey(year))
-        {
-            _directoryWrapper.CreateDirectory(yearPath);
-            _filePaths[year] = new ConcurrentDictionary<int, bool>();
-        }
-
-        if (!_filePaths[year].ContainsKey(month))
-        {
-            _directoryWrapper.CreateDirectory(monthPath);
-            _filePaths[year][month] = true;
-        }
-
+        var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = $"{monthPath}/{fileName}";
         try
@@ -63,22 +49,7 @@ public partial class DestinationWriter : IDestinationWriter
 
     public void MoveFile(string sourcePath, DateTime dateTime)
     {
-        var year = dateTime.Year;
-        var month = dateTime.Month;
-        var yearPath = $"{_options.DestinationPath}/{year:0000}";
-        var monthPath = $"{yearPath}/{month:00}";
-        if (!_filePaths.ContainsKey(year))
-        {
-            _directoryWrapper.CreateDirectory(yearPath);
-            _filePaths[year] = new ConcurrentDictionary<int, bool>();
-        }
-
-        if (!_filePaths[year].ContainsKey(month))
-        {
-            _directoryWrapper.CreateDirectory(monthPath);
-            _filePaths[year][month] = true;
-        }
-
+        var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = $"{monthPath}/{fileName}";
 
@@ -99,6 +70,7 @@ public partial class DestinationWriter : IDestinationWriter
         }
     }
 
+    /// <inheritdoc cref="IDestinationWriter.CopyFiles"/>
     public async Task CopyFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
     {
         var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
@@ -123,6 +95,7 @@ public partial class DestinationWriter : IDestinationWriter
         }
     }
 
+    /// <inheritdoc cref="IDestinationWriter.MoveFiles"/>
     public void MoveFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
     {
         var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);

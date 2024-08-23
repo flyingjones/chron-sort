@@ -2,6 +2,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ImageSorter.Services.FileWrapper;
 
+/// <summary>
+/// Wrapper for <see cref="File"/>
+/// </summary>
 public interface IFileWrapper
 {
     /// <inheritdoc cref="File.Exists"/>
