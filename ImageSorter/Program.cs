@@ -10,7 +10,8 @@ using Microsoft.Extensions.Logging;
 
 var rootCommand = new RootCommand(description: "sorts images based on the taken date from their meta data");
 var sourceArgument = new Argument<FileInfo>("source path", "The path of the source directory");
-var destinationArgument = new Argument<FileInfo>("destination path", "The path of the destination directory");
+var destinationOption = new Option<FileInfo>(aliases: new[] { "--dest" }, description: "The path of the destination directory (required if not --in-place)");
+var inPlaceOption = new Option<bool>(aliases: new[] { "--in-place" }, description: "[EXPERIMENTAL] Move files instead of copy", getDefaultValue: () => false);
 var fileEndingsOption = new Option<string[]>(aliases: new[] { "--types", "-t" },
     description: "space seperated list of file endings to copy");
 var overwriteOption =
@@ -22,7 +23,8 @@ var toOption = new Option<DateTime?>(aliases: new[] { "--to" }, description: "ma
 var progressOption = new Option<int?>(aliases: new[] { "--progress-at" },
     description: "written file count after which a progress update is printed", getDefaultValue: () => 1000);
 rootCommand.AddArgument(sourceArgument);
-rootCommand.AddArgument(destinationArgument);
+rootCommand.AddOption(destinationOption);
+rootCommand.AddOption(inPlaceOption);
 rootCommand.AddOption(fileEndingsOption);
 rootCommand.AddOption(overwriteOption);
 rootCommand.AddOption(fromOption);
@@ -33,10 +35,19 @@ rootCommand.AddOption(progressOption);
 rootCommand.SetHandler(async (context) =>
 {
     var parsedContext = context.ParseResult;
+
+    var destPath = parsedContext.GetValueForOption(destinationOption);
+    var isInPlace = parsedContext.GetValueForOption(inPlaceOption);
+
+    if (destPath == null && !isInPlace)
+    {
+        throw new ArgumentException("no destination path provided but in-place was not set");
+    }
+    
     var runConfig = new RunConfiguration
     {
         SourcePath = parsedContext.GetValueForArgument(sourceArgument),
-        DestinationPath = parsedContext.GetValueForArgument(destinationArgument),
+        DestinationPath = destPath!,
         FileEndings = parsedContext.GetValueForOption(fileEndingsOption),
         Overwrite = parsedContext.GetValueForOption(overwriteOption),
         From = parsedContext.GetValueForOption(fromOption),
@@ -56,7 +67,15 @@ rootCommand.SetHandler(async (context) =>
         .ScanFiles(filesToProcess, context.GetCancellationToken());
 
     var destinationWriter = serviceProvider.GetRequiredService<IDestinationWriter>();
-    await destinationWriter.CopyFiles(writeQueue.ToList(), context.GetCancellationToken());
+
+    if (runConfig.DestinationPath != null)
+    {
+        await destinationWriter.CopyFiles(writeQueue, context.GetCancellationToken());
+    }
+    else
+    {
+        destinationWriter.MoveFiles(writeQueue, context.GetCancellationToken());
+    }
 
     logger.LogInformation("Finished sorting");
 });

@@ -15,7 +15,7 @@ public class ParallelDateParsingHandler : IDateParsingHandler
         _logger = logger;
     }
 
-    public async Task<ICollection<WriteQueueItem>> ScanFiles(string[] filePaths, CancellationToken cancellationToken)
+    public async Task<IEnumerable<WriteQueueItem>> ScanFiles(string[] filePaths, CancellationToken cancellationToken)
     {
         var writeQueue = new ConcurrentStack<WriteQueueItem>();
         await Parallel.ForEachAsync(filePaths, cancellationToken, async (filePath, _) =>
@@ -33,6 +33,6 @@ public class ParallelDateParsingHandler : IDateParsingHandler
             });
         });
 
-        return writeQueue.ToList();
+        return writeQueue;
     }
 }

@@ -4,5 +4,5 @@ namespace ImageSorter.Services.DateParser;
 
 public interface IDateParsingHandler
 {
-    Task<ICollection<WriteQueueItem>> ScanFiles(string[] filePaths, CancellationToken cancellationToken);
+    Task<IEnumerable<WriteQueueItem>> ScanFiles(string[] filePaths, CancellationToken cancellationToken);
 }

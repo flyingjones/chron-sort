@@ -20,7 +20,7 @@ public static partial class RunConfigurationHelper
         stringBuilder.Append($"-------------------------");
         stringBuilder.Append($"{Environment.NewLine}");
         stringBuilder.Append($"Source Path             : {runConfiguration.SourcePath}{Environment.NewLine}");
-        stringBuilder.Append($"Destination Path        : {runConfiguration.DestinationPath}{Environment.NewLine}");
+        stringBuilder.Append($"Destination Path        : {runConfiguration.DestinationPath?.FullName ?? "- (running in place)"}{Environment.NewLine}");
         stringBuilder.Append($"Overwrite Existing files: {runConfiguration.Overwrite}{Environment.NewLine}");
         var fileEndingsString = runConfiguration.FilterFileEndings
             ? $"[{string.Join(", ", runConfiguration.FileEndings!)}]"

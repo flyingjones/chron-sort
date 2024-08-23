@@ -14,7 +14,7 @@ public class SequentialDateParsingHandler : IDateParsingHandler
         _logger = logger;
     }
 
-    public async Task<ICollection<WriteQueueItem>> ScanFiles(string[] filePaths, CancellationToken cancellationToken)
+    public async Task<IEnumerable<WriteQueueItem>> ScanFiles(string[] filePaths, CancellationToken cancellationToken)
     {
         var result = new WriteQueueItem[filePaths.Length];
         var index = 0;
