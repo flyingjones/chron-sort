@@ -127,8 +127,7 @@ public partial class DestinationWriter : IDestinationWriter
     {
         if (index % _options.ProgressCount == 0)
         {
-            var progressString = (((double)index / totalCount) * 100).ToString("00");
-            LogProgress(index, totalCount, progressString);
+            LogProgress(index, totalCount, ((double)index / totalCount) * 100);
         }
     }
 
@@ -202,8 +201,8 @@ public partial class DestinationWriter : IDestinationWriter
         Message = "Could not write file {sourcePath} to {destinationPath}")]
     private partial void LogError(Exception exception, string sourcePath, string destinationPath);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Total Progress: {index}/{totalCount} ({progressString}%)")]
-    private partial void LogProgress(int index, int totalCount, string progressString);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Total Progress: {index}/{totalCount} ({progressPercentage:00}%)")]
+    private partial void LogProgress(int index, int totalCount, double progressPercentage);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Processing year {year} ({count} files)")]
     private partial void LogYearMessage(int year, int count);
