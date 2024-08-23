@@ -57,8 +57,7 @@ public partial class DestinationWriter : IDestinationWriter
         }
         catch (Exception ex)
         {
-            _logger.LogTrace("Could not write file {srcPath} to {destPath}, reason: {reason}", sourcePath,
-                destinationPath, ex);
+            LogError(_logger, sourcePath, destinationPath, ex);
         }
     }
 
@@ -96,81 +95,68 @@ public partial class DestinationWriter : IDestinationWriter
         }
         catch (Exception ex)
         {
-            _logger.LogTrace("Could not write file {srcPath} to {destPath}, reason: {reason}", sourcePath,
-                destinationPath, ex);
+            LogError(_logger, sourcePath, destinationPath, ex);
         }
     }
 
     public async Task CopyFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
     {
-        var yearGroups = writeQueueItems
-            .Where(x => _options.From == null || x.DateTaken >= _options.From)
-            .Where(x => _options.To == null || x.DateTaken <= _options.To)
-            .OrderBy(x => x.DateTaken)
-            .GroupBy(x => x.DateTaken.Year)
-            .ToList();
-
-        LogStartupMessage(_logger, FormatSortSummary(yearGroups));
+        var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
+        LogSummaryMessage(_logger, FormatSortSummary(yearGroups));
 
         var idx = 0;
         var count = yearGroups.SelectMany(x => x).Count();
         foreach (var yearGroup in yearGroups)
         {
-            _logger.LogInformation("Writing year {year} ({fileCount} files)", yearGroup.Key, yearGroup.Count());
+            LogYearMessage(_logger, yearGroup.Key, yearGroup.Count());
             foreach (var item in yearGroup)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    throw new TaskCanceledException();
+                    _logger.LogError("Execution Canceled");
+                    return;
                 }
 
                 await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
-                idx++;
-
-                if (idx % _options.ProgressCount == 0)
-                {
-                    var progressString = (((double)idx / count) * 100).ToString("00");
-                    _logger.LogInformation("Total Progress: {idx}/{count} ({progress}%)", idx, count, progressString);
-                }
+                LogProgressIfRequired(++idx, count);
             }
         }
     }
 
     public void MoveFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
     {
-        var yearGroups = writeQueueItems
-            .Where(x => _options.From == null || x.DateTaken >= _options.From)
-            .Where(x => _options.To == null || x.DateTaken <= _options.To)
-            .OrderBy(x => x.DateTaken)
-            .GroupBy(x => x.DateTaken.Year)
-            .ToList();
+        var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
 
-        LogStartupMessage(_logger, FormatSortSummary(yearGroups));
+        LogSummaryMessage(_logger, FormatSortSummary(yearGroups));
 
         var idx = 0;
         var count = yearGroups.SelectMany(x => x).Count();
         foreach (var yearGroup in yearGroups)
         {
-            _logger.LogInformation("Moving year {year} ({fileCount} files)", yearGroup.Key, yearGroup.Count());
+            LogYearMessage(_logger, yearGroup.Key, yearGroup.Count());
             foreach (var item in yearGroup)
             {
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    throw new TaskCanceledException();
+                    _logger.LogError("Execution Canceled");
+                    return;
                 }
 
                 MoveFile(item.FilePath, item.DateTaken);
-                idx++;
-
-                if (idx % _options.ProgressCount == 0)
-                {
-                    var progressString = (((double)idx / count) * 100).ToString("00");
-                    _logger.LogInformation("Total Progress: {idx}/{count} ({progress}%)", idx, count, progressString);
-                }
+                LogProgressIfRequired(++idx, count);
             }
         }
 
         DeleteEmptyDirs(_options.SourcePath);
+    }
+
+    private void LogProgressIfRequired(int index, int totalCount)
+    {
+        if (index % _options.ProgressCount == 0)
+        {
+            var progressString = (((double)index / totalCount) * 100).ToString("00");
+            LogProgress(_logger, index, totalCount, progressString);
+        }
     }
 
     /// <summary>
@@ -206,6 +192,16 @@ public partial class DestinationWriter : IDestinationWriter
         }
     }
 
+    private ICollection<IGrouping<int, WriteQueueItem>> OrderAndGroupWriteQueue(
+        IEnumerable<WriteQueueItem> queue)
+    {
+        return queue.Where(x => _options.From == null || x.DateTaken >= _options.From)
+            .Where(x => _options.To == null || x.DateTaken <= _options.To)
+            .OrderBy(x => x.DateTaken)
+            .GroupBy(x => x.DateTaken.Year)
+            .ToList();
+    }
+
     private static string FormatSortSummary(ICollection<IGrouping<int, WriteQueueItem>> yearGroups)
     {
         var stringBuilder = new StringBuilder();
@@ -229,6 +225,16 @@ public partial class DestinationWriter : IDestinationWriter
         return stringBuilder.ToString();
     }
 
+    [LoggerMessage(Level = LogLevel.Trace,
+        Message = "Could not write file {sourcePath} to {destinationPath}, reason: {exception}")]
+    private static partial void LogError(ILogger logger, string sourcePath, string destinationPath, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Total Progress: {index}/{totalCount} ({progressString}%)")]
+    private static partial void LogProgress(ILogger logger, int index, int totalCount, string progressString);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Processing year {year} ({count} files)")]
+    private static partial void LogYearMessage(ILogger logger, int year, int count);
+
     [LoggerMessage(Level = LogLevel.Information, Message = "Sorting Summary {summary}")]
-    private static partial void LogStartupMessage(ILogger logger, string summary);
+    private static partial void LogSummaryMessage(ILogger logger, string summary);
 }
