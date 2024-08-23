@@ -29,6 +29,7 @@ public static partial class RunConfigurationHelper
         stringBuilder.Append($"From Date               : {fromDateString}{Environment.NewLine}");
         var toDateString = runConfiguration.To?.ToString("o") ?? "-";
         stringBuilder.Append($"To Date                 : {toDateString}{Environment.NewLine}");
+        stringBuilder.Append($"Scan in parallel        : {runConfiguration.ScanParallel}{Environment.NewLine}");
 
         return stringBuilder.ToString();
     }

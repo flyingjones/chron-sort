@@ -19,7 +19,29 @@ public static class DependencySetupHelper
             new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})(0[0-9]|1[0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*", 1));
         serviceCollection.AddDateParsing();
         serviceCollection.AddStopwatchLogger();
-        serviceCollection.AddDestinationWriter(configuration.DestinationPath.FullName, configuration.Overwrite);
+        serviceCollection.AddDestinationWriter(new DestinationWriterOptions
+        {
+            SourcePath = configuration.SourcePath.FullName,
+            DestinationPath = configuration.DestinationPath.FullName,
+            OverwriteExistingFiles = configuration.Overwrite,
+            From = configuration.From,
+            To = configuration.To
+        });
+        serviceCollection.AddFileLoader(new FileLoaderOptions
+        {
+            SourcePath = configuration.SourcePath.FullName,
+            FileEndings = configuration.FileEndings
+        });
+
+        if (configuration.ScanParallel)
+        {
+            serviceCollection.AddSingleton<IDateParsingHandler, ParallelDateParsingHandler>();
+        }
+        else
+        {
+            serviceCollection.AddSingleton<IDateParsingHandler, SequentialDateParsingHandler>();
+        }
+        
         return serviceCollection;
     }
 }

@@ -1,4 +1,4 @@
-namespace ImageSorter;
+namespace ImageSorter.Services.FileHandling;
 
 public class WriteQueueItem
 {

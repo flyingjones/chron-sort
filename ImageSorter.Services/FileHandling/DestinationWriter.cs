@@ -54,4 +54,24 @@ public class DestinationWriter : IDestinationWriter
             _logger.LogWarning("Could not write file {srcPath} to {destPath}, reason: {reason}", sourcePath, destinationPath, ex);
         }
     }
+
+    public async Task CopyFiles(ICollection<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
+    {
+        var yearGroups = writeQueueItems
+            .Where(x => _options.From == null || x.DateTaken >= _options.From)
+            .Where(x => _options.To == null || x.DateTaken <= _options.To)
+            .OrderBy(x => x.DateTaken)
+            .GroupBy(x => x.DateTaken.Year);
+    
+        _logger.LogInformation("Sorted {writeQueueCount} files in memory", writeQueueItems.Count);
+
+        foreach (var yearGroup in yearGroups)
+        {
+            _logger.LogInformation("Writing year {year} ({fileCount} files)", yearGroup.Key, yearGroup.Count());
+            foreach (var item in yearGroup)
+            {
+                await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
+            }
+        }
+    }
 }

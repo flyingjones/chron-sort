@@ -15,4 +15,6 @@ public class RunConfiguration
     public DateTime? From { get; set; }
     
     public DateTime? To { get; set; }
+    
+    public required bool ScanParallel { get; set; }
 }
