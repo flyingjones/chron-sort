@@ -1,8 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace ImageSorter.Services.DateParser;
 
 public interface IFileNameDateParser
 {
-    DateTime? ParseDateFromFileName(string fileName);
+    bool TryParseDateFromFileName(string fileName, [NotNullWhen(true)] out DateTime? parsedDate);
     
     int Priority { get; }
 }

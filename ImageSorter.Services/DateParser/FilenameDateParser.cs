@@ -29,24 +29,25 @@ public class FilenameDateParser : IFileNameDateParser
         this._fileNameRegex = new Regex(fileNameRegex);
     }
 
-    public DateTime? ParseDateFromFileName(string fileName)
+    public bool TryParseDateFromFileName(string fileName, [NotNullWhen(true)] out DateTime? parsedDate)
     {
         var match = _fileNameRegex.Match(fileName);
+        parsedDate = null;
 
-        if (match.Success)
+        if (!match.Success) return false;
+
+        var year = int.Parse(match.Groups[_yearCaptureGroupIndex].Value);
+        var month = int.Parse(match.Groups[_monthCaptureGroupIndex].Value);
+        var day = int.Parse(match.Groups[_dayCaptureGroupIndex].Value);
+
+        var result = new DateTime(year, month, day);
+
+        if (result <= _ignoreAfter)
         {
-            var year = int.Parse(match.Groups[_yearCaptureGroupIndex].Value);
-            var month = int.Parse(match.Groups[_monthCaptureGroupIndex].Value);
-            var day = int.Parse(match.Groups[_dayCaptureGroupIndex].Value);
-
-            var result = new DateTime(year, month, day);
-
-            if (result <= _ignoreAfter)
-            {
-                return result;
-            }
+            parsedDate = result;
+            return true;
         }
 
-        return null;
+        return false;
     }
 }

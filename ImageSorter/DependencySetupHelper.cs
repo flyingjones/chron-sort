@@ -10,7 +10,7 @@ public static class DependencySetupHelper
 {
     public static IServiceCollection SetupServices(this RunConfiguration configuration)
     {
-        var ignoreFileNamesAfter = new DateTime().AddYears(1);
+        var ignoreFileNamesAfter = DateTime.Now.AddYears(1);
 
         var serviceCollection = new ServiceCollection();
 
