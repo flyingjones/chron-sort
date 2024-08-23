@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 
-namespace ImageSorter;
+namespace ImageSorter.Logging;
 
 public class StopwatchLogFormatter : ConsoleFormatter, IDisposable
 {
@@ -37,9 +37,11 @@ public class StopwatchLogFormatter : ConsoleFormatter, IDisposable
         textWriter.Write(timeSpan.ToString("c"));
         textWriter.Write(" ");
         textWriter.WriteLine($"[{logEntry.LogLevel:G}]");
-        
-        textWriter.Write("    ");
-        textWriter.WriteLine(message);
+
+        const string tab = "    ";
+        var newLineReplacement = $"{Environment.NewLine}{tab}";
+        textWriter.Write(tab);
+        textWriter.WriteLine(message.Replace(Environment.NewLine, newLineReplacement));
     }
 
     public void Dispose() => _optionsReloadToken?.Dispose();

@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.CommandLine;
 using System.Diagnostics;
 using ImageSorter;
+using ImageSorter.Logging;
 using ImageSorter.Services.DateParser;
 using ImageSorter.Services.DateParser.MetaData;
 using ImageSorter.Services.FileHandling;
@@ -31,61 +32,33 @@ rootCommand.AddOption(toOption);
 
 rootCommand.SetHandler(async (context) =>
 {
-    var stopWatch = new Stopwatch();
-    stopWatch.Start();
-    
-    var sourcePath = context.ParseResult.GetValueForOption(sourcePathOption);
-    var destPath = context.ParseResult.GetValueForOption(destinationPathOption);
-    var fileEndingsToSupport = context.ParseResult.GetValueForOption(fileEndingsOption);
-    var overwrite = context.ParseResult.GetValueForOption(overwriteOption);
-    var from = context.ParseResult.GetValueForOption(fromOption);
-    var to = context.ParseResult.GetValueForOption(toOption);
+    var runConfig = new RunConfiguration
+    {
+        SourcePath = context.ParseResult.GetValueForOption(sourcePathOption)!,
+        DestinationPath = context.ParseResult.GetValueForOption(destinationPathOption)!,
+        FileEndings = context.ParseResult.GetValueForOption(fileEndingsOption),
+        Overwrite = context.ParseResult.GetValueForOption(overwriteOption),
+        From = context.ParseResult.GetValueForOption(fromOption),
+        To = context.ParseResult.GetValueForOption(toOption)
+    };
 
-    var serviceCollection = new ServiceCollection();
-
-    serviceCollection.AddMetaDataParsing();
-    serviceCollection.AddSingleton<IFileNameDateParser>(
-        new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})-(0[0-9]|1[0-9])-(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*", 0));
-    serviceCollection.AddSingleton<IFileNameDateParser>(
-        new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})(0[0-9]|1[0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*", 1));
-    serviceCollection.AddDateParsing();
-    serviceCollection.AddLogging(builder => builder
-        .AddConsole(opt => opt.FormatterName = "stopwatchLogFormatter")
-        .AddConsoleFormatter<StopwatchLogFormatter, StopwatchLogFormatterOptions>(opt => opt.Stopwatch = stopWatch));
-    serviceCollection.AddDestinationWriter(destPath!.FullName, overwrite);
+    var serviceCollection = runConfig.SetupServices();
 
     var serviceProvider = serviceCollection.BuildServiceProvider();
     var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
     
-    logger.LogInformation("Starting image sort (overwrite: {overwrite})", overwrite);
-    logger.LogInformation("source: {sourcePath}, destination: {destPath}", sourcePath!.FullName, destPath!.FullName);
-
-    if (fileEndingsToSupport?.Length > 0)
-    {
-        var fileEndingString = string.Join(", ", fileEndingsToSupport);
-        logger.LogInformation("Sorting only files with endings [{fileEndingString}]", fileEndingString);
-    }
+    RunConfigurationHelper.LogRunConfiguration(logger, runConfig);
     
-    var files = Directory.GetFiles(sourcePath.FullName, "*", searchOption: SearchOption.AllDirectories);
+    var files = Directory.GetFiles(runConfig.SourcePath.FullName, "*", searchOption: SearchOption.AllDirectories);
 
-    
-    // Console.WriteLine("--- File Endings Found:");
-    // var fileEndings = files.Select(x => x.Split(".")[^1]).Distinct().ToArray();
-    // foreach (var fileEnding in fileEndings)
-    // {
-    //     Console.WriteLine(fileEnding);
-    // }
-
-    var filesToProcess = fileEndingsToSupport == null || fileEndingsToSupport.Length == 0 ? 
+    var filesToProcess = runConfig.FileEndings == null || runConfig.FileEndings.Length == 0 ? 
         files : 
-        files.Where(x => fileEndingsToSupport.Contains(x.FileEnding())).ToArray();
+        files.Where(x => runConfig.FileEndings.Contains(x.FileEnding())).ToArray();
     
     logger.LogInformation("Found {fileCount} files to sort", filesToProcess.Length);
 
     // TODO clean up
     
-    var unsortedFiles = new ConcurrentStack<string>();
-
     var writeQueue = new ConcurrentQueue<WriteQueueItem>();
     
     logger.LogInformation("Starting scan of all files");
@@ -105,17 +78,17 @@ rootCommand.SetHandler(async (context) =>
         }
         catch (Exception exception)
         {
+            // TODO logger
             Console.WriteLine(filePath);
             Console.WriteLine($"Something went wrong: {exception.Message}");
-            unsortedFiles.Push(filePath);
         }
     });
     
     logger.LogInformation("Scanned {writeQueueCount} files successfully", writeQueue.Count);
 
     var yearGroups = writeQueue
-        .Where(x => from == null || x.DateTaken >= from)
-        .Where(x => to == null || x.DateTaken <= to)
+        .Where(x => runConfig.From == null || x.DateTaken >= runConfig.From)
+        .Where(x => runConfig.To == null || x.DateTaken <= runConfig.To)
         .OrderBy(x => x.DateTaken).GroupBy(x => x.DateTaken.Year);
     
     logger.LogInformation("Sorted {writeQueueCount} files in memory", writeQueue.Count);
@@ -130,7 +103,7 @@ rootCommand.SetHandler(async (context) =>
         }
     }
     
-    var foundFiles = Directory.GetFiles(destPath!.FullName, "*", searchOption: SearchOption.AllDirectories);
+    var foundFiles = Directory.GetFiles(runConfig.DestinationPath.FullName, "*", searchOption: SearchOption.AllDirectories);
     
     logger.LogInformation("Found {foundFilesCount} files in output dir", foundFiles.Length);
 });

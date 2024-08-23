@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using Microsoft.Extensions.Logging.Console;
 
-namespace ImageSorter;
+namespace ImageSorter.Logging;
 
 public class StopwatchLogFormatterOptions : ConsoleFormatterOptions
 {
