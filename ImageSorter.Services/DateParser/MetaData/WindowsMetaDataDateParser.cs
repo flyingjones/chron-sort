@@ -5,14 +5,15 @@ using Microsoft.Extensions.Logging;
 namespace ImageSorter.Services.DateParser.MetaData;
 
 /// <summary>
-/// only works on windows
+/// only works on windows -> disable warning that this only works on windows
 /// </summary>
-public class MetaDataDateParser : IMetaDataDateParser
+#pragma warning disable CA1416
+public class WindowsMetaDataDateParser : IMetaDataDateParser
 {
     private readonly MetaDataDateParserOptions _options;
-    private readonly ILogger<MetaDataDateParser> _logger;
+    private readonly ILogger<WindowsMetaDataDateParser> _logger;
 
-    public MetaDataDateParser(MetaDataDateParserOptions options, ILogger<MetaDataDateParser> logger)
+    public WindowsMetaDataDateParser(MetaDataDateParserOptions options, ILogger<WindowsMetaDataDateParser> logger)
     {
         _options = options;
         _logger = logger;
@@ -24,22 +25,20 @@ public class MetaDataDateParser : IMetaDataDateParser
 
         try
         {
-
             await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 
             using var image = Image.FromStream(fileStream, false, false);
 
             foreach (var tagOptions in _options.TagOptions)
             {
-                if (image.PropertyIdList.Contains(tagOptions.TagId))
+                if (image.PropertyIdList.Contains((ushort)tagOptions.Tag))
                 {
-                    var propertyItem = image.GetPropertyItem(tagOptions.TagId);
-                    var propertyValue = Encoding.UTF8.GetString(propertyItem.Value);
-                    var result = tagOptions.ParserFund.Invoke(propertyValue);
+                    var propertyItem = image.GetPropertyItem((ushort)tagOptions.Tag);
+                    var propertyValue = Encoding.UTF8.GetString(propertyItem?.Value ?? Array.Empty<byte>());
+                    var result = MetaDataParserHelpers.ParseDateFromTag(propertyValue);
                     if (result != null) return result;
                 }
             }
-
         }
         catch (Exception ex)
         {
@@ -49,3 +48,5 @@ public class MetaDataDateParser : IMetaDataDateParser
         return null;
     }
 }
+
+#pragma warning restore CA1416

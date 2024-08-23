@@ -10,7 +10,6 @@ It uses the tags on the image, the file name and finally the file edit date to d
 
 ## TODOs
 
-- Built Unix Support? (detect OS and use other stuff to read meta data that ``System.Drawing``)
 - Better readme
 - Add support for user provided regex for parsing file names
 - Add support for more customization (after what should be sorted in which order)
