@@ -4,7 +4,6 @@
 using System.Collections.Concurrent;
 using System.CommandLine;
 using System.Diagnostics;
-using System.Text.RegularExpressions;
 using ImageSorter;
 using ImageSorter.Services.DateParser;
 using ImageSorter.Services.DateParser.MetaData;
@@ -19,10 +18,16 @@ var destinationPathOption = new Option<FileInfo?>(aliases: new[] { "--dest", "-d
     description: "The path of the destination directory");
 var fileEndingsOption = new Option<string[]>(aliases: new[] { "--types", "-t" },
     description: "space seperated list of file endings to copy");
+var overwriteOption =
+    new Option<bool>(aliases: new[] { "--overwrite" }, description: "Overwrite files in destination");
+var fromOption = new Option<DateTime?>(aliases: new[] { "--from" }, description: "min date for files to sort");
+var toOption = new Option<DateTime?>(aliases: new[] { "--to" }, description: "max date for files to sort");
 rootCommand.AddOption(sourcePathOption);
 rootCommand.AddOption(destinationPathOption);
 rootCommand.AddOption(fileEndingsOption);
-Regex r = new Regex(":");
+rootCommand.AddOption(overwriteOption);
+rootCommand.AddOption(fromOption);
+rootCommand.AddOption(toOption);
 
 rootCommand.SetHandler(async (context) =>
 {
@@ -32,6 +37,9 @@ rootCommand.SetHandler(async (context) =>
     var sourcePath = context.ParseResult.GetValueForOption(sourcePathOption);
     var destPath = context.ParseResult.GetValueForOption(destinationPathOption);
     var fileEndingsToSupport = context.ParseResult.GetValueForOption(fileEndingsOption);
+    var overwrite = context.ParseResult.GetValueForOption(overwriteOption);
+    var from = context.ParseResult.GetValueForOption(fromOption);
+    var to = context.ParseResult.GetValueForOption(toOption);
 
     var serviceCollection = new ServiceCollection();
 
@@ -44,12 +52,12 @@ rootCommand.SetHandler(async (context) =>
     serviceCollection.AddLogging(builder => builder
         .AddConsole(opt => opt.FormatterName = "stopwatchLogFormatter")
         .AddConsoleFormatter<StopwatchLogFormatter, StopwatchLogFormatterOptions>(opt => opt.Stopwatch = stopWatch));
-    serviceCollection.AddDestinationWriter(destPath!.FullName, false);
+    serviceCollection.AddDestinationWriter(destPath!.FullName, overwrite);
 
     var serviceProvider = serviceCollection.BuildServiceProvider();
     var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
     
-    logger.LogInformation("Starting image sort");
+    logger.LogInformation("Starting image sort (overwrite: {overwrite})", overwrite);
     logger.LogInformation("source: {sourcePath}, destination: {destPath}", sourcePath!.FullName, destPath!.FullName);
 
     if (fileEndingsToSupport?.Length > 0)
@@ -83,25 +91,7 @@ rootCommand.SetHandler(async (context) =>
     logger.LogInformation("Starting scan of all files");
 
     var dateParser = serviceProvider.GetRequiredService<IDateParser>();
-    // foreach (var filePath in filesToProcess)
-    // {
-    //     try
-    //     {
-    //         var dateTaken = await dateParser.ParseDate(filePath);
-    //         writeQueue.Enqueue(new WriteQueueItem
-    //         {
-    //             DateTaken = dateTaken,
-    //             FilePath = filePath
-    //         });
-    //     }
-    //     catch (Exception exception)
-    //     {
-    //         Console.WriteLine(filePath);
-    //         Console.WriteLine($"Something went wrong: {exception.Message}");
-    //         unsortedFiles.Push(filePath);
-    //     }
-    // }
-    //
+
     await Parallel.ForEachAsync(filesToProcess, context.GetCancellationToken(), async (filePath, cancellationToken ) =>
     {
         try
@@ -123,7 +113,10 @@ rootCommand.SetHandler(async (context) =>
     
     logger.LogInformation("Scanned {writeQueueCount} files successfully", writeQueue.Count);
 
-    var yearGroups = writeQueue.OrderBy(x => x.DateTaken).GroupBy(x => x.DateTaken.Year);
+    var yearGroups = writeQueue
+        .Where(x => from == null || x.DateTaken >= from)
+        .Where(x => to == null || x.DateTaken <= to)
+        .OrderBy(x => x.DateTaken).GroupBy(x => x.DateTaken.Year);
     
     logger.LogInformation("Sorted {writeQueueCount} files in memory", writeQueue.Count);
 
@@ -133,7 +126,7 @@ rootCommand.SetHandler(async (context) =>
         logger.LogInformation("Writing year {year} ({fileCount} files)", yearGroup.Key, yearGroup.Count());
         foreach (var item in yearGroup)
         {
-            destinationWriter.CopyFile(item.FilePath, item.DateTaken);
+            await destinationWriter.CopyFile(item.FilePath, item.DateTaken, context.GetCancellationToken());
         }
     }
     

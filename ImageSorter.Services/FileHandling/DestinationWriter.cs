@@ -17,7 +17,7 @@ public class DestinationWriter : IDestinationWriter
         Directory.CreateDirectory(options.DestinationPath);
     }
 
-    public void CopyFile(string sourcePath, DateTime dateTime)
+    public async Task CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
     {
         var year = dateTime.Year;
         var month = dateTime.Month;
@@ -44,7 +44,10 @@ public class DestinationWriter : IDestinationWriter
                 return;
             }
             
-            File.Copy(sourcePath, destinationPath, _options.OverwriteExistingFiles);
+            await using var sourceFileStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read);
+            await using var destFileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
+
+            await sourceFileStream.CopyToAsync(destFileStream, cancellationToken);
         }
         catch (Exception ex)
         {
