@@ -56,8 +56,47 @@ public partial class DestinationWriter : IDestinationWriter
                 destinationPath, ex);
         }
     }
+    
+    public void MoveFile(string sourcePath, DateTime dateTime)
+    {
+        var year = dateTime.Year;
+        var month = dateTime.Month;
+        var yearPath = $"{_options.DestinationPath}/{year:0000}";
+        var monthPath = $"{yearPath}/{month:00}";
+        if (!_filePaths.ContainsKey(year))
+        {
+            Directory.CreateDirectory(yearPath);
+            _filePaths[year] = new ConcurrentDictionary<int, bool>();
+        }
 
-    public async Task CopyFiles(ICollection<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
+        if (!_filePaths[year].ContainsKey(month))
+        {
+            Directory.CreateDirectory(monthPath);
+            _filePaths[year][month] = true;
+        }
+
+        var fileName = Path.GetFileName(sourcePath);
+        var destinationPath = $"{monthPath}/{fileName}";
+        
+        if (sourcePath == destinationPath) return;
+        
+        try
+        {
+            if (File.Exists(destinationPath) && !_options.OverwriteExistingFiles)
+            {
+                return;
+            }
+            
+            File.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogTrace("Could not write file {srcPath} to {destPath}, reason: {reason}", sourcePath,
+                destinationPath, ex);
+        }
+    }
+
+    public async Task CopyFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
     {
         var yearGroups = writeQueueItems
             .Where(x => _options.From == null || x.DateTaken >= _options.From)
@@ -90,6 +129,70 @@ public partial class DestinationWriter : IDestinationWriter
                 }
             }
         }
+    }
+
+    public void MoveFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
+    {
+        var yearGroups = writeQueueItems
+            .Where(x => _options.From == null || x.DateTaken >= _options.From)
+            .Where(x => _options.To == null || x.DateTaken <= _options.To)
+            .OrderBy(x => x.DateTaken)
+            .GroupBy(x => x.DateTaken.Year)
+            .ToList();
+
+        LogStartupMessage(_logger, FormatSortSummary(yearGroups));
+
+        var idx = 0;
+        var count = yearGroups.SelectMany(x => x).Count();
+        foreach (var yearGroup in yearGroups)
+        {
+            _logger.LogInformation("Moving year {year} ({fileCount} files)", yearGroup.Key, yearGroup.Count());
+            foreach (var item in yearGroup)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    throw new TaskCanceledException();
+                }
+                
+                MoveFile(item.FilePath, item.DateTaken);
+                idx++;
+
+                if (idx % _options.ProgressCount == 0)
+                {
+                    var progressString = (((double)idx / count) * 100).ToString("00");
+                    _logger.LogInformation("Total Progress: {idx}/{count} ({progress}%)", idx, count, progressString);
+                }
+            }
+        }
+        
+        DeleteEmptyDirs(_options.SourcePath);
+    }
+
+    /// <summary>
+    /// Delete all empty subdirectories
+    /// </summary>
+    private static void DeleteEmptyDirs(string path)
+    {
+        try
+        {
+            foreach (var d in Directory.EnumerateDirectories(path))
+            {
+                DeleteEmptyDirs(d);
+            }
+
+            var entries = Directory.EnumerateFileSystemEntries(path);
+
+            if (!entries.Any())
+            {
+                try
+                {
+                    Directory.Delete(path);
+                }
+                catch (UnauthorizedAccessException) { }
+                catch (DirectoryNotFoundException) { }
+            }
+        }
+        catch (UnauthorizedAccessException) { }
     }
 
     private static string FormatSortSummary(ICollection<IGrouping<int, WriteQueueItem>> yearGroups)

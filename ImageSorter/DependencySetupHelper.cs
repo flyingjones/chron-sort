@@ -26,7 +26,7 @@ public static class DependencySetupHelper
         serviceCollection.AddDestinationWriter(new DestinationWriterOptions
         {
             SourcePath = configuration.SourcePath.FullName,
-            DestinationPath = configuration.DestinationPath.FullName,
+            DestinationPath = configuration.DestinationPath?.FullName ?? configuration.SourcePath.FullName,
             OverwriteExistingFiles = configuration.Overwrite,
             From = configuration.From,
             To = configuration.To,
