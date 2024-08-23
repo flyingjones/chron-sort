@@ -4,18 +4,13 @@
 using System.Collections.Concurrent;
 using System.CommandLine;
 using System.Diagnostics;
-using System.Drawing;
-using System.Net.Mime;
-using ImageSorter;
-using System.Drawing.Imaging;
-using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
+using ImageSorter;
 using ImageSorter.Services.DateParser;
 using ImageSorter.Services.DateParser.MetaData;
+using ImageSorter.Services.FileHandling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using DateParser = ImageSorter.DateParser;
 
 var rootCommand = new RootCommand(description: "sorts images based on the taken date from their meta data");
 var sourcePathOption =
@@ -49,6 +44,7 @@ rootCommand.SetHandler(async (context) =>
     serviceCollection.AddLogging(builder => builder
         .AddConsole(opt => opt.FormatterName = "stopwatchLogFormatter")
         .AddConsoleFormatter<StopwatchLogFormatter, StopwatchLogFormatterOptions>(opt => opt.Stopwatch = stopWatch));
+    serviceCollection.AddDestinationWriter(destPath!.FullName, false);
 
     var serviceProvider = serviceCollection.BuildServiceProvider();
     var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
@@ -80,8 +76,6 @@ rootCommand.SetHandler(async (context) =>
 
     // TODO clean up
     
-    var destinationWriter = new DestinationWriter(destPath.FullName);
-
     var unsortedFiles = new ConcurrentStack<string>();
 
     var writeQueue = new ConcurrentQueue<WriteQueueItem>();
@@ -133,6 +127,7 @@ rootCommand.SetHandler(async (context) =>
     
     logger.LogInformation("Sorted {writeQueueCount} files in memory", writeQueue.Count);
 
+    var destinationWriter = serviceProvider.GetRequiredService<IDestinationWriter>();
     foreach (var yearGroup in yearGroups)
     {
         logger.LogInformation("Writing year {year} ({fileCount} files)", yearGroup.Key, yearGroup.Count());
