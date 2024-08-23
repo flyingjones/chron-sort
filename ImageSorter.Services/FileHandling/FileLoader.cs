@@ -13,6 +13,7 @@ public class FileLoader : IFileLoader
         _directoryWrapper = directoryWrapper;
     }
 
+    /// <inheritdoc cref="IFileLoader.GetFilePaths"/>
     public string[] GetFilePaths()
     {
         var allFiles = _directoryWrapper.GetFiles(_options.SourcePath, "*", searchOption: SearchOption.AllDirectories);

@@ -24,8 +24,10 @@ public class DateParser : IDateParser
         
         foreach (var fileNameParser in _fileNameDateParsers.OrderBy(x => x.Priority))
         {
-            var resultFromFileName = fileNameParser.ParseDateFromFileName(fileName);
-            if (resultFromFileName != null) return resultFromFileName.Value;
+            if (fileNameParser.TryParseDateFromFileName(fileName, out var dateTime))
+            {
+                return dateTime.Value;
+            }
         }
         
         return File.GetLastWriteTime(filePath);

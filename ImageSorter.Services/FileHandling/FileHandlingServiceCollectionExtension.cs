@@ -7,6 +7,7 @@ public static class FileHandlingServiceCollectionExtension
 {
     public static IServiceCollection AddDestinationWriter(this IServiceCollection serviceCollection, DestinationWriterOptions options)
     {
+        serviceCollection.AddSingleton<IDateDirectory, DateDirectory>();
         serviceCollection.AddSingleton<IFileStreamService, FileStreamService>();
         serviceCollection.AddSingleton(options);
         serviceCollection.AddSingleton<IDestinationWriter, DestinationWriter>();
