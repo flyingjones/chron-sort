@@ -45,7 +45,7 @@ public static class MetaDataParserServiceCollectionExtension
         }
         else
         {
-            serviceCollection.AddScoped<IMetaDataDateParser, OsAgnosticMetaDataParser>();
+            serviceCollection.AddScoped<IMetaDataDateParser, OsAgnosticMetaDataDateParser>();
         }
 
         return serviceCollection;

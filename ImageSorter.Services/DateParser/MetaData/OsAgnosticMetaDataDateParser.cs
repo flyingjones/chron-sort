@@ -3,12 +3,12 @@ using SixLabors.ImageSharp;
 
 namespace ImageSorter.Services.DateParser.MetaData;
 
-public class OsAgnosticMetaDataParser : IMetaDataDateParser
+public class OsAgnosticMetaDataDateParser : IMetaDataDateParser
 {
     private readonly MetaDataDateParserOptions _options;
     private readonly ILogger<WindowsMetaDataDateParser> _logger;
 
-    public OsAgnosticMetaDataParser(MetaDataDateParserOptions options, ILogger<WindowsMetaDataDateParser> logger)
+    public OsAgnosticMetaDataDateParser(MetaDataDateParserOptions options, ILogger<WindowsMetaDataDateParser> logger)
     {
         _options = options;
         _logger = logger;
