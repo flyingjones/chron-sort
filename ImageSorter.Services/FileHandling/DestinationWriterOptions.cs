@@ -11,4 +11,6 @@ public class DestinationWriterOptions
     public DateTime? To { get; init; }
     
     public required bool OverwriteExistingFiles { get; init; }
+
+    public int ProgressCount { get; set; } = 1000;
 }

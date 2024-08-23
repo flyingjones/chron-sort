@@ -10,13 +10,17 @@ public static class DependencySetupHelper
 {
     public static IServiceCollection SetupServices(this RunConfiguration configuration)
     {
+        var ignoreFileNamesAfter = new DateTime().AddYears(1);
+
         var serviceCollection = new ServiceCollection();
 
         serviceCollection.AddMetaDataParsing();
         serviceCollection.AddSingleton<IFileNameDateParser>(
-            new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})-(0[0-9]|1[0-9])-(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*", 0));
+            new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})-(0[0-9]|1[0-9])-(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*",
+                0, ignoreFileNamesAfter));
         serviceCollection.AddSingleton<IFileNameDateParser>(
-            new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})(0[0-9]|1[0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*", 1));
+            new FilenameDateParser(".*(20[0-9]{2}|19[0-9]{2})(0[0-9]|1[0-9])(0[0-9]|1[0-9]|2[0-9]|3[0-1]).*",
+                1, ignoreFileNamesAfter));
         serviceCollection.AddDateParsing();
         serviceCollection.AddStopwatchLogger();
         serviceCollection.AddDestinationWriter(new DestinationWriterOptions
@@ -25,7 +29,8 @@ public static class DependencySetupHelper
             DestinationPath = configuration.DestinationPath.FullName,
             OverwriteExistingFiles = configuration.Overwrite,
             From = configuration.From,
-            To = configuration.To
+            To = configuration.To,
+            ProgressCount = configuration.ProgressAt > 0 ? configuration.ProgressAt.Value : int.MaxValue
         });
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
@@ -41,7 +46,7 @@ public static class DependencySetupHelper
         {
             serviceCollection.AddSingleton<IDateParsingHandler, SequentialDateParsingHandler>();
         }
-        
+
         return serviceCollection;
     }
 }

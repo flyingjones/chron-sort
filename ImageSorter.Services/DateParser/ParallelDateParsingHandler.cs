@@ -20,19 +20,17 @@ public class ParallelDateParsingHandler : IDateParsingHandler
         var writeQueue = new ConcurrentStack<WriteQueueItem>();
         await Parallel.ForEachAsync(filePaths, cancellationToken, async (filePath, _) =>
         {
-            try
+            if (cancellationToken.IsCancellationRequested)
             {
-                var dateTaken = await _dateParser.ParseDate(filePath);
-                writeQueue.Push(new WriteQueueItem
-                {
-                    DateTaken = dateTaken,
-                    FilePath = filePath
-                });
+                throw new TaskCanceledException();
             }
-            catch (Exception exception)
+            
+            var dateTaken = await _dateParser.ParseDate(filePath);
+            writeQueue.Push(new WriteQueueItem
             {
-                _logger.LogWarning("Something went wrong while scanning {filePath}: {ex}", filePath, exception);
-            }
+                DateTaken = dateTaken,
+                FilePath = filePath
+            });
         });
 
         return writeQueue.ToList();

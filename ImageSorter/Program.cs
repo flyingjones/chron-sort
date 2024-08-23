@@ -21,6 +21,8 @@ var parallelScanningOption =
     new Option<bool>(aliases: new[] { "--scan-parallel" }, description: "Perform the scan part in parallel");
 var fromOption = new Option<DateTime?>(aliases: new[] { "--from" }, description: "min date for files to sort");
 var toOption = new Option<DateTime?>(aliases: new[] { "--to" }, description: "max date for files to sort");
+var progressOption = new Option<int?>(aliases: new[] { "--progress-at" },
+    description: "written file count after which a progress update is printed", getDefaultValue: () => 1000);
 rootCommand.AddOption(sourcePathOption);
 rootCommand.AddOption(destinationPathOption);
 rootCommand.AddOption(fileEndingsOption);
@@ -28,6 +30,7 @@ rootCommand.AddOption(overwriteOption);
 rootCommand.AddOption(fromOption);
 rootCommand.AddOption(toOption);
 rootCommand.AddOption(parallelScanningOption);
+rootCommand.AddOption(progressOption);
 
 rootCommand.SetHandler(async (context) =>
 {
@@ -40,28 +43,23 @@ rootCommand.SetHandler(async (context) =>
         Overwrite = parsedContext.GetValueForOption(overwriteOption),
         From = parsedContext.GetValueForOption(fromOption),
         To = parsedContext.GetValueForOption(toOption),
-        ScanParallel = parsedContext.GetValueForOption(parallelScanningOption)
+        ScanParallel = parsedContext.GetValueForOption(parallelScanningOption),
+        ProgressAt = parsedContext.GetValueForOption(progressOption)
     };
 
     var serviceProvider = runConfig.SetupServices().BuildServiceProvider();
     var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-    
+
     RunConfigurationHelper.LogRunConfiguration(logger, runConfig);
-    
+
     var filesToProcess = serviceProvider.GetRequiredService<IFileLoader>().GetFilePaths();
-    
-    logger.LogInformation("Found {fileCount} files to sort", filesToProcess.Length);
-    
-    logger.LogInformation("Starting scan of all files");
 
     var writeQueue = await serviceProvider.GetRequiredService<IDateParsingHandler>()
         .ScanFiles(filesToProcess, context.GetCancellationToken());
-    
-    logger.LogInformation("Scanned {writeQueueCount} files successfully", writeQueue.Count);
 
     var destinationWriter = serviceProvider.GetRequiredService<IDestinationWriter>();
     await destinationWriter.CopyFiles(writeQueue.ToList(), context.GetCancellationToken());
-    
+
     logger.LogInformation("Finished sorting");
 });
 

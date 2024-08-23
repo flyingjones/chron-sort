@@ -20,18 +20,16 @@ public class SequentialDateParsingHandler : IDateParsingHandler
         var index = 0;
         foreach (var filePath in filePaths)
         {
-            try
+            var dateTaken = await _dateParser.ParseDate(filePath);
+            result[index++] = new WriteQueueItem
             {
-                var dateTaken = await _dateParser.ParseDate(filePath);
-                result[index++] = new WriteQueueItem
-                {
-                    DateTaken = dateTaken,
-                    FilePath = filePath
-                };
-            }
-            catch (Exception exception)
+                DateTaken = dateTaken,
+                FilePath = filePath
+            };
+
+            if (cancellationToken.IsCancellationRequested)
             {
-                _logger.LogWarning("Something went wrong while scanning {filePath}: {ex}", filePath, exception);
+                throw new TaskCanceledException();
             }
         }
 

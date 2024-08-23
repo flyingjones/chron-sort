@@ -17,4 +17,6 @@ public class RunConfiguration
     public DateTime? To { get; set; }
     
     public required bool ScanParallel { get; set; }
+    
+    public int? ProgressAt { get; set; }
 }
