@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Primitives;
@@ -30,6 +31,7 @@ public static partial class RunConfigurationHelper
         var toDateString = runConfiguration.To?.ToString("o") ?? "-";
         stringBuilder.Append($"To Date                 : {toDateString}{Environment.NewLine}");
         stringBuilder.Append($"Scan in parallel        : {runConfiguration.ScanParallel}{Environment.NewLine}");
+        stringBuilder.Append($"OS                      : {RuntimeInformation.OSDescription}");
 
         return stringBuilder.ToString();
     }

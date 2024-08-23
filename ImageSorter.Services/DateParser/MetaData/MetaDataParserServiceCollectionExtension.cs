@@ -1,9 +1,10 @@
-using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
 using Microsoft.Extensions.DependencyInjection;
+using SixLabors.ImageSharp.Metadata.Profiles.Exif;
 
 namespace ImageSorter.Services.DateParser.MetaData;
 
-public static partial class MetaDataParserServiceCollectionExtension
+public static class MetaDataParserServiceCollectionExtension
 {
     public static IServiceCollection AddMetaDataParsing(this IServiceCollection serviceCollection)
     {
@@ -15,17 +16,17 @@ public static partial class MetaDataParserServiceCollectionExtension
                 new MetaDataImageTagOption
                 {
                     // PropertyTagExifDTOrig
-                    TagId = 0x9003, ParserFund = ParseDateFromTag
+                    Tag = ExifTag.DateTimeOriginal
                 },
                 new MetaDataImageTagOption
                 {
                     // PropertyTagExifDTDigitized
-                    TagId = 0x9004, ParserFund = ParseDateFromTag
+                    Tag = ExifTag.DateTimeDigitized
                 },
                 new MetaDataImageTagOption
                 {
                     // PropertyTagDateTime
-                    TagId = 0x9003, ParserFund = ParseDateFromTag
+                    Tag = ExifTag.DateTime
                 }
             }
         };
@@ -36,22 +37,17 @@ public static partial class MetaDataParserServiceCollectionExtension
     public static IServiceCollection AddMetaDataParsing(this IServiceCollection serviceCollection, MetaDataDateParserOptions options)
     {
         serviceCollection.AddSingleton(options);
-        serviceCollection.AddScoped<IMetaDataDateParser, MetaDataDateParser>();
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // MetaDataDateParser uses windows specific apis
+            serviceCollection.AddScoped<IMetaDataDateParser, WindowsMetaDataDateParser>();
+        }
+        else
+        {
+            serviceCollection.AddScoped<IMetaDataDateParser, OsAgnosticMetaDataParser>();
+        }
 
         return serviceCollection;
     }
-
-    private static DateTime? ParseDateFromTag(string dateString)
-    {
-        var cleanedUpDate = DotRegex().Replace(dateString, "-", 2);
-        if (DateTime.TryParse(cleanedUpDate, out var result))
-        {
-            return result;
-        }
-
-        return null;
-    }
-    
-    [GeneratedRegex(":")]
-    private static partial Regex DotRegex();
 }
