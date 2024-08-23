@@ -1,95 +1,64 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 
-using System.Collections.Concurrent;
 using System.CommandLine;
-using System.Drawing;
-using System.Net.Mime;
 using ImageSorter;
-using System.Drawing.Imaging;
-using System.Globalization;
-using System.Text;
-using System.Text.RegularExpressions;
+using ImageSorter.Services.DateParser;
+using ImageSorter.Services.FileHandling;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 var rootCommand = new RootCommand(description: "sorts images based on the taken date from their meta data");
-var sourcePathOption =
-    new Option<FileInfo?>(aliases: new[] { "--input", "-i" }, description: "The path of the source directory");
-var destinationPathOption = new Option<FileInfo?>(aliases: new[] { "--dest", "-d" },
-    description: "The path of the destination directory");
+var sourceArgument = new Argument<FileInfo>("source path", "The path of the source directory");
+var destinationArgument = new Argument<FileInfo>("destination path", "The path of the destination directory");
 var fileEndingsOption = new Option<string[]>(aliases: new[] { "--types", "-t" },
     description: "space seperated list of file endings to copy");
-rootCommand.AddOption(sourcePathOption);
-rootCommand.AddOption(destinationPathOption);
+var overwriteOption =
+    new Option<bool>(aliases: new[] { "--overwrite" }, description: "Overwrite files in destination", getDefaultValue: () => false);
+var parallelScanningOption =
+    new Option<bool>(aliases: new[] { "--scan-parallel" }, description: "Perform the scan part in parallel", getDefaultValue: () => false);
+var fromOption = new Option<DateTime?>(aliases: new[] { "--from" }, description: "min date for files to sort");
+var toOption = new Option<DateTime?>(aliases: new[] { "--to" }, description: "max date for files to sort");
+var progressOption = new Option<int?>(aliases: new[] { "--progress-at" },
+    description: "written file count after which a progress update is printed", getDefaultValue: () => 1000);
+rootCommand.AddArgument(sourceArgument);
+rootCommand.AddArgument(destinationArgument);
 rootCommand.AddOption(fileEndingsOption);
-Regex r = new Regex(":");
+rootCommand.AddOption(overwriteOption);
+rootCommand.AddOption(fromOption);
+rootCommand.AddOption(toOption);
+rootCommand.AddOption(parallelScanningOption);
+rootCommand.AddOption(progressOption);
 
 rootCommand.SetHandler(async (context) =>
 {
-    var sourcePath = context.ParseResult.GetValueForOption(sourcePathOption);
-    var destPath = context.ParseResult.GetValueForOption(destinationPathOption);
-    var fileEndingsToSupport = context.ParseResult.GetValueForOption(fileEndingsOption);
-    
-    Console.WriteLine("--- Started sorting images");
-    Console.WriteLine($"src: {sourcePath!.FullName}");
-    Console.WriteLine($"dest: {destPath!.FullName}");
-
-    var files = Directory.GetFiles(sourcePath!.FullName, "*", searchOption: SearchOption.AllDirectories);
-    
-    
-    Console.WriteLine("--- File Endings Found:");
-    var fileEndings = files.Select(x => x.Split(".")[^1]).Distinct().ToArray();
-    foreach (var fileEnding in fileEndings)
+    var parsedContext = context.ParseResult;
+    var runConfig = new RunConfiguration
     {
-        Console.WriteLine(fileEnding);
-    }
+        SourcePath = parsedContext.GetValueForArgument(sourceArgument),
+        DestinationPath = parsedContext.GetValueForArgument(destinationArgument),
+        FileEndings = parsedContext.GetValueForOption(fileEndingsOption),
+        Overwrite = parsedContext.GetValueForOption(overwriteOption),
+        From = parsedContext.GetValueForOption(fromOption),
+        To = parsedContext.GetValueForOption(toOption),
+        ScanParallel = parsedContext.GetValueForOption(parallelScanningOption),
+        ProgressAt = parsedContext.GetValueForOption(progressOption)
+    };
 
-    var filesToProcess = fileEndingsToSupport == null || fileEndingsToSupport.Length == 0 ? 
-        files : 
-        files.Where(x => fileEndingsToSupport.Contains(x.FileEnding())).ToArray();
-    
-    Console.WriteLine($"Sorting {filesToProcess.Length} files");
+    var serviceProvider = runConfig.SetupServices().BuildServiceProvider();
+    var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
 
-    var destinationWriter = new DestinationWriter(destPath.FullName);
+    RunConfigurationHelper.LogRunConfiguration(logger, runConfig);
 
-    var unsortedFiles = new ConcurrentStack<string>();
+    var filesToProcess = serviceProvider.GetRequiredService<IFileLoader>().GetFilePaths();
 
-    var writeQueue = new ConcurrentQueue<WriteQueueItem>();
+    var writeQueue = await serviceProvider.GetRequiredService<IDateParsingHandler>()
+        .ScanFiles(filesToProcess, context.GetCancellationToken());
 
-    await Parallel.ForEachAsync(filesToProcess, context.GetCancellationToken(), async (filePath, cancellationToken ) =>
-    {
-        try
-        {
-            var dateTaken = await DateParser.GetDateTaken(filePath);
-            writeQueue.Enqueue(new WriteQueueItem
-            {
-                DateTaken = dateTaken,
-                FilePath = filePath
-            });
-        }
-        catch (Exception exception)
-        {
-            Console.WriteLine(filePath);
-            Console.WriteLine($"Something went wrong: {exception.Message}");
-            unsortedFiles.Push(filePath);
-        }
-    });
-    
-    Console.WriteLine($"Scanned {writeQueue.Count} files successfully");
+    var destinationWriter = serviceProvider.GetRequiredService<IDestinationWriter>();
+    await destinationWriter.CopyFiles(writeQueue.ToList(), context.GetCancellationToken());
 
-    var yearGroups = writeQueue.OrderBy(x => x.DateTaken).GroupBy(x => x.DateTaken.Year);
-
-    foreach (var yearGroup in yearGroups)
-    {
-        Console.WriteLine($"Writing year {yearGroup.Key}");
-        foreach (var item in yearGroup)
-        {
-            destinationWriter.CopyFile(item.FilePath, item.DateTaken);
-        }
-    }
-    
-    var foundFiles = Directory.GetFiles(destPath!.FullName, "*", searchOption: SearchOption.AllDirectories);
-    
-    Console.WriteLine($"Found {foundFiles.Length} files in output dir");
+    logger.LogInformation("Finished sorting");
 });
 
 await rootCommand.InvokeAsync(args);
