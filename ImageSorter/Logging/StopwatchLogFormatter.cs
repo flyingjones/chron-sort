@@ -32,7 +32,7 @@ public class StopwatchLogFormatter : ConsoleFormatter, IDisposable
         {
             return;
         }
-        
+
         var timeSpan = TimeSpan.FromMilliseconds(_formatterOptions.Stopwatch.ElapsedMilliseconds);
         textWriter.Write(timeSpan.ToString("c"));
         textWriter.Write(" ");
@@ -42,6 +42,11 @@ public class StopwatchLogFormatter : ConsoleFormatter, IDisposable
         var newLineReplacement = $"{Environment.NewLine}{tab}";
         textWriter.Write(tab);
         textWriter.WriteLine(message.Replace(Environment.NewLine, newLineReplacement));
+        if (logEntry.Exception != null)
+        {
+            textWriter.Write(tab);
+            textWriter.WriteLine(logEntry.Exception.ToString().Replace(Environment.NewLine, newLineReplacement));
+        }
     }
 
     public void Dispose() => _optionsReloadToken?.Dispose();

@@ -43,7 +43,7 @@ public partial class DestinationWriter : IDestinationWriter
         }
         catch (Exception ex)
         {
-            LogError(_logger, sourcePath, destinationPath, ex);
+            LogError(ex, sourcePath, destinationPath);
         }
     }
 
@@ -66,7 +66,7 @@ public partial class DestinationWriter : IDestinationWriter
         }
         catch (Exception ex)
         {
-            LogError(_logger, sourcePath, destinationPath, ex);
+            LogError(ex, sourcePath, destinationPath);
         }
     }
 
@@ -74,13 +74,13 @@ public partial class DestinationWriter : IDestinationWriter
     public async Task CopyFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
     {
         var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
-        LogSummaryMessage(_logger, FormatSortSummary(yearGroups));
+        LogSummaryMessage(FormatSortSummary(yearGroups));
 
         var idx = 0;
         var count = yearGroups.SelectMany(x => x).Count();
         foreach (var yearGroup in yearGroups)
         {
-            LogYearMessage(_logger, yearGroup.Key, yearGroup.Count());
+            LogYearMessage(yearGroup.Key, yearGroup.Count());
             foreach (var item in yearGroup)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -100,13 +100,13 @@ public partial class DestinationWriter : IDestinationWriter
     {
         var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
 
-        LogSummaryMessage(_logger, FormatSortSummary(yearGroups));
+        LogSummaryMessage(FormatSortSummary(yearGroups));
 
         var idx = 0;
         var count = yearGroups.SelectMany(x => x).Count();
         foreach (var yearGroup in yearGroups)
         {
-            LogYearMessage(_logger, yearGroup.Key, yearGroup.Count());
+            LogYearMessage(yearGroup.Key, yearGroup.Count());
             foreach (var item in yearGroup)
             {
                 if (cancellationToken.IsCancellationRequested)
@@ -128,7 +128,7 @@ public partial class DestinationWriter : IDestinationWriter
         if (index % _options.ProgressCount == 0)
         {
             var progressString = (((double)index / totalCount) * 100).ToString("00");
-            LogProgress(_logger, index, totalCount, progressString);
+            LogProgress(index, totalCount, progressString);
         }
     }
 
@@ -198,16 +198,16 @@ public partial class DestinationWriter : IDestinationWriter
         return stringBuilder.ToString();
     }
 
-    [LoggerMessage(Level = LogLevel.Trace,
-        Message = "Could not write file {sourcePath} to {destinationPath}, reason: {exception}")]
-    private static partial void LogError(ILogger logger, string sourcePath, string destinationPath, Exception exception);
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Could not write file {sourcePath} to {destinationPath}")]
+    private partial void LogError(Exception exception, string sourcePath, string destinationPath);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Total Progress: {index}/{totalCount} ({progressString}%)")]
-    private static partial void LogProgress(ILogger logger, int index, int totalCount, string progressString);
+    private partial void LogProgress(int index, int totalCount, string progressString);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Processing year {year} ({count} files)")]
-    private static partial void LogYearMessage(ILogger logger, int year, int count);
+    private partial void LogYearMessage(int year, int count);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Sorting Summary {summary}")]
-    private static partial void LogSummaryMessage(ILogger logger, string summary);
+    private partial void LogSummaryMessage(string summary);
 }
