@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text;
+using ImageSorter.Services.FileWrapper;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.FileHandling;
@@ -9,13 +10,19 @@ public partial class DestinationWriter : IDestinationWriter
     private readonly DestinationWriterOptions _options;
     private readonly ILogger<DestinationWriter> _logger;
     private readonly IDictionary<int, IDictionary<int, bool>> _filePaths;
+    private readonly IFileWrapper _fileWrapper;
+    private readonly IDirectoryWrapper _directoryWrapper;
+    private readonly IFileStreamService _fileStreamService;
 
-    public DestinationWriter(DestinationWriterOptions options, ILogger<DestinationWriter> logger)
+    public DestinationWriter(DestinationWriterOptions options, ILogger<DestinationWriter> logger, IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper, IFileStreamService fileStreamService)
     {
         _filePaths = new ConcurrentDictionary<int, IDictionary<int, bool>>();
         _options = options;
         _logger = logger;
-        Directory.CreateDirectory(options.DestinationPath);
+        _fileWrapper = fileWrapper;
+        _directoryWrapper = directoryWrapper;
+        _fileStreamService = fileStreamService;
+        _directoryWrapper.CreateDirectory(options.DestinationPath);
     }
 
     public async Task CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
@@ -26,13 +33,13 @@ public partial class DestinationWriter : IDestinationWriter
         var monthPath = $"{yearPath}/{month:00}";
         if (!_filePaths.ContainsKey(year))
         {
-            Directory.CreateDirectory(yearPath);
+            _directoryWrapper.CreateDirectory(yearPath);
             _filePaths[year] = new ConcurrentDictionary<int, bool>();
         }
 
         if (!_filePaths[year].ContainsKey(month))
         {
-            Directory.CreateDirectory(monthPath);
+            _directoryWrapper.CreateDirectory(monthPath);
             _filePaths[year][month] = true;
         }
 
@@ -40,15 +47,12 @@ public partial class DestinationWriter : IDestinationWriter
         var destinationPath = $"{monthPath}/{fileName}";
         try
         {
-            if (File.Exists(destinationPath) && !_options.OverwriteExistingFiles)
+            if (_fileWrapper.Exists(destinationPath) && !_options.OverwriteExistingFiles)
             {
                 return;
             }
 
-            await using var sourceFileStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read);
-            await using var destFileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
-
-            await sourceFileStream.CopyToAsync(destFileStream, cancellationToken);
+            await _fileStreamService.CopyToAsync(sourcePath, destinationPath, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -65,13 +69,13 @@ public partial class DestinationWriter : IDestinationWriter
         var monthPath = $"{yearPath}/{month:00}";
         if (!_filePaths.ContainsKey(year))
         {
-            Directory.CreateDirectory(yearPath);
+            _directoryWrapper.CreateDirectory(yearPath);
             _filePaths[year] = new ConcurrentDictionary<int, bool>();
         }
 
         if (!_filePaths[year].ContainsKey(month))
         {
-            Directory.CreateDirectory(monthPath);
+            _directoryWrapper.CreateDirectory(monthPath);
             _filePaths[year][month] = true;
         }
 
@@ -82,12 +86,12 @@ public partial class DestinationWriter : IDestinationWriter
         
         try
         {
-            if (File.Exists(destinationPath) && !_options.OverwriteExistingFiles)
+            if (_fileWrapper.Exists(destinationPath) && !_options.OverwriteExistingFiles)
             {
                 return;
             }
             
-            File.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
+            _fileWrapper.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
         }
         catch (Exception ex)
         {
@@ -171,22 +175,22 @@ public partial class DestinationWriter : IDestinationWriter
     /// <summary>
     /// Delete all empty subdirectories
     /// </summary>
-    private static void DeleteEmptyDirs(string path)
+    private void DeleteEmptyDirs(string path)
     {
         try
         {
-            foreach (var d in Directory.EnumerateDirectories(path))
+            foreach (var d in _directoryWrapper.EnumerateDirectories(path))
             {
                 DeleteEmptyDirs(d);
             }
 
-            var entries = Directory.EnumerateFileSystemEntries(path);
+            var entries = _directoryWrapper.EnumerateFileSystemEntries(path);
 
             if (!entries.Any())
             {
                 try
                 {
-                    Directory.Delete(path);
+                    _directoryWrapper.Delete(path);
                 }
                 catch (UnauthorizedAccessException) { }
                 catch (DirectoryNotFoundException) { }

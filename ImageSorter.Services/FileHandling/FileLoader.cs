@@ -1,17 +1,21 @@
+using ImageSorter.Services.FileWrapper;
+
 namespace ImageSorter.Services.FileHandling;
 
 public class FileLoader : IFileLoader
 {
     private readonly FileLoaderOptions _options;
+    private readonly IDirectoryWrapper _directoryWrapper;
 
-    public FileLoader(FileLoaderOptions options)
+    public FileLoader(FileLoaderOptions options, IDirectoryWrapper directoryWrapper)
     {
         _options = options;
+        _directoryWrapper = directoryWrapper;
     }
 
     public string[] GetFilePaths()
     {
-        var allFiles = Directory.GetFiles(_options.SourcePath, "*", searchOption: SearchOption.AllDirectories);
+        var allFiles = _directoryWrapper.GetFiles(_options.SourcePath, "*", searchOption: SearchOption.AllDirectories);
 
         return FilterFilePathsByFileEnding(allFiles);
     }
