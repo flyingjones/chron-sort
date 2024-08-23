@@ -14,7 +14,8 @@ public partial class DestinationWriter : IDestinationWriter
     private readonly IDirectoryWrapper _directoryWrapper;
     private readonly IFileStreamService _fileStreamService;
 
-    public DestinationWriter(DestinationWriterOptions options, ILogger<DestinationWriter> logger, IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper, IFileStreamService fileStreamService)
+    public DestinationWriter(DestinationWriterOptions options, ILogger<DestinationWriter> logger,
+        IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper, IFileStreamService fileStreamService)
     {
         _filePaths = new ConcurrentDictionary<int, IDictionary<int, bool>>();
         _options = options;
@@ -60,7 +61,7 @@ public partial class DestinationWriter : IDestinationWriter
                 destinationPath, ex);
         }
     }
-    
+
     public void MoveFile(string sourcePath, DateTime dateTime)
     {
         var year = dateTime.Year;
@@ -81,16 +82,16 @@ public partial class DestinationWriter : IDestinationWriter
 
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = $"{monthPath}/{fileName}";
-        
+
         if (sourcePath == destinationPath) return;
-        
+
         try
         {
             if (_fileWrapper.Exists(destinationPath) && !_options.OverwriteExistingFiles)
             {
                 return;
             }
-            
+
             _fileWrapper.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
         }
         catch (Exception ex)
@@ -122,7 +123,7 @@ public partial class DestinationWriter : IDestinationWriter
                 {
                     throw new TaskCanceledException();
                 }
-                
+
                 await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
                 idx++;
 
@@ -157,7 +158,7 @@ public partial class DestinationWriter : IDestinationWriter
                 {
                     throw new TaskCanceledException();
                 }
-                
+
                 MoveFile(item.FilePath, item.DateTaken);
                 idx++;
 
@@ -168,7 +169,7 @@ public partial class DestinationWriter : IDestinationWriter
                 }
             }
         }
-        
+
         DeleteEmptyDirs(_options.SourcePath);
     }
 
@@ -192,11 +193,17 @@ public partial class DestinationWriter : IDestinationWriter
                 {
                     _directoryWrapper.Delete(path);
                 }
-                catch (UnauthorizedAccessException) { }
-                catch (DirectoryNotFoundException) { }
+                catch (UnauthorizedAccessException)
+                {
+                }
+                catch (DirectoryNotFoundException)
+                {
+                }
             }
         }
-        catch (UnauthorizedAccessException) { }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     private static string FormatSortSummary(ICollection<IGrouping<int, WriteQueueItem>> yearGroups)
