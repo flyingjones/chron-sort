@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 var rootCommand = new RootCommand(description: "sorts images based on the taken date from their meta data");
 var sourceArgument = new Argument<FileInfo>("source path", "The path of the source directory");
 var destinationOption = new Option<FileInfo>(aliases: new[] { "--dest" }, description: "The path of the destination directory (required if not --in-place)");
-var inPlaceOption = new Option<bool>(aliases: new[] { "--in-place" }, description: "[EXPERIMENTAL] Move files instead of copy", getDefaultValue: () => false);
+var inPlaceOption = new Option<bool>(aliases: new[] { "--move" }, description: "[EXPERIMENTAL] Move files instead of copy", getDefaultValue: () => false);
 var fileEndingsOption = new Option<string[]>(aliases: new[] { "--types", "-t" },
     description: "space seperated list of file endings to copy");
 var overwriteOption =
@@ -47,7 +47,8 @@ rootCommand.SetHandler(async (context) =>
     var runConfig = new RunConfiguration
     {
         SourcePath = parsedContext.GetValueForArgument(sourceArgument),
-        DestinationPath = destPath!,
+        DestinationPath = destPath ?? parsedContext.GetValueForArgument(sourceArgument),
+        MoveFiles = parsedContext.GetValueForOption(inPlaceOption),
         FileEndings = parsedContext.GetValueForOption(fileEndingsOption),
         Overwrite = parsedContext.GetValueForOption(overwriteOption),
         From = parsedContext.GetValueForOption(fromOption),
@@ -68,7 +69,7 @@ rootCommand.SetHandler(async (context) =>
 
     var destinationWriter = serviceProvider.GetRequiredService<IDestinationWriter>();
 
-    if (runConfig.DestinationPath != null)
+    if (!runConfig.MoveFiles)
     {
         await destinationWriter.CopyFiles(writeQueue, context.GetCancellationToken());
     }

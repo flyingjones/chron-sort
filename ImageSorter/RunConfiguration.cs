@@ -4,7 +4,9 @@ public class RunConfiguration
 {
     public required FileInfo SourcePath { get; set; }
     
-    public required FileInfo? DestinationPath { get; set; }
+    public required FileInfo DestinationPath { get; set; }
+    
+    public required bool MoveFiles { get; set; }
     
     public string[]? FileEndings { get; set; }
 
