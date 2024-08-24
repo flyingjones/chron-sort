@@ -20,6 +20,8 @@ public static partial class RunConfigurationHelper
         stringBuilder.Append($"{Environment.NewLine}");
         stringBuilder.Append($"Source Path             : {runConfiguration.SourcePath}{Environment.NewLine}");
         stringBuilder.Append($"Destination Path        : {runConfiguration.DestinationPath?.FullName ?? "- (running in place)"}{Environment.NewLine}");
+        var modeString = runConfiguration.MoveFiles ? "Move" : "Copy";
+        stringBuilder.Append($"Mode                    : {modeString}{Environment.NewLine}");
         stringBuilder.Append($"Overwrite Existing files: {runConfiguration.Overwrite}{Environment.NewLine}");
         var fileEndingsString = runConfiguration.FilterFileEndings
             ? $"[{string.Join(", ", runConfiguration.FileEndings!)}]"
