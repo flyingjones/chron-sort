@@ -4,9 +4,9 @@ A simply utility to sort a bunch of images chronologically.
 
 ## How to use
 
-You need the [.NET 8.0 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) to use it.
+Download the binary for your platform and execute it from a terminal.
 
-Run ``dotnet run --project ImageSorter -- --help`` to get the help:
+Print the help using ``ImageSorter --help``:
 
 ````
 Description:
@@ -45,4 +45,3 @@ Options:
 - Better readme
 - Add support for user provided regex for parsing file names
 - Add support for more customization (after what should be sorted in which order)
-- provide executable?
