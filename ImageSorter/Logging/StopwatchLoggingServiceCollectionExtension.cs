@@ -10,6 +10,7 @@ public static class StopwatchLoggingServiceCollectionExtension
     {
         var stopWatch = new Stopwatch();
         stopWatch.Start();
+        // works perfectly with native aot compilation, so warning can be ignored
         serviceCollection.AddLogging(builder => builder
             .AddConsole(opt => opt.FormatterName = "stopwatchLogFormatter")
             .AddConsoleFormatter<StopwatchLogFormatter, StopwatchLogFormatterOptions>(opt => opt.Stopwatch = stopWatch));
