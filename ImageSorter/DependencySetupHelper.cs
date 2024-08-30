@@ -10,19 +10,16 @@ public static class DependencySetupHelper
 {
     public static IServiceCollection SetupServices(this RunConfiguration configuration)
     {
-        var ignoreFileNamesAfter = DateTime.Now.AddYears(1);
-
         var serviceCollection = new ServiceCollection();
-
-        serviceCollection.AddMetaDataParsing();
-        serviceCollection.AddSingleton<IFileNameDateParser>(
-            new FilenameDateParser(".*(?<year>20[0-9]{2}|19[0-9]{2})-(?<month>0[0-9]|1[0-9])-(?<day>0[0-9]|1[0-9]|2[0-9]|3[0-1]).*",
-                0, ignoreFileNamesAfter));
-        serviceCollection.AddSingleton<IFileNameDateParser>(
-            new FilenameDateParser(".*(?<year>20[0-9]{2}|19[0-9]{2})(?<month>0[0-9]|1[0-9])(?<day>0[0-9]|1[0-9]|2[0-9]|3[0-1]).*",
-                1, ignoreFileNamesAfter));
         serviceCollection.AddDateParsing();
         serviceCollection.AddStopwatchLogger();
+        serviceCollection.AddFileMetaDataHandleFactory();
+        if (configuration.UseDefaultSortConfiguration)
+        {
+            configuration.SortConfiguration = SortConfigurationFactory.DefaultSorting;
+        }
+        serviceCollection.ConfigureSorting(configuration.SortConfiguration!);
+        
         serviceCollection.AddDestinationWriter(new DestinationWriterOptions
         {
             SourcePath = configuration.SourcePath.FullName,

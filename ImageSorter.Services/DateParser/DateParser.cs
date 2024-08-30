@@ -4,32 +4,78 @@ namespace ImageSorter.Services.DateParser;
 
 public class DateParser : IDateParser
 {
-    private readonly IMetaDataDateParser _metaDataDateParser;
-    private readonly IEnumerable<IFileNameDateParser> _fileNameDateParsers;
+    private readonly IFileMetaDataHandleFactory _fileMetaDataHandleFactory;
+    private readonly IMetaDataDateParser[] _metaDataDateParsers;
+    private readonly IFileNameDateParser[] _fileNameDateParsers;
 
-    public DateParser(IMetaDataDateParser metaDataDateParser, IEnumerable<IFileNameDateParser> fileNameDateParsers)
+    public DateParser(IEnumerable<IMetaDataDateParser> metaDataDateParsers,
+        IEnumerable<IFileNameDateParser> fileNameDateParsers, IFileMetaDataHandleFactory fileMetaDataHandleFactory)
     {
-        _metaDataDateParser = metaDataDateParser;
-        _fileNameDateParsers = fileNameDateParsers;
+        _fileMetaDataHandleFactory = fileMetaDataHandleFactory;
+        _metaDataDateParsers = metaDataDateParsers.OrderBy(x => x.Priority).ToArray();
+        _fileNameDateParsers = fileNameDateParsers.OrderBy(x => x.Priority).ToArray();
     }
 
     public async Task<DateTime> ParseDate(string filePath)
     {
-        var resultFromMetaData = await _metaDataDateParser.ParseDate(filePath);
+        var orderedMetaDataParserIndex = 0;
+        var orderedFileNameParserIndex = 0;
 
-        if (resultFromMetaData != null) return resultFromMetaData.Value;
+        var currentMetaDataParser = orderedMetaDataParserIndex < _metaDataDateParsers.Length
+            ? _metaDataDateParsers[orderedMetaDataParserIndex]
+            : null;
 
-        var parsedPath = new FileInfo(filePath);
-        var fileName = parsedPath.Name;
-        
-        foreach (var fileNameParser in _fileNameDateParsers.OrderBy(x => x.Priority))
+        var currentFileNameParser = orderedFileNameParserIndex < _fileNameDateParsers.Length
+            ? _fileNameDateParsers[orderedFileNameParserIndex]
+            : null;
+
+        FileMetaDataHandle? metaDataFileHandle = null;
+        try
         {
-            if (fileNameParser.TryParseDateFromFileName(fileName, out var dateTime))
+            while (currentMetaDataParser != null || currentFileNameParser != null)
             {
-                return dateTime.Value;
+                if (currentMetaDataParser != null &&
+                    (currentMetaDataParser.Priority < currentFileNameParser?.Priority || currentFileNameParser == null))
+                {
+                    if (metaDataFileHandle == null)
+                    {
+                        metaDataFileHandle = await _fileMetaDataHandleFactory.CreateHandle(filePath);
+                    }
+
+                    if (currentMetaDataParser.TryParseDate(metaDataFileHandle, out var result))
+                    {
+                        return result.Value;
+                    }
+
+                    orderedMetaDataParserIndex++;
+                    currentMetaDataParser = orderedMetaDataParserIndex < _metaDataDateParsers.Length
+                        ? _metaDataDateParsers[orderedMetaDataParserIndex]
+                        : null;
+                }
+                else if (currentFileNameParser != null)
+                {
+                    if (currentFileNameParser.TryParseDateFromFileName(filePath, out var result))
+                    {
+                        return result.Value;
+                    }
+
+                    orderedFileNameParserIndex++;
+                    currentFileNameParser = orderedFileNameParserIndex < _fileNameDateParsers.Length
+                        ? _fileNameDateParsers[orderedFileNameParserIndex]
+                        : null;
+                }
+                else
+                {
+                    // shouldn't happen I think
+                    break;
+                }
             }
         }
-        
+        finally
+        {
+            metaDataFileHandle?.Dispose();
+        }
+
         return File.GetLastWriteTime(filePath);
     }
 }

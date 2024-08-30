@@ -1,9 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace ImageSorter.Services.DateParser.MetaData;
 
 public interface IMetaDataDateParser
 {
-    /// <summary>
-    /// Tries to get a date time from the meta data of an image / video etc.
-    /// </summary>
-    Task<DateTime?> ParseDate(string filePath);
+    bool TryParseDate(FileMetaDataHandle fileMetaDataHandle, [NotNullWhen(true)] out DateTime? result);
+    
+    int Priority { get; }
 }

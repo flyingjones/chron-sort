@@ -32,6 +32,16 @@ public static partial class RunConfigurationHelper
         var toDateString = runConfiguration.To?.ToString("o") ?? "-";
         stringBuilder.Append($"To Date                 : {toDateString}{Environment.NewLine}");
         stringBuilder.Append($"Scan in parallel        : {runConfiguration.ScanParallel}{Environment.NewLine}");
+
+        stringBuilder.Append($"Sort Configuration      :{Environment.NewLine}");
+        var idx = 0;
+        foreach (var sortConfigEntry in runConfiguration.SortConfiguration!)
+        {
+            stringBuilder.Append($"[   {idx++:00}   ] : {sortConfigEntry}{Environment.NewLine}");
+        }
+        
+        stringBuilder.Append($"[fallback] : <file system update date>{Environment.NewLine}");
+        
         stringBuilder.Append($"OS                      : {RuntimeInformation.OSDescription}");
 
         return stringBuilder.ToString();

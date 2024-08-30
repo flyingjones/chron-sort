@@ -9,6 +9,8 @@ Download the binary for your platform and execute it from a terminal.
 Print the help using ``ImageSorter --help``:
 
 ````
+TBD Update me
+
 Description:
   Sorts images chronologically in the directory structure year/month
   Will use the following clues to determine a date for each file in order:

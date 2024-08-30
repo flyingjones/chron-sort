@@ -37,6 +37,10 @@ var fromOption = new Option<DateTime?>(aliases: new[] { "--from" }, description:
 var toOption = new Option<DateTime?>(aliases: new[] { "--to" }, description: "Maximum date for files to sort");
 var progressOption = new Option<int?>(aliases: new[] { "--progress-at" },
     description: "Processed file count after which a progress update is printed", getDefaultValue: () => 1000);
+// TODO more description
+var sortConfiguration =
+    new Option<string[]>(aliases: new[] { "-c", "--configure" }, description: "custom sort configuration");
+rootCommand.AddOption(sortConfiguration);
 rootCommand.AddArgument(sourceArgument);
 rootCommand.AddOption(destinationOption);
 rootCommand.AddOption(inPlaceOption);
@@ -61,6 +65,7 @@ rootCommand.SetHandler(async (context) =>
 
     var runConfig = new RunConfiguration
     {
+        SortConfiguration = parsedContext.GetValueForOption(sortConfiguration),
         SourcePath = parsedContext.GetValueForArgument(sourceArgument),
         DestinationPath = destPath ?? parsedContext.GetValueForArgument(sourceArgument),
         MoveFiles = parsedContext.GetValueForOption(inPlaceOption),

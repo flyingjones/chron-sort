@@ -1,49 +1,55 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
-using SixLabors.ImageSharp;
 
 namespace ImageSorter.Services.DateParser.MetaData;
 
 public class OsAgnosticMetaDataDateParser : IMetaDataDateParser
 {
-    private readonly MetaDataDateParserOptions _options;
-    private readonly ILogger<WindowsMetaDataDateParser> _logger;
+    public int Priority { get; }
 
-    public OsAgnosticMetaDataDateParser(MetaDataDateParserOptions options, ILogger<WindowsMetaDataDateParser> logger)
+    private readonly ExifTagId _exifTagId;
+    private readonly ILogger<IMetaDataDateParser> _logger;
+
+    public OsAgnosticMetaDataDateParser(ExifTagId exifTagId, int priority, ILogger<IMetaDataDateParser> logger)
     {
-        _options = options;
+        _exifTagId = exifTagId;
+        Priority = priority;
         _logger = logger;
     }
 
-    public async Task<DateTime?> ParseDate(string filePath)
+    public bool TryParseDate(FileMetaDataHandle fileMetaDataHandle, [NotNullWhen(true)] out DateTime? result)
     {
-        if (_options.TagOptions.Length == 0) return null;
-
+        result = null;
+        if (fileMetaDataHandle.LoadFailed)
+        {
+            return false;
+        }
+        
+        
         try
         {
-            var imageInfo = await Image.IdentifyAsync(filePath);
+            var imageInfo = fileMetaDataHandle.ImageInfo!;
 
-            foreach (var tagOptions in _options.TagOptions)
+
+            if (imageInfo.Metadata.ExifProfile == null) return false;
+
+            var mappedTag = ExifTagHelper.FromTagId(_exifTagId);
+            if (imageInfo.Metadata.ExifProfile.TryGetValue(mappedTag, out var dateString))
             {
-                if (imageInfo.Metadata.ExifProfile == null) return null;
-                
-                if (imageInfo.Metadata.ExifProfile.TryGetValue(tagOptions.Tag, out var dateString))
+                if (dateString.Value == null)
                 {
-                    if (dateString.Value == null)
-                    {
-                        continue;
-                    }
-
-                    var result = MetaDataParserHelpers.ParseDateFromTag(dateString.Value);
-                    if (result != null) return result;
+                    return false;
                 }
-            }
 
+                result = MetaDataParserHelpers.ParseDateFromTag(dateString.Value);
+                if (result != null) return true;
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogTrace("error while parsing meta data of file {filePath}: {ex}", filePath, ex);
+            _logger.LogTrace("error while parsing meta data of file {filePath}: {ex}", fileMetaDataHandle.FilePath, ex);
         }
 
-        return null;
+        return false;
     }
 }

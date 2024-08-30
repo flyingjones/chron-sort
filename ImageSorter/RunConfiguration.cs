@@ -2,6 +2,10 @@ namespace ImageSorter;
 
 public class RunConfiguration
 {
+    public required string[]? SortConfiguration { get; set; }
+
+    public bool UseDefaultSortConfiguration => SortConfiguration == null || SortConfiguration.Length == 0;
+    
     public required FileInfo SourcePath { get; set; }
     
     public required FileInfo DestinationPath { get; set; }
