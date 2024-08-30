@@ -1,7 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 
-using  System.CommandLine;
+using System.CommandLine;
 using ImageSorter;
 using ImageSorter.Services.DateParser;
 using ImageSorter.Services.FileHandling;

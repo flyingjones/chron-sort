@@ -40,6 +40,10 @@ Options:
   -?, -h, --help               Show help and usage information
 ````
 
+## Releases
+
+Checkout the [release notes](ReleaseNotes/Releases.md)
+
 ## TODOs
 
 - Better readme

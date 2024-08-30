@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PublishAot>true</PublishAot>
+        <Version>0.0.1.1</Version>
+        <Authors>Jonas Kett</Authors>
     </PropertyGroup>
 
     <ItemGroup>
