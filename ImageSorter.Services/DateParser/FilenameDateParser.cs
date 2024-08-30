@@ -67,17 +67,17 @@ public class FilenameDateParser : IFileNameDateParser
 
         if (!namedCaptureGroups.Contains(YearCaptureGroupName))
         {
-            throw new ArgumentException($"Missing named capture group \"{YearCaptureGroupName}\"");
+            throw new ArgumentException($"Missing named capture group \"{YearCaptureGroupName}\"", nameof(fileNameRegex));
         }
         
         if (!namedCaptureGroups.Contains(MonthCaptureGroupName))
         {
-            throw new ArgumentException($"Missing named capture group \"{MonthCaptureGroupName}\"");
+            throw new ArgumentException($"Missing named capture group \"{MonthCaptureGroupName}\"", nameof(fileNameRegex));
         }
         
         if (!namedCaptureGroups.Contains(DayCaptureGroupName))
         {
-            throw new ArgumentException($"Missing named capture group \"{DayCaptureGroupName}\"");
+            throw new ArgumentException($"Missing named capture group \"{DayCaptureGroupName}\"", nameof(fileNameRegex));
         }
     }
 }
