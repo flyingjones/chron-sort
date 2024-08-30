@@ -82,6 +82,47 @@ public class DestinationWriterTests
         }
     }
 
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task CopyFile_FileExists(bool overwrite)
+    {
+        // arrange
+        const string sourcePath = "source/path/img1.jpg";
+        const string destPath = "dest/path";
+        var date = DateTime.Parse("2024-05-08");
+
+        var directoryMock = _fixture.Freeze<Mock<IDirectoryWrapper>>();
+        var fileMock = _fixture.Freeze<Mock<IFileWrapper>>();
+        fileMock.Setup(x => x.Exists(It.IsAny<string>())).Returns(true);
+        var fileStreamServiceMock = _fixture.Freeze<Mock<IFileStreamService>>();
+        var options = _fixture.Freeze<DestinationWriterOptions>();
+        options.DestinationPath = destPath;
+        options.OverwriteExistingFiles = overwrite;
+
+        _fixture.Inject<IDateDirectory>(_fixture.Create<DateDirectory>());
+        var service = _fixture.Create<DestinationWriter>();
+
+        // act
+        await service.CopyFile(sourcePath, date, default);
+
+        // assert
+        directoryMock.Verify(x => x.CreateDirectory($"{destPath}/2024"), Times.Once);
+        directoryMock.Verify(x => x.CreateDirectory($"{destPath}/2024/05"), Times.Once);
+        fileMock.Verify(x => x.Exists($"{destPath}/2024/05/img1.jpg"), Times.Once);
+
+        if (overwrite)
+        {
+            fileStreamServiceMock.Verify(
+                x => x.CopyToAsync(sourcePath, $"{destPath}/2024/05/img1.jpg", It.IsAny<CancellationToken>()),
+                Times.Once);
+        }
+        else
+        {
+            fileStreamServiceMock.Verify(
+                x => x.CopyToAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        }
+    }
+
     [Test]
     public void MoveFiles()
     {
@@ -133,5 +174,63 @@ public class DestinationWriterTests
         fileMock.Verify(x => x.Move("/source/path/img2.jpg", $"{destPath}/2024/05/img2.jpg", false));
         fileMock.Verify(x => x.Move("/source/path/img3.jpg", $"{destPath}/2024/06/img3.jpg", false));
         fileMock.Verify(x => x.Move("/source/path/img4.jpg", $"{destPath}/2025/06/img4.jpg", false));
+    }
+
+    [Test]
+    public async Task CopyFiles()
+    {
+        // arrange
+        var writeQueue = new[]
+        {
+            new WriteQueueItem
+            {
+                FilePath = "/source/path/img1.jpg", DateTaken = DateTime.Parse("2024-05-01"),
+            },
+            new WriteQueueItem
+            {
+                FilePath = "/source/path/img2.jpg", DateTaken = DateTime.Parse("2024-05-01"),
+            },
+            new WriteQueueItem
+            {
+                FilePath = "/source/path/img3.jpg", DateTaken = DateTime.Parse("2024-06-01"),
+            },
+            new WriteQueueItem
+            {
+                FilePath = "/source/path/img4.jpg", DateTaken = DateTime.Parse("2025-06-01"),
+            }
+        };
+
+        const string destPath = "/dest/path";
+        var directoryMock = _fixture.Freeze<Mock<IDirectoryWrapper>>();
+        var fileMock = _fixture.Freeze<Mock<IFileWrapper>>();
+        fileMock.Setup(x => x.Exists(It.IsAny<string>())).Returns(false);
+        var fileStreamServiceMock = _fixture.Freeze<Mock<IFileStreamService>>();
+        var options = _fixture.Freeze<DestinationWriterOptions>();
+        options.DestinationPath = destPath;
+        options.OverwriteExistingFiles = false;
+        options.From = null;
+        options.To = null;
+
+        _fixture.Inject<IDateDirectory>(_fixture.Create<DateDirectory>());
+        var service = _fixture.Create<DestinationWriter>();
+
+        // act
+        await service.CopyFiles(writeQueue, default);
+
+        // assert
+        directoryMock.Verify(x => x.CreateDirectory($"{destPath}/2024"), Times.Once);
+        directoryMock.Verify(x => x.CreateDirectory($"{destPath}/2024/05"), Times.Once);
+        directoryMock.Verify(x => x.CreateDirectory($"{destPath}/2024/06"), Times.Once);
+        directoryMock.Verify(x => x.CreateDirectory($"{destPath}/2025"), Times.Once);
+        directoryMock.Verify(x => x.CreateDirectory($"{destPath}/2025/06"), Times.Once);
+
+        fileStreamServiceMock.Verify(x =>
+            x.CopyToAsync("/source/path/img1.jpg", $"{destPath}/2024/05/img1.jpg", It.IsAny<CancellationToken>()));
+        fileStreamServiceMock.Verify(x =>
+            x.CopyToAsync("/source/path/img2.jpg", $"{destPath}/2024/05/img2.jpg", It.IsAny<CancellationToken>()));
+        fileStreamServiceMock.Verify(x =>
+            x.CopyToAsync("/source/path/img3.jpg", $"{destPath}/2024/06/img3.jpg", It.IsAny<CancellationToken>()));
+        fileStreamServiceMock.Verify(x =>
+            x.CopyToAsync("/source/path/img4.jpg", $"{destPath}/2025/06/img4.jpg", It.IsAny<CancellationToken>()));
     }
 }
