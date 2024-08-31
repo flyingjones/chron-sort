@@ -1,52 +1,33 @@
 using System.Runtime.InteropServices;
 using Microsoft.Extensions.DependencyInjection;
-using SixLabors.ImageSharp.Metadata.Profiles.Exif;
+using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.DateParser.MetaData;
 
 public static class MetaDataParserServiceCollectionExtension
 {
-    public static IServiceCollection AddMetaDataParsing(this IServiceCollection serviceCollection)
+    public static IServiceCollection AddMetaDataParser(
+        this IServiceCollection serviceCollection,
+        ExifTagId exifTagId,
+        int priority,
+        ILogger<IDateParserImplementation> logger)
     {
-        var options = new MetaDataDateParserOptions
-        {
-            TagOptions = new[]
-            {
-                // see https://learn.microsoft.com/en-us/dotnet/api/system.drawing.imaging.propertyitem.id
-                new MetaDataImageTagOption
-                {
-                    // PropertyTagExifDTOrig
-                    Tag = ExifTag.DateTimeOriginal
-                },
-                new MetaDataImageTagOption
-                {
-                    // PropertyTagExifDTDigitized
-                    Tag = ExifTag.DateTimeDigitized
-                },
-                new MetaDataImageTagOption
-                {
-                    // PropertyTagDateTime
-                    Tag = ExifTag.DateTime
-                }
-            }
-        };
-
-        return serviceCollection.AddMetaDataParsing(options);
-    }
-    
-    public static IServiceCollection AddMetaDataParsing(this IServiceCollection serviceCollection, MetaDataDateParserOptions options)
-    {
-        serviceCollection.AddSingleton(options);
-
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             // MetaDataDateParser uses windows specific apis
-            serviceCollection.AddScoped<IMetaDataDateParser, WindowsMetaDataDateParser>();
+            serviceCollection.AddSingleton<IDateParserImplementation>(new WindowsMetaDataDateParser(exifTagId, priority, logger));
         }
         else
         {
-            serviceCollection.AddScoped<IMetaDataDateParser, OsAgnosticMetaDataDateParser>();
+            serviceCollection.AddSingleton<IDateParserImplementation>(new OsAgnosticMetaDataDateParser(exifTagId, priority, logger));
         }
+        
+        return serviceCollection;
+    }
+    
+    public static IServiceCollection AddFileMetaDataHandleFactory(this IServiceCollection serviceCollection)
+    {
+        serviceCollection.AddSingleton<ILazyFileMetaDataHandleFactory, LazyFileMetaDataHandleFactory>();
 
         return serviceCollection;
     }

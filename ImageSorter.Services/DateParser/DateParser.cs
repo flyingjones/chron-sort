@@ -1,35 +1,52 @@
 using ImageSorter.Services.DateParser.MetaData;
+using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.DateParser;
 
-public class DateParser : IDateParser
+public partial class DateParser : IDateParser
 {
-    private readonly IMetaDataDateParser _metaDataDateParser;
-    private readonly IEnumerable<IFileNameDateParser> _fileNameDateParsers;
+    private readonly IEnumerable<IDateParserImplementation> _dateParserImplementations;
+    private readonly ILogger<DateParser> _logger;
+    private readonly ILazyFileMetaDataHandleFactory _fileMetaDataHandleFactory;
+    private readonly DateParserConfiguration _configuration;
 
-    public DateParser(IMetaDataDateParser metaDataDateParser, IEnumerable<IFileNameDateParser> fileNameDateParsers)
+    public DateParser(IEnumerable<IDateParserImplementation> dateParserImplementations, ILogger<DateParser> logger,
+        ILazyFileMetaDataHandleFactory fileMetaDataHandleFactory, DateParserConfiguration configuration)
     {
-        _metaDataDateParser = metaDataDateParser;
-        _fileNameDateParsers = fileNameDateParsers;
+        _dateParserImplementations = dateParserImplementations.OrderBy(x => x.Priority);
+        _logger = logger;
+        _fileMetaDataHandleFactory = fileMetaDataHandleFactory;
+        _configuration = configuration;
     }
 
-    public async Task<DateTime> ParseDate(string filePath)
+
+    public DateTime ParseDate(string filePath)
     {
-        var resultFromMetaData = await _metaDataDateParser.ParseDate(filePath);
+        using var metaDataHandle = _fileMetaDataHandleFactory.CreateHandle(filePath);
 
-        if (resultFromMetaData != null) return resultFromMetaData.Value;
-
-        var parsedPath = new FileInfo(filePath);
-        var fileName = parsedPath.Name;
-        
-        foreach (var fileNameParser in _fileNameDateParsers.OrderBy(x => x.Priority))
+        foreach (var dateParserImpl in _dateParserImplementations)
         {
-            if (fileNameParser.TryParseDateFromFileName(fileName, out var dateTime))
+            if (dateParserImpl.TryParseDate(metaDataHandle, out var result))
             {
-                return dateTime.Value;
+                LogResult(filePath, dateParserImpl.Name, result.Value);
+
+                if (result.Value >= _configuration.SkipParserBefore &&
+                    result.Value <= _configuration.SkipParserAfter)
+                {
+                    return result.Value;
+                }
+                LogSkippedParser(dateParserImpl.Name, filePath, _configuration.SkipParserBefore, result.Value, _configuration.SkipParserAfter);
             }
         }
         
-        return File.GetLastWriteTime(filePath);
+        var resultFromFallback = File.GetLastWriteTime(filePath);
+        LogResult(filePath, "<file system last write time>", resultFromFallback);
+        return resultFromFallback;
     }
+
+    [LoggerMessage(LogLevel.Debug, Message = "Parser {usedParser} skipped for {filePath} because of suspicious result: {found:yyyy-MM-dd} not element of [{min:yyyy-MM-dd}, {max:yyyy-MM-dd}]")]
+    private partial void LogSkippedParser(string usedParser, string filePath, DateTime min, DateTime found, DateTime max);
+
+    [LoggerMessage(LogLevel.Trace, Message = "Parsing date of file {filePath} using {usedParser}: {result:o}")]
+    private partial void LogResult(string filePath, string usedParser, DateTime result);
 }
