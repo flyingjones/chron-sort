@@ -55,7 +55,7 @@ public partial class WindowsMetaDataDateParser : IDateParserImplementation
         return false;
     }
 
-    [LoggerMessage(Level = LogLevel.Trace, Message = "Error while parsing meta data of file")]
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Error while parsing meta data of file")]
     private partial void LogMetaDataParsingError(Exception exception);
 }
 #pragma warning restore CA1416

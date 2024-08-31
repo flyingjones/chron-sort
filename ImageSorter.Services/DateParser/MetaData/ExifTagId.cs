@@ -1,6 +1,6 @@
 namespace ImageSorter.Services.DateParser.MetaData;
 
-public enum ExifTagId
+public enum ExifTagId : ushort
 {
     /// <summary>
     /// Date and time of image creation.

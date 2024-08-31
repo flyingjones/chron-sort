@@ -4,20 +4,16 @@
 using System.CommandLine;
 using ImageSorter;
 using ImageSorter.Services.DateParser;
+using ImageSorter.Services.DateParser.MetaData;
 using ImageSorter.Services.FileHandling;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-var description = @"Sorts images chronologically in the directory structure year/month
-Will use the following clues to determine a date for each file in order:
-
-- Exif Tag DateTimeOriginal  (0x9003)
-- Exif Tag DateTimeDigitized (0x9004)
-- Exif Tag DateTime          (0x0132)
-- Regex for file name: .*(?<year>20[0-9]{2}|19[0-9]{2})-(?<month>0[0-9]|1[0-9])-(?<day>0[0-9]|1[0-9]|2[0-9]|3[0-1]).* : detects yyyy-mm-dd
-- Regex for file name: .*(?<year>20[0-9]{2}|19[0-9]{2})(?<month>0[0-9]|1[0-9])(?<day>0[0-9]|1[0-9]|2[0-9]|3[0-1]).*   : detects yyyymmdd
-- Last edit date from file system
-";
+var description = $"""
+                   Sorts images chronologically in the directory structure year/month
+                   Default sort configuration (change with --configure):
+                   {string.Join(Environment.NewLine, SortConfigurationFactory.DefaultSorting)}
+                   """;
 
 var rootCommand = new RootCommand(description: description);
 var sourceArgument = new Argument<FileInfo>("source path", "The path of the source directory");
@@ -37,14 +33,20 @@ var fromOption = new Option<DateTime?>(aliases: new[] { "--from" }, description:
 var toOption = new Option<DateTime?>(aliases: new[] { "--to" }, description: "Maximum date for files to sort");
 var progressOption = new Option<int?>(aliases: new[] { "--progress-at" },
     description: "Processed file count after which a progress update is printed", getDefaultValue: () => 1000);
-// TODO more description
-var sortConfiguration =
-    new Option<string[]>(aliases: new[] { "-c", "--configure" }, description: "custom sort configuration");
+var sortConfiguration = new Option<string[]>(
+    aliases: new[] { "-c", "--configure" },
+    description: $"""
+                  Custom sort configuration. Parsers will be applied in order. Possible Formats:
+                  {SortType.ExifTag:G}:{ExifTagId.DateTimeOriginal:G}                                       [Tries to use the exif tag 0x{ExifTagId.DateTimeOriginal:X} to get a date]
+                  {SortType.ExifTag:G}:{ExifTagId.DateTimeDigitized:G}                                      [Tries to use the exif tag 0x{ExifTagId.DateTimeDigitized:X} to get a date]
+                  {SortType.ExifTag:G}:{ExifTagId.DateTime:G}                                               [Tries to use the exif tag 0x{ExifTagId.DateTime:X} to get a date]
+                  {SortType.FileName:G}:<Regex with named capture groups year month and day>  [Tries to parse the file name using a regular expression to get a date]
+                  """);
 var logLevelOption = new Option<LogLevel>(aliases: new[] { "--log-level" }, description: "Log Level",
     getDefaultValue: () => LogLevel.Information);
 var verboseOption = new Option<bool>(new[] { "-v", "--verbose" }, description: "Same as --log-level Trace");
 var preferFileNameParsingOption = new Option<bool>(new[] { "--fast-scan", "--prefer-file-name-parsing" },
-    description: "Prefer FileName parsers over ExifTag parsers (which is faster since there is less I/O)");
+    description: "Prefer FileName parsers over ExifTag parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)");
 rootCommand.AddOption(sortConfiguration);
 rootCommand.AddOption(preferFileNameParsingOption);
 rootCommand.AddOption(logLevelOption);

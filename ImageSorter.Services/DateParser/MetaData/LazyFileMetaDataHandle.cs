@@ -70,6 +70,6 @@ public partial class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
         GC.SuppressFinalize(this);
     }
 
-    [LoggerMessage(LogLevel.Trace, "An exception occurred while trying to perform {propertyName} for {filePath}")]
+    [LoggerMessage(LogLevel.Debug, "An exception occurred while trying to perform {propertyName} for {filePath}")]
     private partial void LogError(Exception exception, string filePath, string propertyName);
 }
