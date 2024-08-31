@@ -15,7 +15,7 @@ public class FileNameDateParserTests
     public string? TryParseDateFromFileName([StringSyntax(StringSyntaxAttribute.Regex)] string fileNameRegex, string fileName)
     {
         // arrange
-        var parser = new FilenameDateParser(fileNameRegex, 0, DateTime.MaxValue);
+        var parser = new FilenameDateParser(fileNameRegex, 0);
         
         // act
         var result = parser.TryParseDateFromFileName(fileName, out var resultingDate);
@@ -38,7 +38,7 @@ public class FileNameDateParserTests
     {
         var exception = Assert.Throws<ArgumentException>(() =>
         {
-            var filenameDateParser = new FilenameDateParser(fileNameRegex, 0, DateTime.MaxValue);
+            var filenameDateParser = new FilenameDateParser(fileNameRegex, 0);
         });
 
         exception.Should().NotBeNull();

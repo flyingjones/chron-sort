@@ -2,5 +2,8 @@ namespace ImageSorter.Services.DateParser;
 
 public interface IDateParser
 {
-    Task<DateTime> ParseDate(string filePath);
+    /// <summary>
+    /// Uses all registered instances of the <see cref="IDateParserImplementation"/> to find a date for a file path
+    /// </summary>
+    DateTime ParseDate(string filePath);
 }
