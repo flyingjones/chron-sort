@@ -78,9 +78,3 @@ For x64 modern Windows: ``dotnet publish -r win-x64 -c Release``
 For x64 linux: ``dotnet publish -r linux-x64 -c Release``
 
 (You need to be on the correct platform for that).
-
-## TODOs
-
-- Better readme
-- Add support for user provided regex for parsing file names
-- Add support for more customization (after what should be sorted in which order)
