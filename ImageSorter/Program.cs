@@ -59,21 +59,28 @@ var skipParserWhenDateAfterOption = new Option<DateTime>(
     description: "Skip the result of a parser when the resulting date is later",
     getDefaultValue: () => DateTime.Now.Date.AddYears(1));
 
-rootCommand.AddOption(skipParserWhenDateBeforeOption);
-rootCommand.AddOption(skipParserWhenDateAfterOption);
-
-rootCommand.AddOption(sortConfiguration);
-rootCommand.AddOption(preferFileNameParsingOption);
-rootCommand.AddOption(logLevelOption);
-rootCommand.AddOption(verboseOption);
+// args
 rootCommand.AddArgument(sourceArgument);
+
+// options
+// main settings
 rootCommand.AddOption(destinationOption);
 rootCommand.AddOption(inPlaceOption);
-rootCommand.AddOption(fileEndingsOption);
 rootCommand.AddOption(overwriteOption);
+// parser config
+rootCommand.AddOption(sortConfiguration);
+rootCommand.AddOption(skipParserWhenDateBeforeOption);
+rootCommand.AddOption(skipParserWhenDateAfterOption);
+// file filter
+rootCommand.AddOption(fileEndingsOption);
 rootCommand.AddOption(fromOption);
 rootCommand.AddOption(toOption);
+// optimizations
+rootCommand.AddOption(preferFileNameParsingOption);
 rootCommand.AddOption(parallelScanningOption);
+// logging
+rootCommand.AddOption(logLevelOption);
+rootCommand.AddOption(verboseOption);
 rootCommand.AddOption(progressOption);
 
 rootCommand.SetHandler(async (context) =>
