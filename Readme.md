@@ -46,6 +46,17 @@ Options:
 
 Checkout the [release notes](ReleaseNotes/Releases.md)
 
+## Build it yourself
+
+The executable can be built using the command 
+``dotnet publish -r <target> -c Release``
+
+For x64 modern Windows: ``dotnet publish -r win-x64 -c Release``
+
+For x64 linux: ``dotnet publish -r linux-x64 -c Release``
+
+(You need to be on the correct platform for that).
+
 ## TODOs
 
 - Better readme

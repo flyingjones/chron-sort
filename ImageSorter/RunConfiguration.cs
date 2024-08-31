@@ -5,6 +5,8 @@ namespace ImageSorter;
 public class RunConfiguration
 {
     public required string[]? SortConfiguration { get; set; }
+    
+    public required bool PreferFileNameParsing { get; set; }
 
     public bool UseDefaultSortConfiguration => SortConfiguration == null || SortConfiguration.Length == 0;
     

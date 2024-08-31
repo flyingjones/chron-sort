@@ -7,7 +7,9 @@ namespace ImageSorter;
 
 public static class SortConfigurationFactory
 {
-    public static IServiceCollection ConfigureSorting(this IServiceCollection serviceCollection, string[] sortConfig)
+    public static IServiceCollection ConfigureSorting(
+        this IServiceCollection serviceCollection,
+        string[] sortConfig)
     {
         var priority = 0;
 
@@ -43,8 +45,8 @@ public static class SortConfigurationFactory
 
         return serviceCollection;
     }
-    
-    public static string[] DefaultSorting = new[]
+
+    public static readonly string[] DefaultSorting = new[]
     {
         $"{SortType.ExifTag:G}:{ExifTagId.DateTimeOriginal:G}",
         $"{SortType.ExifTag:G}:{ExifTagId.DateTimeDigitized:G}",

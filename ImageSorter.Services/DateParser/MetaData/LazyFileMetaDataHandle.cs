@@ -1,10 +1,13 @@
+using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using Image = System.Drawing.Image;
 
 namespace ImageSorter.Services.DateParser.MetaData;
 
-public class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
+public partial class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
 {
+    private readonly ILogger<LazyFileMetaDataHandle> _logger;
+
     public required string FilePath { get; init; }
 
     private bool _imageInfoLoadFailed = false;
@@ -13,6 +16,11 @@ public class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
     private bool _imageLoadFailed = false;
     private Image? _image;
     private FileStream? _fileStream;
+
+    public LazyFileMetaDataHandle(ILogger<LazyFileMetaDataHandle> logger)
+    {
+        _logger = logger;
+    }
 
     public ImageInfo? GetOrLoadImageInfo()
     {
@@ -24,8 +32,9 @@ public class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
             _imageInfo = SixLabors.ImageSharp.Image.Identify(FilePath);
             return _imageInfo;
         }
-        catch (Exception _)
+        catch (Exception ex)
         {
+            LogError(ex, FilePath, "SixLabors.ImageSharp.Image.Identify");
             _imageInfoLoadFailed = true;
             return null;
         }
@@ -43,8 +52,9 @@ public class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
             _image = Image.FromStream(_fileStream, false, false);
             return _image;
         }
-        catch (Exception _)
+        catch (Exception ex)
         {
+            LogError(ex, FilePath, "Image.FromStream");
             _imageLoadFailed = true;
             return null;
         }
@@ -59,4 +69,7 @@ public class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
 #pragma warning restore CA1416
         GC.SuppressFinalize(this);
     }
+
+    [LoggerMessage(LogLevel.Trace, "An exception occurred while trying to perform {propertyName} for {filePath}")]
+    private partial void LogError(Exception exception, string filePath, string propertyName);
 }

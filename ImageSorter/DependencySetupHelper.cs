@@ -18,6 +18,16 @@ public static class DependencySetupHelper
         {
             configuration.SortConfiguration = SortConfigurationFactory.DefaultSorting;
         }
+
+        if (configuration.PreferFileNameParsing)
+        {
+            configuration.SortConfiguration = configuration.SortConfiguration!
+                .GroupBy(x => x.Split(':', 2)[0], x => x)
+                .OrderBy(x => x.Key == $"{SortType.FileName:G}" ? 0 : 1)
+                .SelectMany(x => x)
+                .ToArray();
+        }
+        
         serviceCollection.ConfigureSorting(configuration.SortConfiguration!);
         
         serviceCollection.AddDestinationWriter(new DestinationWriterOptions

@@ -43,7 +43,10 @@ var sortConfiguration =
 var logLevelOption = new Option<LogLevel>(aliases: new[] { "--log-level" }, description: "Log Level",
     getDefaultValue: () => LogLevel.Information);
 var verboseOption = new Option<bool>(new[] { "-v", "--verbose" }, description: "Same as --log-level Trace");
+var preferFileNameParsingOption = new Option<bool>(new[] { "--fast-scan", "--prefer-file-name-parsing" },
+    description: "Prefer FileName parsers over ExifTag parsers (which is faster since there is less I/O)");
 rootCommand.AddOption(sortConfiguration);
+rootCommand.AddOption(preferFileNameParsingOption);
 rootCommand.AddOption(logLevelOption);
 rootCommand.AddOption(verboseOption);
 rootCommand.AddArgument(sourceArgument);
@@ -71,6 +74,7 @@ rootCommand.SetHandler(async (context) =>
     var runConfig = new RunConfiguration
     {
         SortConfiguration = parsedContext.GetValueForOption(sortConfiguration),
+        PreferFileNameParsing = parsedContext.GetValueForOption(preferFileNameParsingOption),
         SourcePath = parsedContext.GetValueForArgument(sourceArgument),
         DestinationPath = destPath ?? parsedContext.GetValueForArgument(sourceArgument),
         MoveFiles = parsedContext.GetValueForOption(inPlaceOption),
