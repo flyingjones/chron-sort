@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace ImageSorter;
 
 public class RunConfiguration
@@ -25,4 +27,6 @@ public class RunConfiguration
     public required bool ScanParallel { get; set; }
     
     public int? ProgressAt { get; set; }
+    
+    public LogLevel LogLevel { get; set; }
 }

@@ -10,16 +10,16 @@ public static class MetaDataParserServiceCollectionExtension
         this IServiceCollection serviceCollection,
         ExifTagId exifTagId,
         int priority,
-        ILogger<IMetaDataDateParser> logger)
+        ILogger<IDateParserImplementation> logger)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             // MetaDataDateParser uses windows specific apis
-            serviceCollection.AddSingleton<IMetaDataDateParser>(new WindowsMetaDataDateParser(exifTagId, priority, logger));
+            serviceCollection.AddSingleton<IDateParserImplementation>(new WindowsMetaDataDateParser(exifTagId, priority, logger));
         }
         else
         {
-            serviceCollection.AddSingleton<IMetaDataDateParser>(new OsAgnosticMetaDataDateParser(exifTagId, priority, logger));
+            serviceCollection.AddSingleton<IDateParserImplementation>(new OsAgnosticMetaDataDateParser(exifTagId, priority, logger));
         }
         
         return serviceCollection;
@@ -27,15 +27,7 @@ public static class MetaDataParserServiceCollectionExtension
     
     public static IServiceCollection AddFileMetaDataHandleFactory(this IServiceCollection serviceCollection)
     {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // MetaDataDateParser uses windows specific apis
-            serviceCollection.AddScoped<IFileMetaDataHandleFactory, WindowsFileMetaDataHandleFactory>();
-        }
-        else
-        {
-            serviceCollection.AddScoped<IFileMetaDataHandleFactory, OsAgnosticMetaDataHandlerFactory>();
-        }
+        serviceCollection.AddSingleton<ILazyFileMetaDataHandleFactory, LazyFileMetaDataHandleFactory>();
 
         return serviceCollection;
     }

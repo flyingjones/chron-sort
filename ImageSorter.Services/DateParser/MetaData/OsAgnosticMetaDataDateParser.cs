@@ -1,36 +1,39 @@
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
+using SixLabors.ImageSharp;
 
 namespace ImageSorter.Services.DateParser.MetaData;
 
-public class OsAgnosticMetaDataDateParser : IMetaDataDateParser
+public partial class OsAgnosticMetaDataDateParser : IDateParserImplementation
 {
     public int Priority { get; }
 
     private readonly ExifTagId _exifTagId;
-    private readonly ILogger<IMetaDataDateParser> _logger;
+    private readonly ILogger<IDateParserImplementation> _logger;
 
-    public OsAgnosticMetaDataDateParser(ExifTagId exifTagId, int priority, ILogger<IMetaDataDateParser> logger)
+    public OsAgnosticMetaDataDateParser(ExifTagId exifTagId, int priority, ILogger<IDateParserImplementation> logger)
     {
         _exifTagId = exifTagId;
         Priority = priority;
         _logger = logger;
     }
 
-    public bool TryParseDate(FileMetaDataHandle fileMetaDataHandle, [NotNullWhen(true)] out DateTime? result)
+    public string Name => $"ExifTag:{_exifTagId:G}";
+
+    public bool TryParseDate(ILazyFileMetaDataHandle fileHandle, [NotNullWhen(true)] out DateTime? result)
+    {
+        var imageInfo = fileHandle.GetOrLoadImageInfo();
+        result = null;
+        if (imageInfo == null) return false;
+
+        return TryParseDate(imageInfo, out result);
+    }
+
+    public bool TryParseDate(ImageInfo imageInfo, [NotNullWhen(true)] out DateTime? result)
     {
         result = null;
-        if (fileMetaDataHandle.LoadFailed)
-        {
-            return false;
-        }
-        
-        
         try
         {
-            var imageInfo = fileMetaDataHandle.ImageInfo!;
-
-
             if (imageInfo.Metadata.ExifProfile == null) return false;
 
             var mappedTag = ExifTagHelper.FromTagId(_exifTagId);
@@ -47,9 +50,12 @@ public class OsAgnosticMetaDataDateParser : IMetaDataDateParser
         }
         catch (Exception ex)
         {
-            _logger.LogTrace("error while parsing meta data of file {filePath}: {ex}", fileMetaDataHandle.FilePath, ex);
+            LogMetaDataParsingError(ex);
         }
 
         return false;
     }
+
+    [LoggerMessage(Level = LogLevel.Trace, Message = "Error while parsing meta data of file")]
+    private partial void LogMetaDataParsingError(Exception exception);
 }

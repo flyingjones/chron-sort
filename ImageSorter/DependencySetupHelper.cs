@@ -12,7 +12,7 @@ public static class DependencySetupHelper
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddDateParsing();
-        serviceCollection.AddStopwatchLogger();
+        serviceCollection.AddStopwatchLogger(configuration.LogLevel);
         serviceCollection.AddFileMetaDataHandleFactory();
         if (configuration.UseDefaultSortConfiguration)
         {

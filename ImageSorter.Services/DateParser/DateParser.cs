@@ -1,81 +1,41 @@
 using ImageSorter.Services.DateParser.MetaData;
+using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.DateParser;
 
-public class DateParser : IDateParser
+public partial class DateParser : IDateParser
 {
-    private readonly IFileMetaDataHandleFactory _fileMetaDataHandleFactory;
-    private readonly IMetaDataDateParser[] _metaDataDateParsers;
-    private readonly IFileNameDateParser[] _fileNameDateParsers;
+    private readonly IEnumerable<IDateParserImplementation> _dateParserImplementations;
+    private readonly ILogger<DateParser> _logger;
+    private readonly ILazyFileMetaDataHandleFactory _fileMetaDataHandleFactory;
 
-    public DateParser(IEnumerable<IMetaDataDateParser> metaDataDateParsers,
-        IEnumerable<IFileNameDateParser> fileNameDateParsers, IFileMetaDataHandleFactory fileMetaDataHandleFactory)
+    public DateParser(IEnumerable<IDateParserImplementation> dateParserImplementations, ILogger<DateParser> logger,
+        ILazyFileMetaDataHandleFactory fileMetaDataHandleFactory)
     {
+        _dateParserImplementations = dateParserImplementations.OrderBy(x => x.Priority);
+        _logger = logger;
         _fileMetaDataHandleFactory = fileMetaDataHandleFactory;
-        _metaDataDateParsers = metaDataDateParsers.OrderBy(x => x.Priority).ToArray();
-        _fileNameDateParsers = fileNameDateParsers.OrderBy(x => x.Priority).ToArray();
     }
 
-    public async Task<DateTime> ParseDate(string filePath)
+
+    public DateTime ParseDate(string filePath)
     {
-        var orderedMetaDataParserIndex = 0;
-        var orderedFileNameParserIndex = 0;
+        using var metaDataHandle = _fileMetaDataHandleFactory.CreateHandle(filePath);
 
-        var currentMetaDataParser = orderedMetaDataParserIndex < _metaDataDateParsers.Length
-            ? _metaDataDateParsers[orderedMetaDataParserIndex]
-            : null;
-
-        var currentFileNameParser = orderedFileNameParserIndex < _fileNameDateParsers.Length
-            ? _fileNameDateParsers[orderedFileNameParserIndex]
-            : null;
-
-        FileMetaDataHandle? metaDataFileHandle = null;
-        try
+        foreach (var dateParserImpl in _dateParserImplementations)
         {
-            while (currentMetaDataParser != null || currentFileNameParser != null)
+            if (dateParserImpl.TryParseDate(metaDataHandle, out var result))
             {
-                if (currentMetaDataParser != null &&
-                    (currentMetaDataParser.Priority < currentFileNameParser?.Priority || currentFileNameParser == null))
-                {
-                    if (metaDataFileHandle == null)
-                    {
-                        metaDataFileHandle = await _fileMetaDataHandleFactory.CreateHandle(filePath);
-                    }
-
-                    if (currentMetaDataParser.TryParseDate(metaDataFileHandle, out var result))
-                    {
-                        return result.Value;
-                    }
-
-                    orderedMetaDataParserIndex++;
-                    currentMetaDataParser = orderedMetaDataParserIndex < _metaDataDateParsers.Length
-                        ? _metaDataDateParsers[orderedMetaDataParserIndex]
-                        : null;
-                }
-                else if (currentFileNameParser != null)
-                {
-                    if (currentFileNameParser.TryParseDateFromFileName(filePath, out var result))
-                    {
-                        return result.Value;
-                    }
-
-                    orderedFileNameParserIndex++;
-                    currentFileNameParser = orderedFileNameParserIndex < _fileNameDateParsers.Length
-                        ? _fileNameDateParsers[orderedFileNameParserIndex]
-                        : null;
-                }
-                else
-                {
-                    // shouldn't happen I think
-                    break;
-                }
+                LogResult(filePath, dateParserImpl.Name, result.Value);
+                return result.Value;
             }
         }
-        finally
-        {
-            metaDataFileHandle?.Dispose();
-        }
-
-        return File.GetLastWriteTime(filePath);
+        
+        var resultFromFallback = File.GetLastWriteTime(filePath);
+        LogResult(filePath, "<file system last write time>", resultFromFallback);
+        return resultFromFallback;
     }
+
+    [LoggerMessage(LogLevel.Trace, Message = "Parsing date of file {filePath} using {usedParser}: {result:o}")]
+    private partial void LogResult(string filePath, string usedParser, DateTime result);
 }

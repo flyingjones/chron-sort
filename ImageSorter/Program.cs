@@ -21,7 +21,7 @@ Will use the following clues to determine a date for each file in order:
 
 var rootCommand = new RootCommand(description: description);
 var sourceArgument = new Argument<FileInfo>("source path", "The path of the source directory");
-var destinationOption = new Option<FileInfo?>(aliases: new[] { "--dest" },
+var destinationOption = new Option<FileInfo?>(aliases: new[] { "--dest", "--out" },
     description: "The path of the destination directory (required if not --move)");
 var inPlaceOption = new Option<bool>(aliases: new[] { "--move" }, description: "Move files instead of copy",
     getDefaultValue: () => false);
@@ -40,7 +40,12 @@ var progressOption = new Option<int?>(aliases: new[] { "--progress-at" },
 // TODO more description
 var sortConfiguration =
     new Option<string[]>(aliases: new[] { "-c", "--configure" }, description: "custom sort configuration");
+var logLevelOption = new Option<LogLevel>(aliases: new[] { "--log-level" }, description: "Log Level",
+    getDefaultValue: () => LogLevel.Information);
+var verboseOption = new Option<bool>(new[] { "-v", "--verbose" }, description: "Same as --log-level Trace");
 rootCommand.AddOption(sortConfiguration);
+rootCommand.AddOption(logLevelOption);
+rootCommand.AddOption(verboseOption);
 rootCommand.AddArgument(sourceArgument);
 rootCommand.AddOption(destinationOption);
 rootCommand.AddOption(inPlaceOption);
@@ -74,7 +79,10 @@ rootCommand.SetHandler(async (context) =>
         From = parsedContext.GetValueForOption(fromOption),
         To = parsedContext.GetValueForOption(toOption),
         ScanParallel = parsedContext.GetValueForOption(parallelScanningOption),
-        ProgressAt = parsedContext.GetValueForOption(progressOption)
+        ProgressAt = parsedContext.GetValueForOption(progressOption),
+        LogLevel = parsedContext.GetValueForOption(verboseOption)
+            ? LogLevel.Trace
+            : parsedContext.GetValueForOption(logLevelOption)
     };
 
     var serviceProvider = runConfig.SetupServices().BuildServiceProvider();

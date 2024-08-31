@@ -11,7 +11,7 @@ public static class SortConfigurationFactory
     {
         var priority = 0;
 
-        var logger = serviceCollection.BuildServiceProvider().GetRequiredService<ILogger<IMetaDataDateParser>>();
+        var logger = serviceCollection.BuildServiceProvider().GetRequiredService<ILogger<IDateParserImplementation>>();
 
         foreach (var configEntry in sortConfig)
         {
@@ -34,7 +34,7 @@ public static class SortConfigurationFactory
             else if (sortType == SortType.FileName)
             {
                 var ignoresAfter = DateTime.Now.Date.AddYears(1);
-                serviceCollection.AddSingleton<IFileNameDateParser>(new FilenameDateParser(splat[1], priority,
+                serviceCollection.AddSingleton<IDateParserImplementation>(new FilenameDateParser(splat[1], priority,
                     ignoresAfter));
             }
 

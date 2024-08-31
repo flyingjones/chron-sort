@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
@@ -8,47 +9,53 @@ namespace ImageSorter.Services.DateParser.MetaData;
 /// only works on windows -> disable warning that this only works on windows
 /// </summary>
 #pragma warning disable CA1416
-public class WindowsMetaDataDateParser : IMetaDataDateParser
+public partial class WindowsMetaDataDateParser : IDateParserImplementation
 {
     public int Priority { get; }
 
     private readonly ExifTagId _exifTagId;
-    private readonly ILogger<IMetaDataDateParser> _logger;
+    private readonly ILogger<IDateParserImplementation> _logger;
 
-    public WindowsMetaDataDateParser(ExifTagId exifTagId, int priority, ILogger<IMetaDataDateParser> logger)
+    public WindowsMetaDataDateParser(ExifTagId exifTagId, int priority, ILogger<IDateParserImplementation> logger)
     {
         _exifTagId = exifTagId;
         Priority = priority;
         _logger = logger;
     }
 
-    public bool TryParseDate(FileMetaDataHandle fileMetaDataHandle, [NotNullWhen(true)] out DateTime? result)
+    public string Name => $"ExifTag:{_exifTagId:G}";
+
+    public bool TryParseDate(ILazyFileMetaDataHandle fileHandle, [NotNullWhen(true)] out DateTime? result)
+    {
+        var image = fileHandle.GetOrLoadImage();
+        result = null;
+        if (image == null) return false;
+
+        return TryParseDate(image, out result);
+    }
+
+    public bool TryParseDate(Image image, [NotNullWhen(true)] out DateTime? result)
     {
         result = null;
-        if (fileMetaDataHandle.LoadFailed)
-        {
-            return false;
-        }
-        
         try
         {
-            var image = fileMetaDataHandle.Image!;
-
-            if (image.PropertyIdList.Contains((int)_exifTagId)) ;
+            var property = image.PropertyItems.FirstOrDefault(x => x.Id == (int)_exifTagId);
+            if (property != null)
             {
-                var propertyItem = image.GetPropertyItem((int)_exifTagId);
-                var propertyValue = Encoding.UTF8.GetString(propertyItem?.Value ?? Array.Empty<byte>());
+                var propertyValue = Encoding.UTF8.GetString(property.Value ?? Array.Empty<byte>());
                 result = MetaDataParserHelpers.ParseDateFromTag(propertyValue);
                 if (result != null) return true;
             }
         }
         catch (Exception ex)
         {
-            _logger.LogTrace("error while parsing meta data of file {filePath}: {ex}", fileMetaDataHandle.FilePath, ex);
+            LogMetaDataParsingError(ex);
         }
 
         return false;
     }
-}
 
+    [LoggerMessage(Level = LogLevel.Trace, Message = "Error while parsing meta data of file")]
+    private partial void LogMetaDataParsingError(Exception exception);
+}
 #pragma warning restore CA1416

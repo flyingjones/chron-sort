@@ -1,9 +1,10 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using ImageSorter.Services.DateParser.MetaData;
 
 namespace ImageSorter.Services.DateParser;
 
-public class FilenameDateParser : IFileNameDateParser
+public class FilenameDateParser : IFileNameDateParser, IDateParserImplementation
 {
     public int Priority { get; }
     private readonly DateTime _ignoreAfter;
@@ -32,6 +33,13 @@ public class FilenameDateParser : IFileNameDateParser
         _fileNameRegex = new Regex(fileNameRegex);
 
         ThrowIfRegexInvalid(_fileNameRegex);
+    }
+
+    public string Name => $"FileName:{_fileNameRegex}";
+    
+    public bool TryParseDate(ILazyFileMetaDataHandle fileHandle, [NotNullWhen(true)] out DateTime? result)
+    {
+        return TryParseDateFromFileName(fileHandle.FilePath, out result);
     }
 
     public bool TryParseDateFromFileName(string fileName, [NotNullWhen(true)] out DateTime? parsedDate)

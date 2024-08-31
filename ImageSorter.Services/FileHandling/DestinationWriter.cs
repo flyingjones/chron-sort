@@ -32,13 +32,17 @@ public partial class DestinationWriter : IDestinationWriter
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = $"{monthPath}/{fileName}";
+        LogWriting("Copying", sourcePath, destinationPath);
         try
         {
-            if (_fileWrapper.Exists(destinationPath) && !_options.OverwriteExistingFiles)
+            var fileExists = _fileWrapper.Exists(destinationPath);
+            if (fileExists && !_options.OverwriteExistingFiles)
             {
+                LogSkip();
                 return;
             }
 
+            if (fileExists) LogOverwrite();
             await _fileStreamService.CopyToAsync(sourcePath, destinationPath, cancellationToken);
         }
         catch (Exception ex)
@@ -52,16 +56,19 @@ public partial class DestinationWriter : IDestinationWriter
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = $"{monthPath}/{fileName}";
-
+        LogWriting("Moving", sourcePath, destinationPath);
         if (sourcePath == destinationPath) return;
 
         try
         {
-            if (_fileWrapper.Exists(destinationPath) && !_options.OverwriteExistingFiles)
+            var fileExists = _fileWrapper.Exists(destinationPath);
+            if (fileExists && !_options.OverwriteExistingFiles)
             {
+                LogSkip();
                 return;
             }
-
+            
+            if (fileExists) LogOverwrite();
             _fileWrapper.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
         }
         catch (Exception ex)
@@ -197,11 +204,21 @@ public partial class DestinationWriter : IDestinationWriter
         return stringBuilder.ToString();
     }
 
+    [LoggerMessage(Level = LogLevel.Trace, Message = "Skipping file since it already exists at the destination")]
+    private partial void LogSkip();
+    
+    [LoggerMessage(Level = LogLevel.Trace, Message = "Overwriting existing file")]
+    private partial void LogOverwrite();
+
+    [LoggerMessage(Level = LogLevel.Trace, Message = "{operation} {sourcePath} to {destinationPath}")]
+    private partial void LogWriting(string operation, string sourcePath, string destinationPath);
+
     [LoggerMessage(Level = LogLevel.Error,
         Message = "Could not write file {sourcePath} to {destinationPath}")]
     private partial void LogError(Exception exception, string sourcePath, string destinationPath);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Total Progress: {index}/{totalCount} ({progressPercentage:00}%)")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Total Progress: {index}/{totalCount} ({progressPercentage:00}%)")]
     private partial void LogProgress(int index, int totalCount, double progressPercentage);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Processing year {year} ({count} files)")]

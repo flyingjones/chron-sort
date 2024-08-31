@@ -20,7 +20,7 @@ public class SequentialDateParsingHandler : IDateParsingHandler
         var index = 0;
         foreach (var filePath in filePaths)
         {
-            var dateTaken = await _dateParser.ParseDate(filePath);
+            var dateTaken = await Task.Run(() => _dateParser.ParseDate(filePath), cancellationToken);
             result[index++] = new WriteQueueItem
             {
                 DateTaken = dateTaken,
