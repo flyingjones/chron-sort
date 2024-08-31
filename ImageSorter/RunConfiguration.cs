@@ -31,4 +31,8 @@ public class RunConfiguration
     public int? ProgressAt { get; set; }
     
     public LogLevel LogLevel { get; set; }
+    
+    public required DateTime SkipParserBefore { get; set; }
+    
+    public required DateTime SkipParserAfter { get; set; }
 }

@@ -35,9 +35,7 @@ public static class SortConfigurationFactory
             }
             else if (sortType == SortType.FileName)
             {
-                var ignoresAfter = DateTime.Now.Date.AddYears(1);
-                serviceCollection.AddSingleton<IDateParserImplementation>(new FilenameDateParser(splat[1], priority,
-                    ignoresAfter));
+                serviceCollection.AddSingleton<IDateParserImplementation>(new FilenameDateParser(splat[1], priority));
             }
 
             priority++;

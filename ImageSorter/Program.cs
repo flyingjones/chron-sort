@@ -46,7 +46,22 @@ var logLevelOption = new Option<LogLevel>(aliases: new[] { "--log-level" }, desc
     getDefaultValue: () => LogLevel.Information);
 var verboseOption = new Option<bool>(new[] { "-v", "--verbose" }, description: "Same as --log-level Trace");
 var preferFileNameParsingOption = new Option<bool>(new[] { "--fast-scan", "--prefer-file-name-parsing" },
-    description: "Prefer FileName parsers over ExifTag parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)");
+    description:
+    "Prefer FileName parsers over ExifTag parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)");
+
+var skipParserWhenDateBeforeOption = new Option<DateTime>(
+    aliases: new[] { "--skip-parser-when-before" },
+    description: "Skip the result of a parser when the resulting date is earlier",
+    getDefaultValue: () => DateTime.Parse("1900-01-01"));
+
+var skipParserWhenDateAfterOption = new Option<DateTime>(
+    aliases: new[] { "--skip-parser-when-after" },
+    description: "Skip the result of a parser when the resulting date is later",
+    getDefaultValue: () => DateTime.Now.Date.AddYears(1));
+
+rootCommand.AddOption(skipParserWhenDateBeforeOption);
+rootCommand.AddOption(skipParserWhenDateAfterOption);
+
 rootCommand.AddOption(sortConfiguration);
 rootCommand.AddOption(preferFileNameParsingOption);
 rootCommand.AddOption(logLevelOption);
@@ -88,7 +103,9 @@ rootCommand.SetHandler(async (context) =>
         ProgressAt = parsedContext.GetValueForOption(progressOption),
         LogLevel = parsedContext.GetValueForOption(verboseOption)
             ? LogLevel.Trace
-            : parsedContext.GetValueForOption(logLevelOption)
+            : parsedContext.GetValueForOption(logLevelOption),
+        SkipParserBefore = parsedContext.GetValueForOption(skipParserWhenDateBeforeOption),
+        SkipParserAfter = parsedContext.GetValueForOption(skipParserWhenDateAfterOption)
     };
 
     var serviceProvider = runConfig.SetupServices().BuildServiceProvider();

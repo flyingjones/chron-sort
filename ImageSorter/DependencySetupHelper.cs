@@ -11,7 +11,11 @@ public static class DependencySetupHelper
     public static IServiceCollection SetupServices(this RunConfiguration configuration)
     {
         var serviceCollection = new ServiceCollection();
-        serviceCollection.AddDateParsing();
+        serviceCollection.AddDateParsing(new DateParserConfiguration
+        {
+            SkipParserAfter = configuration.SkipParserAfter,
+            SkipParserBefore = configuration.SkipParserBefore
+        });
         serviceCollection.AddStopwatchLogger(configuration.LogLevel);
         serviceCollection.AddFileMetaDataHandleFactory();
         if (configuration.UseDefaultSortConfiguration)

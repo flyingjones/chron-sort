@@ -4,10 +4,9 @@ using ImageSorter.Services.DateParser.MetaData;
 
 namespace ImageSorter.Services.DateParser;
 
-public class FilenameDateParser : IFileNameDateParser, IDateParserImplementation
+public class FilenameDateParser : IDateParserImplementation
 {
     public int Priority { get; }
-    private readonly DateTime _ignoreAfter;
     private const string YearCaptureGroupName = "year";
     private const string MonthCaptureGroupName = "month";
     private const string DayCaptureGroupName = "day";
@@ -21,22 +20,19 @@ public class FilenameDateParser : IFileNameDateParser, IDateParserImplementation
     /// Expects a regex with exactly three named capture groups with the names <c>year</c>, <c>month</c>, <c>day</c>.
     /// </param>
     /// <param name="priority">The priority of this parser</param>
-    /// <param name="ignoreAfter">TODO remove me and expose this as a general setting</param>
     public FilenameDateParser(
         [StringSyntax(StringSyntaxAttribute.Regex)]
         string fileNameRegex,
-        int priority,
-        DateTime ignoreAfter)
+        int priority)
     {
         Priority = priority;
-        _ignoreAfter = ignoreAfter;
         _fileNameRegex = new Regex(fileNameRegex);
 
         ThrowIfRegexInvalid(_fileNameRegex);
     }
 
     public string Name => $"FileName:{_fileNameRegex}";
-    
+
     public bool TryParseDate(ILazyFileMetaDataHandle fileHandle, [NotNullWhen(true)] out DateTime? result)
     {
         return TryParseDateFromFileName(fileHandle.FilePath, out result);
@@ -55,19 +51,14 @@ public class FilenameDateParser : IFileNameDateParser, IDateParserImplementation
 
         var result = new DateTime(year, month, day);
 
-        if (result <= _ignoreAfter)
-        {
-            parsedDate = result;
-            return true;
-        }
-
-        return false;
+        parsedDate = result;
+        return true;
     }
 
     private static void ThrowIfRegexInvalid(Regex fileNameRegex)
     {
         var namedCaptureGroups = fileNameRegex.GetGroupNames();
-        
+
         if (namedCaptureGroups.Length != 4)
         {
             throw new ArgumentException("Should contain three named capture groups", nameof(fileNameRegex));
@@ -75,17 +66,20 @@ public class FilenameDateParser : IFileNameDateParser, IDateParserImplementation
 
         if (!namedCaptureGroups.Contains(YearCaptureGroupName))
         {
-            throw new ArgumentException($"Missing named capture group \"{YearCaptureGroupName}\"", nameof(fileNameRegex));
+            throw new ArgumentException($"Missing named capture group \"{YearCaptureGroupName}\"",
+                nameof(fileNameRegex));
         }
-        
+
         if (!namedCaptureGroups.Contains(MonthCaptureGroupName))
         {
-            throw new ArgumentException($"Missing named capture group \"{MonthCaptureGroupName}\"", nameof(fileNameRegex));
+            throw new ArgumentException($"Missing named capture group \"{MonthCaptureGroupName}\"",
+                nameof(fileNameRegex));
         }
-        
+
         if (!namedCaptureGroups.Contains(DayCaptureGroupName))
         {
-            throw new ArgumentException($"Missing named capture group \"{DayCaptureGroupName}\"", nameof(fileNameRegex));
+            throw new ArgumentException($"Missing named capture group \"{DayCaptureGroupName}\"",
+                nameof(fileNameRegex));
         }
     }
 }

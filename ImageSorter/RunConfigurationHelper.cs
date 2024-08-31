@@ -41,6 +41,9 @@ public static partial class RunConfigurationHelper
         }
         
         stringBuilder.Append($"[fallback] : <file system update date>{Environment.NewLine}");
+
+        stringBuilder.Append($"Skip parser before      : {runConfiguration.SkipParserBefore:yyyy-MM-dd}{Environment.NewLine}");
+        stringBuilder.Append($"Skip parser after       : {runConfiguration.SkipParserAfter:yyyy-MM-dd}{Environment.NewLine}");
         
         stringBuilder.Append($"OS                      : {RuntimeInformation.OSDescription}");
 
