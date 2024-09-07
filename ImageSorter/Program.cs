@@ -29,6 +29,10 @@ var overwriteOption =
 var parallelScanningOption =
     new Option<bool>(aliases: new[] { "--scan-parallel" }, description: "Perform the scan part in parallel",
         getDefaultValue: () => false);
+var dryRunOption = new Option<bool>(aliases: new[] { "--dry-run" },
+    description: "Don't move or copy any files, just print the planned operations to a file",
+    getDefaultValue: () => false);
+
 var fromOption = new Option<DateTime?>(aliases: new[] { "--from" }, description: "Minimum date for files to sort");
 var toOption = new Option<DateTime?>(aliases: new[] { "--to" }, description: "Maximum date for files to sort");
 var progressOption = new Option<int?>(aliases: new[] { "--progress-at" },
@@ -67,6 +71,7 @@ rootCommand.AddArgument(sourceArgument);
 rootCommand.AddOption(destinationOption);
 rootCommand.AddOption(inPlaceOption);
 rootCommand.AddOption(overwriteOption);
+rootCommand.AddOption(dryRunOption);
 // parser config
 rootCommand.AddOption(sortConfiguration);
 rootCommand.AddOption(skipParserWhenDateBeforeOption);
@@ -112,7 +117,8 @@ rootCommand.SetHandler(async (context) =>
             ? LogLevel.Trace
             : parsedContext.GetValueForOption(logLevelOption),
         SkipParserBefore = parsedContext.GetValueForOption(skipParserWhenDateBeforeOption),
-        SkipParserAfter = parsedContext.GetValueForOption(skipParserWhenDateAfterOption)
+        SkipParserAfter = parsedContext.GetValueForOption(skipParserWhenDateAfterOption),
+        IsDryRun = parsedContext.GetValueForOption(dryRunOption)
     };
 
     var serviceProvider = runConfig.SetupServices().BuildServiceProvider();
