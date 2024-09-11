@@ -75,22 +75,11 @@ public partial class DryRunDestinationWriter : IDestinationWriter
 
                 foreach (var item in monthGrouping.OrderBy(x => Path.GetFileName(x.FilePath)))
                 {
-                    string? infos = null;
                     var fileName = Path.GetFileName(item.FilePath);
                     var targetPath = Path.GetFullPath($"{currentPath}/{fileName}");
-                    if (_fileWrapper.Exists(targetPath))
-                    {
-                        if (_options.OverwriteExistingFiles)
-                        {
-                            infos = "OverwriteExisting";
-                        }
-                        else
-                        {
-                            infos = "SkipExisting";
-                        }
-                    }
 
-                    textWriter.WriteLine($"    {BuiltOperationString(operation, infos, item)}");
+                    var fileExists = _fileWrapper.Exists(targetPath);
+                    textWriter.WriteLine($"    {BuiltOperationString(operation, fileExists, item)}");
                 }
             }
         }
@@ -99,9 +88,14 @@ public partial class DryRunDestinationWriter : IDestinationWriter
     [LoggerMessage(LogLevel.Information, Message = "Writing sorting result to {filePath}")]
     private partial void LogOutputFile(string filePath);
 
-    private static string BuiltOperationString(string operation, string? infos, WriteQueueItem queueItem)
+    private string BuiltOperationString(string operation, bool fileExists, WriteQueueItem queueItem)
     {
-        var infoString = infos == null ? string.Empty : $"[{infos}] ";
+        var infoString = (fileExists, _options.OverwriteExistingFiles) switch
+        {
+            (false, _) => string.Empty,
+            (true, false) => "[SkipExisting] ",
+            (true, true) => "[OverwriteExisting] "
+        };
         return $"[{operation}] {infoString}{queueItem.FilePath} [{queueItem.DateTaken:o}]";
     }
 
