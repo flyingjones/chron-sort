@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Logging;
 
-namespace ImageSorter;
+namespace ImageSorter.DependencyInjection;
 
 public class RunConfiguration
 {
