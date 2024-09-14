@@ -27,8 +27,11 @@ public partial class WindowsMetaDataDateParser : IDateParserImplementation
 
     public bool TryParseDate(ILazyFileMetaDataHandle fileHandle, [NotNullWhen(true)] out DateTime? result)
     {
-        var image = fileHandle.GetOrLoadImage();
         result = null;
+        if (!ExifTagHelper.FileEndingSupported(fileHandle.FileEnding))
+            return false;
+        
+        var image = fileHandle.GetOrLoadImage();
         if (image == null) return false;
 
         return TryParseDate(image, out result);

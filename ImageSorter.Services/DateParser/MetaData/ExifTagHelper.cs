@@ -5,6 +5,9 @@ namespace ImageSorter.Services.DateParser.MetaData;
 public static class ExifTagHelper
 {
     private static readonly Dictionary<ExifTagId, ExifTag<string>> TagDict;
+    
+    // exif tag support taken from wiki page: https://en.wikipedia.org/wiki/Exif
+    private static readonly string[] SupportedFileEndings = new[]{"jpg", "jpeg", "tif", "tiff", "wav", "png", "webp"};
 
     static ExifTagHelper()
     {
@@ -24,5 +27,10 @@ public static class ExifTagHelper
         }
 
         throw new ArgumentException($"Invalid exif tag \"{tagId}\"", nameof(tagId));
+    }
+
+    public static bool FileEndingSupported(string fileEnding)
+    {
+        return SupportedFileEndings.Contains(fileEnding, StringComparer.InvariantCultureIgnoreCase);
     }
 }

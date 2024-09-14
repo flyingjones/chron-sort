@@ -9,7 +9,7 @@ namespace ImageSorter;
 public static class RootCommandFactory
 {
     private static readonly string Description = $"""
-                                                  Sorts images chronologically in the directory structure year/month
+                                                  Sorts files chronologically in the directory structure year/month
                                                   Default sort configuration (change with --configure):
                                                   {string.Join(Environment.NewLine, SortConfigurationFactory.DefaultSorting)}
                                                   """;
@@ -79,7 +79,7 @@ public static class RootCommandFactory
 
     private static class Arguments
     {
-        public static readonly Argument<FileInfo> SourcePathArgument = new Argument<FileInfo>(
+        public static readonly Argument<FileInfo> SourcePathArgument = new (
             name: "source path",
             description: "The path of the source directory");
     }

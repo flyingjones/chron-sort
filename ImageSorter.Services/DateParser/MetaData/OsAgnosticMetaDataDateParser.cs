@@ -22,8 +22,11 @@ public partial class OsAgnosticMetaDataDateParser : IDateParserImplementation
 
     public bool TryParseDate(ILazyFileMetaDataHandle fileHandle, [NotNullWhen(true)] out DateTime? result)
     {
-        var imageInfo = fileHandle.GetOrLoadImageInfo();
         result = null;
+        if (!ExifTagHelper.FileEndingSupported(fileHandle.FileEnding))
+            return false;
+        
+        var imageInfo = fileHandle.GetOrLoadImageInfo();
         if (imageInfo == null) return false;
 
         return TryParseDate(imageInfo, out result);
