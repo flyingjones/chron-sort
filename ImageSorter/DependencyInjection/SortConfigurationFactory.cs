@@ -3,7 +3,7 @@ using ImageSorter.Services.DateParser.MetaData;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace ImageSorter;
+namespace ImageSorter.DependencyInjection;
 
 public static class SortConfigurationFactory
 {

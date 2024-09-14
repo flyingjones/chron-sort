@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace ImageSorter;
+namespace ImageSorter.DependencyInjection;
 
 public static partial class RunConfigurationHelper
 {
