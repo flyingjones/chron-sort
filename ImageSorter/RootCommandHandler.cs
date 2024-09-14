@@ -1,4 +1,5 @@
 using System.CommandLine.Invocation;
+using ImageSorter.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -20,7 +21,7 @@ public static class RootCommandHandler
         
         // log the configuration
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-        RunConfigurationHelper.LogRunConfiguration(logger, runConfiguration);
+        DependencyInjection.RunConfigurationHelper.LogRunConfiguration(logger, runConfiguration);
 
         // get the sorter and perform the sorting
         var sorter = serviceProvider.GetRequiredService<ISorter>();

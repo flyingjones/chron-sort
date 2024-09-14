@@ -4,7 +4,7 @@ using ImageSorter.Services.DateParser.MetaData;
 using ImageSorter.Services.FileHandling;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ImageSorter;
+namespace ImageSorter.DependencyInjection;
 
 public static class DependencySetupHelper
 {

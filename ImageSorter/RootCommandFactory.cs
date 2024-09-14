@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using ImageSorter.DependencyInjection;
 using ImageSorter.Services.DateParser.MetaData;
 using Microsoft.Extensions.Logging;
 

@@ -1,4 +1,4 @@
-namespace ImageSorter;
+namespace ImageSorter.DependencyInjection;
 
 public enum SortType
 {
