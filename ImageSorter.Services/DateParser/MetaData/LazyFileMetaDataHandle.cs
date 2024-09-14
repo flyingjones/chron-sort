@@ -9,6 +9,7 @@ public partial class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
     private readonly ILogger<LazyFileMetaDataHandle> _logger;
 
     public required string FilePath { get; init; }
+    public string FileEnding => FilePath.Split(".")[^1];
 
     private bool _imageInfoLoadFailed = false;
     private ImageInfo? _imageInfo;

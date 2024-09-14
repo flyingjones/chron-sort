@@ -28,8 +28,10 @@ public partial class Sorter : ISorter
         _logger.LogInformation("Scanning source");
         var filesToProcess = _fileLoader.GetFilePaths();
 
+        _logger.LogInformation("Parse dates");
         var writeQueue = await _dateParsingHandler.ScanFiles(filesToProcess, cancellationToken);
 
+        _logger.LogInformation("Write results");
         if (!moveFiles)
         {
             await _destinationWriter.CopyFiles(writeQueue, cancellationToken);
@@ -39,6 +41,6 @@ public partial class Sorter : ISorter
             _destinationWriter.MoveFiles(writeQueue, cancellationToken);
         }
 
-        _logger.LogInformation("Finished sorting");
+        _logger.LogInformation("Finished");
     }
 }
