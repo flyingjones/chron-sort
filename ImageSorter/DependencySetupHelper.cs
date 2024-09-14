@@ -58,6 +58,8 @@ public static class DependencySetupHelper
             serviceCollection.AddSingleton<IDateParsingHandler, SequentialDateParsingHandler>();
         }
 
+        serviceCollection.AddTransient<ISorter, Sorter>();
+
         return serviceCollection;
     }
 }
