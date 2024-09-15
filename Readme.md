@@ -1,6 +1,14 @@
 # Image Sorter
 
-A simply utility to sort a bunch of images chronologically.
+A simply utility to sort a bunch of files chronologically based on file names and file meta data.
+
+The tool can evaluate meta data of the following file types:
+
+**Images**: ``jpg``, ``jpeg``, ``tif``, ``tiff``, ``wav``, ``png``, ``webp``
+
+**Videos**: ``mp4``, ``mov``, ``qt``
+
+And will use the last write time of a file as a fallback.
 
 ## How to use
 
