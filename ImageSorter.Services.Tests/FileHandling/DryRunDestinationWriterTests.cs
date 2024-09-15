@@ -53,6 +53,14 @@ public class DryRunDestinationWriterTests
         options.DestinationPath = "C:/dest/path";
         options.OverwriteExistingFiles = overwrite;
 
+        var dateDirectoryOptions = _fixture.Freeze<DateDirectoryOptions>();
+        dateDirectoryOptions.DryRun = true;
+        dateDirectoryOptions.DestinationPath = "C:/dest/path";
+        dateDirectoryOptions.Format = "yyyy/MM";
+        
+        var dateDirectory = _fixture.Create<ConfigurableDateDirectory>();
+        _fixture.Inject<IDateDirectory>(dateDirectory);
+
         var dateTimeProviderMock = _fixture.Freeze<Mock<IDateTimeProvider>>();
         var now = DateTime.Parse("2024-09-11T07:41:00");
         dateTimeProviderMock.Setup(x => x.Now()).Returns(now);

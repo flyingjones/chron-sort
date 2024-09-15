@@ -33,18 +33,25 @@ public static class DependencySetupHelper
                 .SelectMany(x => x)
                 .ToArray();
         }
-        
+
         serviceCollection.ConfigureSorting(configuration.SortConfiguration!);
-        
+
         serviceCollection.AddDestinationWriter(new DestinationWriterOptions
-        {
-            SourcePath = configuration.SourcePath.FullName,
-            DestinationPath = configuration.DestinationPath.FullName,
-            OverwriteExistingFiles = configuration.Overwrite,
-            From = configuration.From,
-            To = configuration.To,
-            ProgressCount = configuration.ProgressAt > 0 ? configuration.ProgressAt.Value : int.MaxValue
-        }, configuration.IsDryRun);
+            {
+                SourcePath = configuration.SourcePath.FullName,
+                DestinationPath = configuration.DestinationPath.FullName,
+                OverwriteExistingFiles = configuration.Overwrite,
+                From = configuration.From,
+                To = configuration.To,
+                ProgressCount = configuration.ProgressAt > 0 ? configuration.ProgressAt.Value : int.MaxValue
+            },
+            new DateDirectoryOptions
+            {
+                DestinationPath = configuration.DestinationPath.FullName,
+                Format = configuration.OutputFormat,
+                DryRun = configuration.IsDryRun
+            },
+            configuration.IsDryRun);
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
             SourcePath = configuration.SourcePath.FullName,
