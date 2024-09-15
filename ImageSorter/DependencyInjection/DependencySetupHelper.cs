@@ -1,6 +1,7 @@
 using ImageSorter.Logging;
 using ImageSorter.Services.DateParser;
 using ImageSorter.Services.DateParser.MetaData;
+using ImageSorter.Services.DateTimeWrapper;
 using ImageSorter.Services.FileHandling;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,6 +12,7 @@ public static class DependencySetupHelper
     public static IServiceCollection SetupServices(this RunConfiguration configuration)
     {
         var serviceCollection = new ServiceCollection();
+        serviceCollection.AddTransient<IDateTimeProvider, DateTimeProvider>();
         serviceCollection.AddDateParsing(new DateParserConfiguration
         {
             SkipParserAfter = configuration.SkipParserAfter,
@@ -42,7 +44,7 @@ public static class DependencySetupHelper
             From = configuration.From,
             To = configuration.To,
             ProgressCount = configuration.ProgressAt > 0 ? configuration.ProgressAt.Value : int.MaxValue
-        });
+        }, configuration.IsDryRun);
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
             SourcePath = configuration.SourcePath.FullName,

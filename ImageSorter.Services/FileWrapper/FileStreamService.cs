@@ -1,5 +1,6 @@
 namespace ImageSorter.Services.FileWrapper;
 
+/// <inheritdoc cref="IFileStreamService"/>
 public class FileStreamService : IFileStreamService
 {
     /// <inheritdoc cref="IFileStreamService.CopyToAsync"/>

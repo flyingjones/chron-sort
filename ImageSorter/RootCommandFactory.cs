@@ -28,6 +28,7 @@ public static class RootCommandFactory
         rootCommand.AddOption(Options.DestinationPathOption);
         rootCommand.AddOption(Options.MoveOption);
         rootCommand.AddOption(Options.OverwriteOption);
+        rootCommand.AddOption(Options.IsDryRunOption);
         // parser config
         rootCommand.AddOption(Options.SortConfigurationOption);
         rootCommand.AddOption(Options.SkipParserWhenDateBeforeOption);
@@ -74,7 +75,8 @@ public static class RootCommandFactory
                 ? LogLevel.Trace
                 : parsedContext.GetValueForOption(Options.LogLevelOption),
             SkipParserBefore = parsedContext.GetValueForOption(Options.SkipParserWhenDateBeforeOption),
-            SkipParserAfter = parsedContext.GetValueForOption(Options.SkipParserWhenDateAfterOption)
+            SkipParserAfter = parsedContext.GetValueForOption(Options.SkipParserWhenDateAfterOption),
+            IsDryRun = parsedContext.GetValueForOption(Options.IsDryRunOption)
         };
         return runConfig;
     }
@@ -159,5 +161,10 @@ public static class RootCommandFactory
             aliases: new[] { "--skip-parser-when-after" },
             description: "Skip the result of a parser when the resulting date is later",
             getDefaultValue: () => DateTime.Now.Date.AddYears(1));
+
+        public static readonly Option<bool> IsDryRunOption = new(
+            aliases: new[] { "--dry-run" },
+            description: "Don't move or copy any files, just print the planned operations to a file",
+            getDefaultValue: () => false);
     }
 }
