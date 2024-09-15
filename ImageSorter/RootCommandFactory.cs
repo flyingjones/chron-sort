@@ -2,6 +2,8 @@ using System.CommandLine;
 using System.CommandLine.Parsing;
 using ImageSorter.DependencyInjection;
 using ImageSorter.Services.DateParser.MetaData;
+using ImageSorter.Services.DateParser.MetaData.ExifTags;
+using ImageSorter.Services.DateParser.MetaData.QuickTimeMovieHeaders;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter;
@@ -129,6 +131,8 @@ public static class RootCommandFactory
                           {SortType.ExifTag:G}:{ExifTagId.DateTimeOriginal:G}                                       [Tries to use the exif tag 0x{ExifTagId.DateTimeOriginal:X} to get a date]
                           {SortType.ExifTag:G}:{ExifTagId.DateTimeDigitized:G}                                      [Tries to use the exif tag 0x{ExifTagId.DateTimeDigitized:X} to get a date]
                           {SortType.ExifTag:G}:{ExifTagId.DateTime:G}                                               [Tries to use the exif tag 0x{ExifTagId.DateTime:X} to get a date]
+                          {SortType.QuickTimeMovieHeader:G}:{QuickTimeMovieHeader.CreationTime:G}                              [Tries to use the quick time movie header (mvhd) 'Creation time' to get a date]
+                          {SortType.QuickTimeMovieHeader:G}:{QuickTimeMovieHeader.ModificationTime:G}                          [Tries to use the quick time movie header (mvhd) 'Modification time' to get a date]
                           {SortType.FileName:G}:<Regex with named capture groups year month and day>  [Tries to parse the file name using a regular expression to get a date]
                           """);
 
