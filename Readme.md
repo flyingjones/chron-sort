@@ -56,6 +56,7 @@ Options:
   --move                                                             Move files instead of copy [default: False]
   --overwrite                                                        Overwrite files in destination [default: False]
   --dry-run                                                          Don't move or copy any files, just print the planned operations to a file [default: False]
+  --format <format>                                                  Output directory structure (date format specifier separated by / ) [default: yyyy/MM]
   -c, --configure <configure>                                        Custom sort configuration. Parsers will be applied in order. Possible Formats:
                                                                      ExifTag:DateTimeOriginal                                       [Tries to use the exif tag 0x9003 to get a date]
                                                                      ExifTag:DateTimeDigitized                                      [Tries to use the exif tag 0x9004 to get a date]
@@ -68,7 +69,7 @@ Options:
   -t, --types <types>                                                Space seperated list of file endings to sort
   --from <from>                                                      Minimum date for files to sort
   --to <to>                                                          Maximum date for files to sort
-  --fast-scan, --prefer-file-name-parsing                            Prefer FileName parsers over ExifTag parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)
+  --fast-scan, --prefer-file-name-parsing                            Prefer FileName parsers over metadata-based parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)      
   --scan-parallel                                                    Perform the scan part in parallel [default: False]
   --log-level <Critical|Debug|Error|Information|None|Trace|Warning>  Log Level [default: Information]
   -v, --verbose                                                      Same as --log-level Trace
