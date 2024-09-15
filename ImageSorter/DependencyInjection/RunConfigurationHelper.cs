@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Extensions.Logging;
 
-namespace ImageSorter;
+namespace ImageSorter.DependencyInjection;
 
 public static partial class RunConfigurationHelper
 {
@@ -21,7 +21,8 @@ public static partial class RunConfigurationHelper
         stringBuilder.Append($"Source Path             : {runConfiguration.SourcePath}{Environment.NewLine}");
         stringBuilder.Append($"Destination Path        : {runConfiguration.DestinationPath?.FullName ?? "- (running in place)"}{Environment.NewLine}");
         var modeString = runConfiguration.MoveFiles ? "Move" : "Copy";
-        stringBuilder.Append($"Mode                    : {modeString}{Environment.NewLine}");
+        var dryRunString = runConfiguration.IsDryRun ? " (dry run)" : string.Empty;
+        stringBuilder.Append($"Mode                    : {modeString}{dryRunString}{Environment.NewLine}");
         stringBuilder.Append($"Overwrite Existing files: {runConfiguration.Overwrite}{Environment.NewLine}");
         var fileEndingsString = runConfiguration.FilterFileEndings
             ? $"[{string.Join(", ", runConfiguration.FileEndings!)}]"
@@ -45,7 +46,8 @@ public static partial class RunConfigurationHelper
         stringBuilder.Append($"Skip parser before      : {runConfiguration.SkipParserBefore:yyyy-MM-dd}{Environment.NewLine}");
         stringBuilder.Append($"Skip parser after       : {runConfiguration.SkipParserAfter:yyyy-MM-dd}{Environment.NewLine}");
         
-        stringBuilder.Append($"OS                      : {RuntimeInformation.OSDescription}");
+        stringBuilder.Append($"OS                      : {RuntimeInformation.OSDescription}{Environment.NewLine}");
+        stringBuilder.Append($"Version                 : {VersionInformation.Version} (Assembly: {VersionInformation.AssemblyVersion})");
 
         return stringBuilder.ToString();
     }

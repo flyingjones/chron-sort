@@ -1,26 +1,28 @@
 using ImageSorter.Logging;
 using ImageSorter.Services.DateParser;
 using ImageSorter.Services.DateParser.MetaData;
+using ImageSorter.Services.DateTimeWrapper;
 using ImageSorter.Services.FileHandling;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ImageSorter;
+namespace ImageSorter.DependencyInjection;
 
 public static class DependencySetupHelper
 {
     public static IServiceCollection SetupServices(this RunConfiguration configuration)
     {
         var serviceCollection = new ServiceCollection();
+        serviceCollection.AddTransient<IDateTimeProvider, DateTimeProvider>();
         serviceCollection.AddDateParsing(new DateParserConfiguration
         {
             SkipParserAfter = configuration.SkipParserAfter,
             SkipParserBefore = configuration.SkipParserBefore
         });
         serviceCollection.AddStopwatchLogger(configuration.LogLevel);
-        serviceCollection.AddFileMetaDataHandleFactory();
+        serviceCollection.AddSingleton<ILazyFileMetaDataHandleFactory, LazyFileMetaDataHandleFactory>();
         if (configuration.UseDefaultSortConfiguration)
         {
-            configuration.SortConfiguration = SortConfigurationFactory.DefaultSorting;
+            configuration.SortConfiguration = SortConfigurationFactory.DefaultSorting.ToArray();
         }
 
         if (configuration.PreferFileNameParsing)
@@ -42,7 +44,7 @@ public static class DependencySetupHelper
             From = configuration.From,
             To = configuration.To,
             ProgressCount = configuration.ProgressAt > 0 ? configuration.ProgressAt.Value : int.MaxValue
-        });
+        }, configuration.IsDryRun);
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
             SourcePath = configuration.SourcePath.FullName,
@@ -57,6 +59,8 @@ public static class DependencySetupHelper
         {
             serviceCollection.AddSingleton<IDateParsingHandler, SequentialDateParsingHandler>();
         }
+
+        serviceCollection.AddTransient<ISorter, Sorter>();
 
         return serviceCollection;
     }
