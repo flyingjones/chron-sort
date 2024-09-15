@@ -11,14 +11,6 @@ namespace ImageSorter.Services.Tests.DateParser.MetaData;
 [TestFixture]
 public class ExifTagParserTests
 {
-    private IFixture _fixture = null!;
-
-    [SetUp]
-    public void SetUp()
-    {
-        _fixture = new Fixture().Customize(new AutoMoqCustomization());
-    }
-
     [TestCase("jpg", ExifTagId.DateTimeOriginal, "2016:07:18 15:48:54", ExpectedResult = "2016-07-18T15:48:54")]
     [TestCase("jpeg", ExifTagId.DateTimeDigitized, "2016:08:03 19:48:49", ExpectedResult = "2016-08-03T19:48:49")]
     [TestCase("tif", ExifTagId.DateTime, "2016:08:07 21:25:05", ExpectedResult = "2016-08-07T21:25:05")]
