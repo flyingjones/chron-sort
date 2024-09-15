@@ -37,4 +37,6 @@ public class RunConfiguration
     public required DateTime SkipParserAfter { get; set; }
     
     public required bool IsDryRun { get; set; }
+    
+    public required string? OutputFormat { get; set; }
 }

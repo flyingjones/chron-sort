@@ -6,9 +6,12 @@ namespace ImageSorter.Services.FileHandling;
 public static class FileHandlingServiceCollectionExtension
 {
     public static IServiceCollection AddDestinationWriter(this IServiceCollection serviceCollection,
-        DestinationWriterOptions options, bool dryRun)
+        DestinationWriterOptions options,
+        DateDirectoryOptions dateDirectoryOptions,
+        bool dryRun)
     {
-        serviceCollection.AddSingleton<IDateDirectory, DateDirectory>();
+        serviceCollection.AddSingleton(dateDirectoryOptions);
+        serviceCollection.AddSingleton<IDateDirectory, ConfigurableDateDirectory>();
         serviceCollection.AddSingleton<IFileStreamService, FileStreamService>();
         serviceCollection.AddSingleton(options);
         if (dryRun)

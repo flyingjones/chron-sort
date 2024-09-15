@@ -15,6 +15,7 @@ public partial class DryRunDestinationWriter : IDestinationWriter
     private readonly IFileWrapper _fileWrapper;
     private readonly IDirectoryWrapper _directoryWrapper;
     private readonly IBufferedStreamWriterFactory _bufferedStreamWriterFactory;
+    private readonly IDateDirectory _dateDirectory;
 
     public DryRunDestinationWriter(
         DestinationWriterOptions options,
@@ -22,7 +23,8 @@ public partial class DryRunDestinationWriter : IDestinationWriter
         IDateTimeProvider dateTimeProvider,
         IFileWrapper fileWrapper,
         IDirectoryWrapper directoryWrapper,
-        IBufferedStreamWriterFactory bufferedStreamWriterFactory)
+        IBufferedStreamWriterFactory bufferedStreamWriterFactory,
+        IDateDirectory dateDirectory)
     {
         _options = options;
         _logger = logger;
@@ -30,6 +32,7 @@ public partial class DryRunDestinationWriter : IDestinationWriter
         _fileWrapper = fileWrapper;
         _directoryWrapper = directoryWrapper;
         _bufferedStreamWriterFactory = bufferedStreamWriterFactory;
+        _dateDirectory = dateDirectory;
     }
 
     public Task CopyFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
@@ -55,32 +58,21 @@ public partial class DryRunDestinationWriter : IDestinationWriter
 
         using var textWriter = _bufferedStreamWriterFactory.CreateStreamWriter(targetFilePath, FileMode.CreateNew);
 
-        var yearGroupings = writeQueueItems
-            .GroupBy(x => x.DateTaken.Year)
+        var pathGroupings = writeQueueItems
+            .GroupBy(x => _dateDirectory.CreatePathAndDirs(x.DateTaken))
             .OrderBy(x => x.Key);
 
-        foreach (var yearGrouping in yearGroupings)
+        foreach (var pathGrouping in pathGroupings)
         {
-            var year = yearGrouping.Key;
-            var monthGroupings = yearGrouping
-                .GroupBy(x => x.DateTaken.Month)
-                .OrderBy(x => x.Key);
+            textWriter.WriteLine(pathGrouping.Key);
 
-            foreach (var monthGrouping in monthGroupings)
+            foreach (var item in pathGrouping.OrderBy(x => Path.GetFileName(x.FilePath)))
             {
-                var month = monthGrouping.Key;
+                var fileName = Path.GetFileName(item.FilePath);
+                var targetPath = Path.GetFullPath($"{pathGrouping.Key}/{fileName}");
 
-                var currentPath = Path.GetFullPath($"{_options.DestinationPath}/{year:0000}/{month:00}");
-                textWriter.WriteLine(currentPath);
-
-                foreach (var item in monthGrouping.OrderBy(x => Path.GetFileName(x.FilePath)))
-                {
-                    var fileName = Path.GetFileName(item.FilePath);
-                    var targetPath = Path.GetFullPath($"{currentPath}/{fileName}");
-
-                    var fileExists = _fileWrapper.Exists(targetPath);
-                    textWriter.WriteLine($"    {BuiltOperationString(operation, fileExists, item)}");
-                }
+                var fileExists = _fileWrapper.Exists(targetPath);
+                textWriter.WriteLine($"    {BuiltOperationString(operation, fileExists, item)}");
             }
         }
     }

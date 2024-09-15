@@ -24,6 +24,7 @@ public static partial class RunConfigurationHelper
         var dryRunString = runConfiguration.IsDryRun ? " (dry run)" : string.Empty;
         stringBuilder.Append($"Mode                    : {modeString}{dryRunString}{Environment.NewLine}");
         stringBuilder.Append($"Overwrite Existing files: {runConfiguration.Overwrite}{Environment.NewLine}");
+        stringBuilder.Append($"Output format           : {runConfiguration.OutputFormat}{Environment.NewLine}");
         var fileEndingsString = runConfiguration.FilterFileEndings
             ? $"[{string.Join(", ", runConfiguration.FileEndings!)}]"
             : "*";

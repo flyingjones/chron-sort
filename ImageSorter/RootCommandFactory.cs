@@ -29,6 +29,7 @@ public static class RootCommandFactory
         rootCommand.AddOption(Options.MoveOption);
         rootCommand.AddOption(Options.OverwriteOption);
         rootCommand.AddOption(Options.IsDryRunOption);
+        rootCommand.AddOption(Options.FormatOption);
         // parser config
         rootCommand.AddOption(Options.SortConfigurationOption);
         rootCommand.AddOption(Options.SkipParserWhenDateBeforeOption);
@@ -76,7 +77,8 @@ public static class RootCommandFactory
                 : parsedContext.GetValueForOption(Options.LogLevelOption),
             SkipParserBefore = parsedContext.GetValueForOption(Options.SkipParserWhenDateBeforeOption),
             SkipParserAfter = parsedContext.GetValueForOption(Options.SkipParserWhenDateAfterOption),
-            IsDryRun = parsedContext.GetValueForOption(Options.IsDryRunOption)
+            IsDryRun = parsedContext.GetValueForOption(Options.IsDryRunOption),
+            OutputFormat = parsedContext.GetValueForOption(Options.FormatOption)
         };
         return runConfig;
     }
@@ -137,6 +139,11 @@ public static class RootCommandFactory
                           {SortType.QuickTimeMovieHeader:G}:{QuickTimeMovieHeader.ModificationTime:G}                          [Tries to use the quick time movie header (mvhd) 'Modification time' to get a date]
                           {SortType.FileName:G}:<Regex with named capture groups year month and day>  [Tries to parse the file name using a regular expression to get a date]
                           """);
+
+        public static readonly Option<string> FormatOption = new(
+            aliases: new[]{"--format"},
+            description: "Output directory structure (date format specifier separated by / )",
+            getDefaultValue: () => "yyyy/MM");
 
         public static readonly Option<LogLevel> LogLevelOption = new(
             aliases: new[] { "--log-level" },
