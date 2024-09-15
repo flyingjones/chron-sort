@@ -8,7 +8,7 @@
         <PublishAot>true</PublishAot>
         <OptimizationPreference>Speed</OptimizationPreference>
         <InvariantGlobalization>true</InvariantGlobalization>
-        <Version>0.0.1.3</Version>
+        <Version>0.0.1.4</Version>
         <Authors>Jonas Kett</Authors>
     </PropertyGroup>
 
