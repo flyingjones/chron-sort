@@ -1,4 +1,4 @@
-namespace ImageSorter.Services.DateParser.MetaData;
+namespace ImageSorter.Services.DateParser.MetaData.ExifTags;
 
 public enum ExifTagId : ushort
 {
