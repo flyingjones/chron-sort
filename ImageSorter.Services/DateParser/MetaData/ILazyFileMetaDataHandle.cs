@@ -1,5 +1,3 @@
-using Directory = MetadataExtractor.Directory;
-
 namespace ImageSorter.Services.DateParser.MetaData;
 
 public interface ILazyFileMetaDataHandle : IDisposable
@@ -8,5 +6,5 @@ public interface ILazyFileMetaDataHandle : IDisposable
     
     string FileEnding { get; }
 
-    IReadOnlyList<Directory>? GetOrLoadMetaDataDirectories();
+    IMetaDataTagWrapper GetOrLoadTagWrapper();
 }

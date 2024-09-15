@@ -46,7 +46,8 @@ public static partial class RunConfigurationHelper
         stringBuilder.Append($"Skip parser before      : {runConfiguration.SkipParserBefore:yyyy-MM-dd}{Environment.NewLine}");
         stringBuilder.Append($"Skip parser after       : {runConfiguration.SkipParserAfter:yyyy-MM-dd}{Environment.NewLine}");
         
-        stringBuilder.Append($"OS                      : {RuntimeInformation.OSDescription}");
+        stringBuilder.Append($"OS                      : {RuntimeInformation.OSDescription}{Environment.NewLine}");
+        stringBuilder.Append($"Version                 : {VersionInformation.Version} (Assembly: {VersionInformation.AssemblyVersion})");
 
         return stringBuilder.ToString();
     }

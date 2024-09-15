@@ -150,7 +150,7 @@ public static class RootCommandFactory
         public static readonly Option<bool> PreferFileNameParsingOption = new(
             new[] { "--fast-scan", "--prefer-file-name-parsing" },
             description:
-            "Prefer FileName parsers over ExifTag parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)");
+            "Prefer FileName parsers over metadata-based parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)");
 
         public static readonly Option<DateTime> SkipParserWhenDateBeforeOption = new(
             aliases: new[] { "--skip-parser-when-before" },
