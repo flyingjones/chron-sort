@@ -31,7 +31,7 @@ public partial class DestinationWriter : IDestinationWriter
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
-        var destinationPath = $"{monthPath}/{fileName}";
+        var destinationPath = Path.GetFullPath($"{monthPath}/{fileName}");
         LogWriting("Copying", sourcePath, destinationPath);
         try
         {
@@ -55,7 +55,7 @@ public partial class DestinationWriter : IDestinationWriter
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
-        var destinationPath = $"{monthPath}/{fileName}";
+        var destinationPath = Path.GetFullPath($"{monthPath}/{fileName}");
         LogWriting("Moving", sourcePath, destinationPath);
         if (sourcePath == destinationPath) return;
 
