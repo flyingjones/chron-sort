@@ -1,14 +1,24 @@
 # Image Sorter
 
-A simply utility to sort a bunch of files chronologically based on file names and file meta data.
+A simple .NET based utility tool to sort files chronologically based on file names and file meta data into a specified directory structure.
+
+The tool is supported on Windows x64 and Linux x64. The releases contains self contained ahead of time compiled builds for those platforms.
+
+## Description
 
 The tool can evaluate meta data of the following file types:
 
-**Images**: ``jpg``, ``jpeg``, ``tif``, ``tiff``, ``wav``, ``png``, ``webp``
+**Images** (uses [Exif Tags](https://en.wikipedia.org/wiki/Exif)): ``jpg``, ``jpeg``, ``tif``, ``tiff``, ``wav``, ``png``, ``webp``.
+Supported Tags: ``DateTime``, ``DateTimeOriginal``, ``DateTimeDigitized``.
 
-**Videos**: ``mp4``, ``mov``, ``qt``
+**Videos** (uses [Quick Time Movie Header](https://developer.apple.com/documentation/quicktime-file-format/movie_header_atom)): ``mp4``, ``mov``, ``qt``.
+Supported Tags: ``CreationTime``, ``ModificationTime``
 
-And will use the last write time of a file as a fallback.
+It can also use a [regex](https://en.wikipedia.org/wiki/Regular_expression) with named capture groups ``year``, ``month`` and ``day`` to try to extract a date from the file name.
+
+And it will always use the last write time of a file as a fallback.
+
+The date parsers will try to parse a date in order so that the first successfully parsed date is used to perform the sorting.
 
 ## How to use
 
@@ -26,7 +36,7 @@ I want to create a sorted copy of all files from ``<source>`` at ``<destination>
 Moving _between disks_ is slower and could lead to data loss so use with caution.
 On Windows you can easily see if its on the same disk by checking if the first letter of the paths are the same (e.g. the ``C`` in ``C:\Users\..``).
 
-If you are fine with using the file name based parsers in preference of the exif tag parsers, you can use ``--fast-scan``
+If you are fine with using the file name based parsers in preference of the meta data parsers, you can use ``--fast-scan``
 which is significantly faster but may not be as accurate.
 
 ### Full Reference
@@ -35,7 +45,7 @@ which is significantly faster but may not be as accurate.
 
 ````
 Description:
-  Sorts files chronologically in the directory structure year/month
+  Sorts files chronologically in the specified directory structure (default: year/month)
   Default sort configuration (change with --configure):
   ExifTag:DateTimeOriginal
   ExifTag:DateTimeDigitized
@@ -85,9 +95,9 @@ Checkout the [release notes](ReleaseNotes/Releases.md)
 ## Build it yourself
 
 The executable can be built using the command 
-``dotnet publish -r <target> -c Release``
+``dotnet publish -r <target> -c Release`` if you have the [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed.
 
-For x64 modern Windows: ``dotnet publish -r win-x64 -c Release``
+For x64 Windows: ``dotnet publish -r win-x64 -c Release``
 
 For x64 linux: ``dotnet publish -r linux-x64 -c Release``
 
