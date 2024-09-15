@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Directory = MetadataExtractor.Directory;
 
 namespace ImageSorter.Services.DateParser.MetaData;
 
@@ -26,13 +25,12 @@ public abstract class MetaDataParserBase : IDateParserImplementation
         if (!FileEndingSupported(fileHandle.FileEnding))
             return false;
 
-        var directories = fileHandle.GetOrLoadMetaDataDirectories();
-        if (directories is null)
-            return false;
-
-        return TryParseMetaDataDirectories(directories, out result);
+        var metaDataWrapper = fileHandle.GetOrLoadTagWrapper();
+        
+        return metaDataWrapper.HasMetaData && TryParseMetaDataDirectories(metaDataWrapper, out result);
     }
 
-    protected abstract bool TryParseMetaDataDirectories(IReadOnlyList<Directory> directories,
+    protected abstract bool TryParseMetaDataDirectories(
+        IMetaDataTagWrapper metaDataWrapper,
         [NotNullWhen(true)] out DateTime? result);
 }

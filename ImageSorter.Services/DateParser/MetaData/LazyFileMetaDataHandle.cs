@@ -13,12 +13,14 @@ public partial class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
     private IReadOnlyList<Directory>? _directories;
     private bool _directoryLoadFailed = false;
 
+    private IMetaDataTagWrapper? _metaDataTagWrapper;
+
     public LazyFileMetaDataHandle(ILogger<LazyFileMetaDataHandle> logger)
     {
         _logger = logger;
     }
 
-    public IReadOnlyList<Directory>? GetOrLoadMetaDataDirectories()
+    private IReadOnlyList<Directory>? GetOrLoadMetaDataDirectories()
     {
         if (_directoryLoadFailed) return null;
         if (_directories != null) return _directories;
@@ -34,6 +36,11 @@ public partial class LazyFileMetaDataHandle : ILazyFileMetaDataHandle
             _directoryLoadFailed = true;
             return null;
         }
+    }
+
+    public IMetaDataTagWrapper GetOrLoadTagWrapper()
+    {
+        return _metaDataTagWrapper ??= new MetaDataTagWrapper(GetOrLoadMetaDataDirectories());
     }
 
     public void Dispose()

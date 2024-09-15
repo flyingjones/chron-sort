@@ -20,21 +20,13 @@ public class QuickTimeMovieHeaderParser : MetaDataParserBase
     protected override IEnumerable<string> SupportedFileEndings() => SupportedFileEndingsInternal;
 
     protected override bool TryParseMetaDataDirectories(
-        IReadOnlyList<Directory> directories,
+        IMetaDataTagWrapper metaDataWrapper,
         [NotNullWhen(true)] out DateTime? result)
     {
         result = null;
-        var tags = directories
-            .Where(x => x is QuickTimeMovieHeaderDirectory)
-            .SelectMany(x => x.Tags);
-        var tagDescription = tags.FirstOrDefault(tag => tag.Type == (int)_header)?.Description;
-
-        if (tagDescription != null)
-        {
-            return TryParseTagDescription(tagDescription, out result);
-        }
-
-        return false;
+        
+        var tagDescription = metaDataWrapper.GetQuickTimeMovieHeaderValue(_header);
+        return tagDescription != null && TryParseTagDescription(tagDescription, out result);
     }
     
     private static bool TryParseTagDescription(string description, [NotNullWhen(true)] out DateTime? result)
