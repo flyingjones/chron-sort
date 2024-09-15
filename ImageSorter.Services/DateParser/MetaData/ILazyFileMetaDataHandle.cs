@@ -1,5 +1,4 @@
-using SixLabors.ImageSharp;
-using Image = System.Drawing.Image;
+using Directory = MetadataExtractor.Directory;
 
 namespace ImageSorter.Services.DateParser.MetaData;
 
@@ -9,7 +8,5 @@ public interface ILazyFileMetaDataHandle : IDisposable
     
     string FileEnding { get; }
 
-    ImageInfo? GetOrLoadImageInfo();
-
-    Image? GetOrLoadImage();
+    IReadOnlyList<Directory>? GetOrLoadMetaDataDirectories();
 }

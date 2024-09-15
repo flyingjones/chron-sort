@@ -17,10 +17,10 @@ public static class DependencySetupHelper
             SkipParserBefore = configuration.SkipParserBefore
         });
         serviceCollection.AddStopwatchLogger(configuration.LogLevel);
-        serviceCollection.AddFileMetaDataHandleFactory();
+        serviceCollection.AddSingleton<ILazyFileMetaDataHandleFactory, LazyFileMetaDataHandleFactory>();
         if (configuration.UseDefaultSortConfiguration)
         {
-            configuration.SortConfiguration = SortConfigurationFactory.DefaultSorting;
+            configuration.SortConfiguration = SortConfigurationFactory.DefaultSorting.ToArray();
         }
 
         if (configuration.PreferFileNameParsing)
