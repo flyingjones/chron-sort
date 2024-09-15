@@ -27,11 +27,13 @@ which is significantly faster but may not be as accurate.
 
 ````
 Description:
-  Sorts images chronologically in the directory structure year/month
+  Sorts files chronologically in the directory structure year/month
   Default sort configuration (change with --configure):
   ExifTag:DateTimeOriginal
   ExifTag:DateTimeDigitized
   ExifTag:DateTime
+  QuickTimeMovieHeader:CreationTime
+  QuickTimeMovieHeader:ModificationTime
   FileName:.*(?<year>20[0-9]{2}|19[0-9]{2})-(?<month>0[0-9]|1[0-9])-(?<day>0[0-9]|1[0-9]|2[0-9]|3[0-1]).*
   FileName:.*(?<year>20[0-9]{2}|19[0-9]{2})(?<month>0[0-9]|1[0-9])(?<day>0[0-9]|1[0-9]|2[0-9]|3[0-1]).*
 
@@ -45,13 +47,16 @@ Options:
   --dest, --out <dest>                                               The path of the destination directory (required if not --move)
   --move                                                             Move files instead of copy [default: False]
   --overwrite                                                        Overwrite files in destination [default: False]
+  --dry-run                                                          Don't move or copy any files, just print the planned operations to a file [default: False]
   -c, --configure <configure>                                        Custom sort configuration. Parsers will be applied in order. Possible Formats:
                                                                      ExifTag:DateTimeOriginal                                       [Tries to use the exif tag 0x9003 to get a date]
                                                                      ExifTag:DateTimeDigitized                                      [Tries to use the exif tag 0x9004 to get a date]
                                                                      ExifTag:DateTime                                               [Tries to use the exif tag 0x0132 to get a date]
+                                                                     QuickTimeMovieHeader:CreationTime                              [Tries to use the quick time movie header (mvhd) 'Creation time' to get a date]
+                                                                     QuickTimeMovieHeader:ModificationTime                          [Tries to use the quick time movie header (mvhd) 'Modification time' to get a date]
                                                                      FileName:<Regex with named capture groups year month and day>  [Tries to parse the file name using a regular expression to get a date]
-  --skip-parser-when-before <skip-parser-when-before>                Skip the result of a parser when the resulting date is earlier [default: 01.01.1900 00:00:00]
-  --skip-parser-when-after <skip-parser-when-after>                  Skip the result of a parser when the resulting date is later [default: <current date + 1 year>]
+  --skip-parser-when-before <skip-parser-when-before>                Skip the result of a parser when the resulting date is earlier [default: 01/01/1900 00:00:00]
+  --skip-parser-when-after <skip-parser-when-after>                  Skip the result of a parser when the resulting date is later [default: <current date + 1 year> 00:00:00]
   -t, --types <types>                                                Space seperated list of file endings to sort
   --from <from>                                                      Minimum date for files to sort
   --to <to>                                                          Maximum date for files to sort
