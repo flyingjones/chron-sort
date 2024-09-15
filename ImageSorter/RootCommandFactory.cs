@@ -1,7 +1,6 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using ImageSorter.DependencyInjection;
-using ImageSorter.Services.DateParser.MetaData;
 using ImageSorter.Services.DateParser.MetaData.ExifTags;
 using ImageSorter.Services.DateParser.MetaData.QuickTimeMovieHeaders;
 using Microsoft.Extensions.Logging;
@@ -11,7 +10,7 @@ namespace ImageSorter;
 public static class RootCommandFactory
 {
     private static readonly string Description = $"""
-                                                  Sorts files chronologically in the directory structure year/month
+                                                  Sorts files chronologically in the specified directory structure (default: year/month)
                                                   Default sort configuration (change with --configure):
                                                   {string.Join(Environment.NewLine, SortConfigurationFactory.DefaultSorting)}
                                                   """;
