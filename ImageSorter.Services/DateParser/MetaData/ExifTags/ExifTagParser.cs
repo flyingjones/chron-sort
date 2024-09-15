@@ -1,10 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace ImageSorter.Services.DateParser.MetaData.ExifTags;
 
-public partial class ExifTagParser : MetaDataParserBase
+public class ExifTagParser : MetaDataParserBase
 {
     private static readonly IReadOnlyCollection<string> SupportedFileEndingsInternal =
         new ReadOnlyCollection<string>(new[] { "jpg", "jpeg", "tif", "tiff", "wav", "png", "webp" });
@@ -26,7 +26,8 @@ public partial class ExifTagParser : MetaDataParserBase
     {
         result = null;
         var tagDescription = metaDataWrapper.GetExifTagValue(_exifTagId);
-        if (tagDescription != null && TryParseDateFromExifTag(tagDescription, out var tmp))
+        const string format = "yyyy:MM:dd HH:mm:ss";
+        if (tagDescription != null && DateTime.TryParseExact(tagDescription, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var tmp))
         {
             result = tmp;
             return true;
@@ -34,13 +35,4 @@ public partial class ExifTagParser : MetaDataParserBase
 
         return false;
     }
-    
-    private static bool TryParseDateFromExifTag(string dateString, out DateTime result)
-    {
-        var cleanedUpDate = DotRegex().Replace(dateString, "-", 2);
-        return DateTime.TryParse(cleanedUpDate, out result);
-    }
-    
-    [GeneratedRegex(":")]
-    private static partial Regex DotRegex();
 }
