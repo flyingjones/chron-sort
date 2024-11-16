@@ -1,12 +1,12 @@
 # Image Sorter
 
-A simple .NET based utility tool to sort files chronologically based on file names and file meta data into a specified directory structure.
+A simple .NET based utility tool to sort files chronologically based on file names and file metadata into a specified directory structure.
 
-The tool is supported on Windows x64 and Linux x64. The releases contains self contained ahead of time compiled builds for those platforms.
+The tool is supported on Windows x64 and Linux x64. The releases contain self-contained ahead of time compiled builds for those platforms.
 
 ## Description
 
-The tool can evaluate meta data of the following file types:
+The tool can evaluate metadata of the following file types:
 
 **Images** (uses [Exif Tags](https://en.wikipedia.org/wiki/Exif)): ``jpg``, ``jpeg``, ``tif``, ``tiff``, ``wav``, ``png``, ``webp``.
 Supported Tags: ``DateTime``, ``DateTimeOriginal``, ``DateTimeDigitized``.
@@ -95,7 +95,7 @@ Checkout the [release notes](ReleaseNotes/Releases.md)
 ## Build it yourself
 
 The executable can be built using the command 
-``dotnet publish -r <target> -c Release`` if you have the [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) installed.
+``dotnet publish -r <target> -c Release`` if you have the [.NET 9 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0) installed.
 
 For x64 Windows: ``dotnet publish -r win-x64 -c Release``
 
