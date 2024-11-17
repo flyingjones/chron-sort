@@ -23,6 +23,5 @@ Global
 		{599983B9-AB3A-4A8E-BCB3-1FB843A04881}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{599983B9-AB3A-4A8E-BCB3-1FB843A04881}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{599983B9-AB3A-4A8E-BCB3-1FB843A04881}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{599983B9-AB3A-4A8E-BCB3-1FB843A04881}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
