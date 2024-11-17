@@ -9,9 +9,9 @@ namespace ImageSorter.Services.Tests.DateParser.MetaData;
 [TestFixture]
 public class QuickTimeMovieHeaderParserTests
 {
-    [TestCase("mov", QuickTimeMovieHeader.CreationTime, "Sat Nov 16 00:00:00 2013", ExpectedResult = "2013-11-16T00:00:00")]
-    [TestCase("qt", QuickTimeMovieHeader.ModificationTime, "Tue Jan 05 00:00:00 2010", ExpectedResult = "2010-01-05T00:00:00")]
-    [TestCase("mp4", QuickTimeMovieHeader.CreationTime, "Thu Sep 19 12:29:45 2024", ExpectedResult = "2024-09-19T12:29:45")]
+    [TestCase("mov", (ushort)QuickTimeMovieHeader.CreationTime, "Sat Nov 16 00:00:00 2013", ExpectedResult = "2013-11-16T00:00:00")]
+    [TestCase("qt", (ushort)QuickTimeMovieHeader.ModificationTime, "Tue Jan 05 00:00:00 2010", ExpectedResult = "2010-01-05T00:00:00")]
+    [TestCase("mp4", (ushort)QuickTimeMovieHeader.CreationTime, "Thu Sep 19 12:29:45 2024", ExpectedResult = "2024-09-19T12:29:45")]
     public string TryParseDate_ValidFileEndingValidTagValue(string fileEnding, QuickTimeMovieHeader header, string tagValue)
     {
         // arrange
