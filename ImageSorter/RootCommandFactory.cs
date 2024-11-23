@@ -44,6 +44,7 @@ public static class RootCommandFactory
         rootCommand.AddOption(Options.LogLevelOption);
         rootCommand.AddOption(Options.BeVerboseOption);
         rootCommand.AddOption(Options.ProgressReportingIntervalOption);
+        rootCommand.AddOption(Options.UseProgressBar);
 
         return rootCommand;
     }
@@ -77,7 +78,8 @@ public static class RootCommandFactory
             SkipParserBefore = parsedContext.GetValueForOption(Options.SkipParserWhenDateBeforeOption),
             SkipParserAfter = parsedContext.GetValueForOption(Options.SkipParserWhenDateAfterOption),
             IsDryRun = parsedContext.GetValueForOption(Options.IsDryRunOption),
-            OutputFormat = parsedContext.GetValueForOption(Options.FormatOption)
+            OutputFormat = parsedContext.GetValueForOption(Options.FormatOption),
+            UseProgressBar = parsedContext.GetValueForOption(Options.UseProgressBar)
         };
         return runConfig;
     }
@@ -172,5 +174,10 @@ public static class RootCommandFactory
             aliases: new[] { "--dry-run" },
             description: "Don't move or copy any files, just print the planned operations to a file",
             getDefaultValue: () => false);
+        
+        public static readonly Option<bool> UseProgressBar = new(
+            aliases: new[] { "--progress-bar" },
+            description: "Show animated progress bar",
+            getDefaultValue: () => true);
     }
 }

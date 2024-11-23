@@ -1,5 +1,6 @@
 using System.Text;
 using ImageSorter.Services.FileWrapper;
+using ImageSorter.Services.ProgressLogger;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.FileHandling;
@@ -13,10 +14,11 @@ public partial class DestinationWriter : IDestinationWriter
     private readonly IDirectoryWrapper _directoryWrapper;
     private readonly IFileStreamService _fileStreamService;
     private readonly IDateDirectory _dateDirectory;
+    private readonly IProgressLogger<DestinationWriter> _progressLogger;
 
     public DestinationWriter(DestinationWriterOptions options, ILogger<DestinationWriter> logger,
         IFileWrapper fileWrapper, IDirectoryWrapper directoryWrapper, IFileStreamService fileStreamService,
-        IDateDirectory dateDirectory)
+        IDateDirectory dateDirectory, IProgressLogger<DestinationWriter> progressLogger)
     {
         _options = options;
         _logger = logger;
@@ -24,6 +26,7 @@ public partial class DestinationWriter : IDestinationWriter
         _directoryWrapper = directoryWrapper;
         _fileStreamService = fileStreamService;
         _dateDirectory = dateDirectory;
+        _progressLogger = progressLogger;
         _directoryWrapper.CreateDirectory(options.DestinationPath);
     }
 
@@ -83,13 +86,18 @@ public partial class DestinationWriter : IDestinationWriter
         var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
         LogSummaryMessage(FormatSortSummary(yearGroups));
 
-        var idx = 0;
         var count = yearGroups.SelectMany(x => x).Count();
+        
+        _progressLogger.LogStart("Copying {count} files (this may take a while)", count);
+        
+        var idx = 0;
+        
         foreach (var yearGroup in yearGroups)
         {
-            LogYearMessage(yearGroup.Key, yearGroup.Count());
             foreach (var item in yearGroup)
             {
+                _progressLogger.LogProgress((double) idx / count);
+                
                 if (cancellationToken.IsCancellationRequested)
                 {
                     _logger.LogError("Execution Canceled");
@@ -97,25 +105,30 @@ public partial class DestinationWriter : IDestinationWriter
                 }
 
                 await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
-                LogProgressIfRequired(++idx, count);
+                ++idx;
             }
         }
+        
+        _progressLogger.LogProgressFinished();
     }
 
     /// <inheritdoc cref="IDestinationWriter.MoveFiles"/>
     public void MoveFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
     {
         var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
-
         LogSummaryMessage(FormatSortSummary(yearGroups));
-
-        var idx = 0;
         var count = yearGroups.SelectMany(x => x).Count();
+        
+        _progressLogger.LogStart("Moving {count} files (this may take a while)", count);
+        
+        var idx = 0;
+        
         foreach (var yearGroup in yearGroups)
         {
-            LogYearMessage(yearGroup.Key, yearGroup.Count());
             foreach (var item in yearGroup)
             {
+                _progressLogger.LogProgress((double) idx / count);
+                
                 if (cancellationToken.IsCancellationRequested)
                 {
                     _logger.LogError("Execution Canceled");
@@ -123,19 +136,13 @@ public partial class DestinationWriter : IDestinationWriter
                 }
 
                 MoveFile(item.FilePath, item.DateTaken);
-                LogProgressIfRequired(++idx, count);
+                ++idx;
             }
         }
+        
+        _progressLogger.LogProgressFinished();
 
         DeleteEmptyDirs(_options.SourcePath);
-    }
-
-    private void LogProgressIfRequired(int index, int totalCount)
-    {
-        if (index % _options.ProgressCount == 0)
-        {
-            LogProgress(index, totalCount, ((double)index / totalCount) * 100);
-        }
     }
 
     /// <summary>
@@ -216,13 +223,6 @@ public partial class DestinationWriter : IDestinationWriter
     [LoggerMessage(Level = LogLevel.Error,
         Message = "Could not write file {sourcePath} to {destinationPath}")]
     private partial void LogError(Exception exception, string sourcePath, string destinationPath);
-
-    [LoggerMessage(Level = LogLevel.Information,
-        Message = "Total Progress: {index}/{totalCount} ({progressPercentage:00}%)")]
-    private partial void LogProgress(int index, int totalCount, double progressPercentage);
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Processing year {year} ({count} files)")]
-    private partial void LogYearMessage(int year, int count);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Sorting Summary {summary}")]
     private partial void LogSummaryMessage(string summary);
