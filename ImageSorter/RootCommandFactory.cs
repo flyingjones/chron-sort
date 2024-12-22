@@ -43,8 +43,8 @@ public static class RootCommandFactory
         // logging
         rootCommand.AddOption(Options.LogLevelOption);
         rootCommand.AddOption(Options.BeVerboseOption);
-        rootCommand.AddOption(Options.ProgressReportingIntervalOption);
         rootCommand.AddOption(Options.UseProgressBar);
+        rootCommand.AddOption(Options.ProgressBarString);
 
         return rootCommand;
     }
@@ -71,7 +71,6 @@ public static class RootCommandFactory
             From = parsedContext.GetValueForOption(Options.UseFromDateFilterOption),
             To = parsedContext.GetValueForOption(Options.UseToDateFilterOption),
             ScanParallel = parsedContext.GetValueForOption(Options.UseParallelScanningOption),
-            ProgressAt = parsedContext.GetValueForOption(Options.ProgressReportingIntervalOption),
             LogLevel = parsedContext.GetValueForOption(Options.BeVerboseOption)
                 ? LogLevel.Trace
                 : parsedContext.GetValueForOption(Options.LogLevelOption),
@@ -79,7 +78,8 @@ public static class RootCommandFactory
             SkipParserAfter = parsedContext.GetValueForOption(Options.SkipParserWhenDateAfterOption),
             IsDryRun = parsedContext.GetValueForOption(Options.IsDryRunOption),
             OutputFormat = parsedContext.GetValueForOption(Options.FormatOption),
-            UseProgressBar = parsedContext.GetValueForOption(Options.UseProgressBar)
+            UseProgressBar = parsedContext.GetValueForOption(Options.UseProgressBar),
+            ProgressBarCharacters = parsedContext.GetValueForOption(Options.ProgressBarString)
         };
         return runConfig;
     }
@@ -123,11 +123,6 @@ public static class RootCommandFactory
         public static readonly Option<DateTime?> UseToDateFilterOption = new(
             aliases: new[] { "--to" },
             description: "Maximum date for files to sort");
-
-        public static readonly Option<int?> ProgressReportingIntervalOption = new(
-            aliases: new[] { "--progress-at" },
-            description: "Processed file count after which a progress update is printed",
-            getDefaultValue: () => 1000);
 
         public static readonly Option<string[]> SortConfigurationOption = new(
             aliases: new[] { "-c", "--configure" },
@@ -179,5 +174,10 @@ public static class RootCommandFactory
             aliases: new[] { "--progress-bar" },
             description: "Show animated progress bar",
             getDefaultValue: () => true);
+
+        public static readonly Option<string> ProgressBarString = new(
+            aliases: new[] { "--progress-bar-chars" },
+            description: "Characters to use for rendering the progress bar",
+            getDefaultValue: () => " -=#");
     }
 }

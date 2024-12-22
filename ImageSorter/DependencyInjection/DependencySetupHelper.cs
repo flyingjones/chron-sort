@@ -72,7 +72,14 @@ public static class DependencySetupHelper
 
         if (configuration.UseProgressBar)
         {
-            serviceCollection.AddSingleton(new ConsoleProgressLoggerConfiguration());
+            var progressLoggerConfig = new ConsoleProgressLoggerConfiguration();
+
+            if (configuration.ProgressBarCharacters != null)
+            {
+                progressLoggerConfig.ProgressCharsString = configuration.ProgressBarCharacters;
+            }
+            
+            serviceCollection.AddSingleton(progressLoggerConfig);
             serviceCollection.AddTransient(typeof(IProgressLogger<>), typeof(ConsoleProgressLogger<>));
         }
         else
