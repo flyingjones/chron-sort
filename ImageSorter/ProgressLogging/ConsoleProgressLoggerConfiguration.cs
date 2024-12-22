@@ -2,8 +2,14 @@ namespace ImageSorter.ProgressLogging;
 
 public class ConsoleProgressLoggerConfiguration
 {
+    /// <summary>
+    /// The width (in chars) of the progress bar itself (excluding the text around it)
+    /// </summary>
     public int ProgressBarWidth => 80;
 
+    /// <summary>
+    /// The threshold between re-renders of the progress bar
+    /// </summary>
     public double RefreshThreshold => 0.001d;
 
     /// <summary>

@@ -6,7 +6,6 @@ using ImageSorter.Services.DateTimeWrapper;
 using ImageSorter.Services.FileHandling;
 using ImageSorter.Services.ProgressLogger;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Console;
 
 namespace ImageSorter.DependencyInjection;
 

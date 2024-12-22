@@ -2,6 +2,9 @@ using ImageSorter.Services.ProgressLogger;
 
 namespace ImageSorter.ProgressLogging;
 
+/// <summary>
+/// ProgressLogger which doesn't log at all. Useful when output is piped to a file.
+/// </summary>
 public class NoOperationProgressLogger<T> : IProgressLogger<T>
 {
     public void LogStart(string? message, params object?[] args)
