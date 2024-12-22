@@ -1,5 +1,6 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
+using FluentAssertions;
 using ImageSorter.Services.FileHandling;
 using ImageSorter.Services.FileWrapper;
 using Moq;
@@ -38,12 +39,13 @@ public class DestinationWriterTests
         var service = _fixture.Create<DestinationWriter>();
 
         // act
-        service.MoveFile(sourcePath, date);
+        var result = service.MoveFile(sourcePath, date);
 
         // assert
         fileMock.Verify(x => x.Exists(Path.GetFullPath($"{destPath}/2024/05/img1.jpg")), Times.Once);
         fileMock.Verify(x => x.Move(sourcePath, Path.GetFullPath($"{destPath}/2024/05/img1.jpg"), It.IsAny<bool>()),
             Times.Once);
+        result.Should().BeTrue();
     }
 
     [TestCase(true)]
@@ -69,7 +71,7 @@ public class DestinationWriterTests
         var service = _fixture.Create<DestinationWriter>();
 
         // act
-        service.MoveFile(sourcePath, date);
+        var result = service.MoveFile(sourcePath, date);
 
         // assert
         fileMock.Verify(x => x.Exists(Path.GetFullPath($"{destPath}/2024/05/img1.jpg")), Times.Once);
@@ -78,10 +80,12 @@ public class DestinationWriterTests
         {
             fileMock.Verify(x => x.Move(sourcePath, Path.GetFullPath($"{destPath}/2024/05/img1.jpg"), true),
                 Times.Once);
+            result.Should().BeTrue();
         }
         else
         {
             fileMock.Verify(x => x.Move(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+            result.Should().BeFalse();
         }
     }
 
@@ -108,7 +112,7 @@ public class DestinationWriterTests
         var service = _fixture.Create<DestinationWriter>();
 
         // act
-        await service.CopyFile(sourcePath, date, default);
+        var result = await service.CopyFile(sourcePath, date, default);
 
         // assert
         fileMock.Verify(x => x.Exists(Path.GetFullPath($"{destPath}/2024/05/img1.jpg")), Times.Once);
@@ -119,11 +123,13 @@ public class DestinationWriterTests
                 x => x.CopyToAsync(sourcePath, Path.GetFullPath($"{destPath}/2024/05/img1.jpg"),
                     It.IsAny<CancellationToken>()),
                 Times.Once);
+            result.Should().BeTrue();
         }
         else
         {
             fileStreamServiceMock.Verify(
                 x => x.CopyToAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+            result.Should().BeFalse();
         }
     }
 

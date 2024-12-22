@@ -74,7 +74,7 @@ Options:
                                                                      QuickTimeMovieHeader:CreationTime                              [Tries to use the quick time movie header (mvhd) 'Creation time' to get a date]
                                                                      QuickTimeMovieHeader:ModificationTime                          [Tries to use the quick time movie header (mvhd) 'Modification time' to get a date]
                                                                      FileName:<Regex with named capture groups year month and day>  [Tries to parse the file name using a regular expression to get a date]
-  --skip-parser-when-before <skip-parser-when-before>                Skip the result of a parser when the resulting date is earlier [default: 01/01/1900 00:00:00]
+  --skip-parser-when-before <skip-parser-when-before>                Skip the result of a parser when the resulting date is earlier [default: 01/01/1950 00:00:00]
   --skip-parser-when-after <skip-parser-when-after>                  Skip the result of a parser when the resulting date is later [default: <current date + 1 year> 00:00:00]
   -t, --types <types>                                                Space seperated list of file endings to sort
   --from <from>                                                      Minimum date for files to sort

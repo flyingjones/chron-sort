@@ -158,7 +158,7 @@ public static class RootCommandFactory
         public static readonly Option<DateTime> SkipParserWhenDateBeforeOption = new(
             aliases: new[] { "--skip-parser-when-before" },
             description: "Skip the result of a parser when the resulting date is earlier",
-            getDefaultValue: () => DateTime.Parse("1900-01-01"));
+            getDefaultValue: () => DateTime.Parse("1950-01-01"));
 
         public static readonly Option<DateTime> SkipParserWhenDateAfterOption = new(
             aliases: new[] { "--skip-parser-when-after" },
