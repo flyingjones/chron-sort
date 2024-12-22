@@ -26,8 +26,9 @@ public class ConsoleProgressLogger<T> : IProgressLogger<T>
 
     public void LogStart(string? message, params object?[] args)
     {
-        _stopwatch.Start();
         _logger.LogInformation(message, args);
+        Thread.Sleep(50);
+        _stopwatch.Start();
     }
 
     /// <summary>
@@ -123,6 +124,10 @@ public class ConsoleProgressLogger<T> : IProgressLogger<T>
         Console.WriteLine("\r" + new string(' ', emptyCharsCount) + "\r");
         _lastPercentage = 1d;
         _stopwatch.Stop();
+
+        var timeTaken = TimeSpan.FromMilliseconds(_stopwatch.ElapsedMilliseconds);
+        _logger.LogInformation(@"Finished in {timeTaken}", timeTaken);
+        
         _stopwatch.Reset();
     }
 }

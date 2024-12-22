@@ -79,11 +79,12 @@ Options:
   -t, --types <types>                                                Space seperated list of file endings to sort
   --from <from>                                                      Minimum date for files to sort
   --to <to>                                                          Maximum date for files to sort
-  --fast-scan, --prefer-file-name-parsing                            Prefer FileName parsers over metadata-based parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)      
+  --fast-scan, --prefer-file-name-parsing                            Prefer FileName parsers over metadata-based parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)
   --scan-parallel                                                    Perform the scan part in parallel [default: False]
   --log-level <Critical|Debug|Error|Information|None|Trace|Warning>  Log Level [default: Information]
   -v, --verbose                                                      Same as --log-level Trace
-  --progress-at <progress-at>                                        Processed file count after which a progress update is printed [default: 1000]
+  --progress-bar                                                     Show animated progress bar [default: True]
+  --progress-bar-chars <progress-bar-chars>                          Characters to use for rendering the progress bar [default:  -=#]
   --version                                                          Show version information
   -?, -h, --help                                                     Show help and usage information
 ````
