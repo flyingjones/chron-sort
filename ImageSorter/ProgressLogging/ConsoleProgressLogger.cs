@@ -22,8 +22,8 @@ public class ConsoleProgressLogger<T> : IProgressLogger<T>
         _logger = logger;
         _stopwatch = new Stopwatch();
     }
-    /// <inheritdoc/>
 
+    /// <inheritdoc/>
     public void LogStart(string? message, params object?[] args)
     {
         _logger.LogInformation(message, args);

@@ -11,7 +11,9 @@ public class ParallelDateParsingHandler : IDateParsingHandler
     private readonly ILogger<ParallelDateParsingHandler> _logger;
     private readonly IProgressLogger<ParallelDateParsingHandler> _progressLogger;
 
-    public ParallelDateParsingHandler(IDateParser dateParser, ILogger<ParallelDateParsingHandler> logger,
+    public ParallelDateParsingHandler(
+        IDateParser dateParser,
+        ILogger<ParallelDateParsingHandler> logger,
         IProgressLogger<ParallelDateParsingHandler> progressLogger)
     {
         _dateParser = dateParser;

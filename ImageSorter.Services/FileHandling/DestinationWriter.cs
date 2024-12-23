@@ -129,8 +129,6 @@ public partial class DestinationWriter : IDestinationWriter
 
         var count = yearGroups.SelectMany(x => x).Count();
 
-        GenerateDuplicateDescription(yearGroups.SelectMany(x => x));
-
         var copySummary = new List<FileOperationResult>();
         
         _progressLogger.LogStart("Copying {count} files (this may take a while)", count);
@@ -169,8 +167,6 @@ public partial class DestinationWriter : IDestinationWriter
         LogSummaryMessage(FormatSortSummary(yearGroups));
         var count = yearGroups.SelectMany(x => x).Count();
         
-        GenerateDuplicateDescription(yearGroups.SelectMany(x => x));
-        
         var moveSummary = new List<FileOperationResult>();
         
         _progressLogger.LogStart("Moving {count} files (this may take a while)", count);
@@ -201,33 +197,6 @@ public partial class DestinationWriter : IDestinationWriter
         DeleteEmptyDirs(_options.SourcePath);
         _logger.LogInformation("Sorting Result Summary{Summary}", FormatSortResultSummary(moveSummary));
         WriteSummaryFile(_options.DestinationPath, moveSummary);
-    }
-
-    private void GenerateDuplicateDescription(IEnumerable<WriteQueueItem> writeQueueItems)
-    {
-        var duplicateCount = writeQueueItems
-            .Select(item =>
-            {
-                var monthPath = _dateDirectory.CreatePathAndDirs(item.DateTaken);
-                var fileName = Path.GetFileName(item.FilePath);
-                return Path.GetFullPath($"{monthPath}/{fileName}");
-            }).CountBy(x => x).Where(x => x.Value > 2).ToList();
-
-        if (duplicateCount.Count > 0)
-        {
-            LogDuplicates(duplicateCount);
-        }
-    }
-
-    private void LogDuplicates(ICollection<KeyValuePair<string, int>> duplicates)
-    {
-        foreach (var file in duplicates)
-        {
-            LogDuplicate(file.Key, file.Value);
-        }
-
-        var totalDuplicateCount = duplicates.Sum(x => x.Value);
-        LogDuplicateCount(totalDuplicateCount);
     }
 
     /// <summary>
@@ -348,12 +317,6 @@ public partial class DestinationWriter : IDestinationWriter
 
         return stringBuilder.ToString();
     }
-    
-    [LoggerMessage(Level = LogLevel.Information, Message = "Sorting with the current configuration will result in {count} files less in the destination because of duplicates in the source")]
-    private partial void LogDuplicateCount(int count);
-
-    [LoggerMessage(Level = LogLevel.Trace, Message = "Target File {targetPath} is found in the source {count} times")]
-    private partial void LogDuplicate(string targetPath, int count);
 
     [LoggerMessage(Level = LogLevel.Trace, Message = "Skipping file since it already exists at the destination")]
     private partial void LogSkip();
