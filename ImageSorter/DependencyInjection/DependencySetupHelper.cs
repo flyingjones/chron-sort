@@ -1,8 +1,10 @@
 using ImageSorter.Logging;
+using ImageSorter.ProgressLogging;
 using ImageSorter.Services.DateParser;
 using ImageSorter.Services.DateParser.MetaData;
 using ImageSorter.Services.DateTimeWrapper;
 using ImageSorter.Services.FileHandling;
+using ImageSorter.Services.ProgressLogger;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ImageSorter.DependencyInjection;
@@ -65,6 +67,23 @@ public static class DependencySetupHelper
         else
         {
             serviceCollection.AddSingleton<IDateParsingHandler, SequentialDateParsingHandler>();
+        }
+
+        if (configuration.UseProgressBar)
+        {
+            var progressLoggerConfig = new ConsoleProgressLoggerConfiguration();
+
+            if (configuration.ProgressBarCharacters != null)
+            {
+                progressLoggerConfig.ProgressCharsString = configuration.ProgressBarCharacters;
+            }
+            
+            serviceCollection.AddSingleton(progressLoggerConfig);
+            serviceCollection.AddTransient(typeof(IProgressLogger<>), typeof(ConsoleProgressLogger<>));
+        }
+        else
+        {
+            serviceCollection.AddTransient(typeof(IProgressLogger<>), typeof(NoOperationProgressLogger<>));
         }
 
         serviceCollection.AddTransient<ISorter, Sorter>();

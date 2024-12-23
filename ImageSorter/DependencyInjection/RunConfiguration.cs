@@ -39,4 +39,8 @@ public class RunConfiguration
     public required bool IsDryRun { get; set; }
     
     public required string? OutputFormat { get; set; }
+    
+    public required bool UseProgressBar { get; set; }
+    
+    public required string? ProgressBarCharacters { get; set; }
 }
