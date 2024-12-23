@@ -20,9 +20,10 @@ public partial class DateParser : IDateParser
     }
 
 
-    public DateTime ParseDate(string filePath)
+    public DateTime ParseDate(string filePath, out string parserName)
     {
         using var metaDataHandle = _fileMetaDataHandleFactory.CreateHandle(filePath);
+        parserName = "<file system last write time>";
 
         foreach (var dateParserImpl in _dateParserImplementations)
         {
@@ -33,6 +34,7 @@ public partial class DateParser : IDateParser
                 if (result.Value >= _configuration.SkipParserBefore &&
                     result.Value <= _configuration.SkipParserAfter)
                 {
+                    parserName = dateParserImpl.Name;
                     return result.Value;
                 }
                 LogSkippedParser(dateParserImpl.Name, filePath, _configuration.SkipParserBefore, result.Value, _configuration.SkipParserAfter);

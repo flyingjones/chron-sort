@@ -17,6 +17,7 @@ public partial class DryRunDestinationWriter : IDestinationWriter
     private readonly IBufferedStreamWriterFactory _bufferedStreamWriterFactory;
     private readonly IDateDirectory _dateDirectory;
 
+    // TODO let the dry run check for conflicts and log those
     public DryRunDestinationWriter(
         DestinationWriterOptions options,
         ILogger<DryRunDestinationWriter> logger,

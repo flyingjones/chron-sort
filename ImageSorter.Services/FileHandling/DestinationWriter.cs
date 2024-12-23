@@ -1,4 +1,5 @@
 using System.Text;
+using ImageSorter.Services.DateTimeWrapper;
 using ImageSorter.Services.FileWrapper;
 using ImageSorter.Services.ProgressLogger;
 using Microsoft.Extensions.Logging;
@@ -15,6 +16,8 @@ public partial class DestinationWriter : IDestinationWriter
     private readonly IFileStreamService _fileStreamService;
     private readonly IDateDirectory _dateDirectory;
     private readonly IProgressLogger<DestinationWriter> _progressLogger;
+    private readonly IBufferedStreamWriterFactory _bufferedStreamWriterFactory;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
     public DestinationWriter(
         DestinationWriterOptions options,
@@ -23,7 +26,9 @@ public partial class DestinationWriter : IDestinationWriter
         IDirectoryWrapper directoryWrapper,
         IFileStreamService fileStreamService,
         IDateDirectory dateDirectory,
-        IProgressLogger<DestinationWriter> progressLogger)
+        IProgressLogger<DestinationWriter> progressLogger,
+        IBufferedStreamWriterFactory bufferedStreamWriterFactory,
+        IDateTimeProvider dateTimeProvider)
     {
         _options = options;
         _logger = logger;
@@ -32,14 +37,24 @@ public partial class DestinationWriter : IDestinationWriter
         _fileStreamService = fileStreamService;
         _dateDirectory = dateDirectory;
         _progressLogger = progressLogger;
+        _bufferedStreamWriterFactory = bufferedStreamWriterFactory;
+        _dateTimeProvider = dateTimeProvider;
         _directoryWrapper.CreateDirectory(options.DestinationPath);
     }
 
-    public async Task<bool> CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
+    public async Task<FileOperationResult> CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = Path.GetFullPath($"{monthPath}/{fileName}");
+        var result = new FileOperationResult
+        {
+            SourcePath = sourcePath,
+            DestinationPath = destinationPath,
+            Status = FileOperationResultStatus.Error,
+            FileDate = dateTime
+        };
+        
         LogWriting("Copying", sourcePath, destinationPath);
         try
         {
@@ -47,29 +62,42 @@ public partial class DestinationWriter : IDestinationWriter
             if (fileExists && !_options.OverwriteExistingFiles)
             {
                 LogSkip();
-                return false;
+                result.Status = FileOperationResultStatus.Skipped;
+                return result;
             }
 
             if (fileExists) LogOverwrite();
             await _fileStreamService.CopyToAsync(sourcePath, destinationPath, cancellationToken);
-            return true;
+            result.Status = fileExists ? FileOperationResultStatus.OverwriteSuccess : FileOperationResultStatus.Success;
         }
         catch (Exception ex)
         {
             LogError(ex, sourcePath, destinationPath);
         }
 
-        return false;
+        return result;
     }
 
-    public bool MoveFile(string sourcePath, DateTime dateTime)
+    public FileOperationResult MoveFile(string sourcePath, DateTime dateTime)
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = Path.GetFullPath($"{monthPath}/{fileName}");
+        var result = new FileOperationResult
+        {
+            SourcePath = sourcePath,
+            DestinationPath = destinationPath,
+            Status = FileOperationResultStatus.Error,
+            FileDate = dateTime
+        };
+        
         LogWriting("Moving", sourcePath, destinationPath);
         // the file is now at the desired location -> return true
-        if (sourcePath == destinationPath) return true;
+        if (sourcePath == destinationPath)
+        {
+            result.Status = FileOperationResultStatus.AlreadyInCorrectPlace;
+            return result;
+        }
 
         try
         {
@@ -77,19 +105,20 @@ public partial class DestinationWriter : IDestinationWriter
             if (fileExists && !_options.OverwriteExistingFiles)
             {
                 LogSkip();
-                return false;
+                result.Status = FileOperationResultStatus.Skipped;
+                return result;
             }
             
             if (fileExists) LogOverwrite();
             _fileWrapper.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
-            return true;
+            result.Status = fileExists ? FileOperationResultStatus.OverwriteSuccess : FileOperationResultStatus.Success;
         }
         catch (Exception ex)
         {
             LogError(ex, sourcePath, destinationPath);
         }
 
-        return false;
+        return result;
     }
 
     /// <inheritdoc cref="IDestinationWriter.CopyFiles"/>
@@ -101,6 +130,8 @@ public partial class DestinationWriter : IDestinationWriter
         var count = yearGroups.SelectMany(x => x).Count();
 
         GenerateDuplicateDescription(yearGroups.SelectMany(x => x));
+
+        var copySummary = new List<FileOperationResult>();
         
         _progressLogger.LogStart("Copying {count} files (this may take a while)", count);
         
@@ -118,12 +149,17 @@ public partial class DestinationWriter : IDestinationWriter
                     return;
                 }
 
-                await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
+                var copyResult = await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
+                copyResult.ParserName = item.ParserName;
+                copySummary.Add(copyResult);
                 ++idx;
             }
         }
         
         _progressLogger.LogProgressFinished();
+        
+        _logger.LogInformation("Sorting Result Summary{Summary}", FormatSortResultSummary(copySummary));
+        WriteSummaryFile(_options.DestinationPath, copySummary);
     }
 
     /// <inheritdoc cref="IDestinationWriter.MoveFiles"/>
@@ -134,6 +170,8 @@ public partial class DestinationWriter : IDestinationWriter
         var count = yearGroups.SelectMany(x => x).Count();
         
         GenerateDuplicateDescription(yearGroups.SelectMany(x => x));
+        
+        var moveSummary = new List<FileOperationResult>();
         
         _progressLogger.LogStart("Moving {count} files (this may take a while)", count);
         
@@ -151,14 +189,18 @@ public partial class DestinationWriter : IDestinationWriter
                     return;
                 }
 
-                MoveFile(item.FilePath, item.DateTaken);
+                var moveResult = MoveFile(item.FilePath, item.DateTaken);
+                moveResult.ParserName = item.ParserName;
                 ++idx;
+                moveSummary.Add(moveResult);
             }
         }
         
         _progressLogger.LogProgressFinished();
 
         DeleteEmptyDirs(_options.SourcePath);
+        _logger.LogInformation("Sorting Result Summary{Summary}", FormatSortResultSummary(moveSummary));
+        WriteSummaryFile(_options.DestinationPath, moveSummary);
     }
 
     private void GenerateDuplicateDescription(IEnumerable<WriteQueueItem> writeQueueItems)
@@ -229,6 +271,59 @@ public partial class DestinationWriter : IDestinationWriter
             .OrderBy(x => x.DateTaken)
             .GroupBy(x => x.DateTaken.Year)
             .ToList();
+    }
+
+    private void WriteSummaryFile(string destinationPath, ICollection<FileOperationResult> results)
+    {
+        // TODO move to own class and add flag to generate the summary file
+        var summaryFileName = $"sort_result_summary_{_dateTimeProvider.Now():yyyy-MM-dd_hh_mm_ss}.txt";
+        var summaryFilePath = $"{destinationPath}/{summaryFileName}";
+        using var textWriter = _bufferedStreamWriterFactory.CreateStreamWriter(summaryFilePath, FileMode.CreateNew);
+
+        foreach (var result in results)
+        {
+            textWriter.WriteLine(result.ToString());
+        }
+    }
+
+    private static string FormatSortResultSummary(ICollection<FileOperationResult> operationResults)
+    {
+        var duplicatesFromSourceCount = operationResults
+            .CountBy(x => x.DestinationPath)
+            .Where(x => x.Value > 2)
+            // one file will be moved
+            .Sum(x => x.Value - 1);
+
+        var countByStatus = operationResults
+            .CountBy(x => x.Status)
+            .ToDictionary();
+
+        foreach (var possibleStatus in Enum.GetValues<FileOperationResultStatus>())
+        {
+            countByStatus.TryAdd(possibleStatus, 0);
+        }
+
+        var stringBuilder = new StringBuilder();
+
+        stringBuilder.Append(Environment.NewLine);
+        
+        if (countByStatus[FileOperationResultStatus.AlreadyInCorrectPlace] > 0)
+        {
+            stringBuilder.Append($"[Already Sorted       ]: {countByStatus[FileOperationResultStatus.AlreadyInCorrectPlace],6:#####0}");
+            stringBuilder.Append(Environment.NewLine);
+        }
+        
+        stringBuilder.Append($"[Success              ]: {countByStatus[FileOperationResultStatus.Success],6:#####0}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append($"[Success (Overwritten)]: {countByStatus[FileOperationResultStatus.OverwriteSuccess],6:#####0}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append($"[Skipped              ]: {countByStatus[FileOperationResultStatus.Skipped],6:#####0} (duplicates in source: {duplicatesFromSourceCount})");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append($"[Error                ]: {countByStatus[FileOperationResultStatus.Error],6:#####0}");
+        stringBuilder.Append(Environment.NewLine);
+        stringBuilder.Append($"[Total                ]: {operationResults.Count,6:#####0}");
+
+        return stringBuilder.ToString();
     }
 
     private static string FormatSortSummary(ICollection<IGrouping<int, WriteQueueItem>> yearGroups)

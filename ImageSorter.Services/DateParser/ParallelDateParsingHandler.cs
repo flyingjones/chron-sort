@@ -33,11 +33,12 @@ public class ParallelDateParsingHandler : IDateParsingHandler
                 throw new TaskCanceledException();
             }
 
-            var dateTaken = _dateParser.ParseDate(filePath);
+            var dateTaken = _dateParser.ParseDate(filePath, out var parserId);
             writeQueue.Push(new WriteQueueItem
             {
                 DateTaken = dateTaken,
-                FilePath = filePath
+                FilePath = filePath,
+                ParserName = parserId
             });
 
             await Task.CompletedTask;

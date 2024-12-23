@@ -45,7 +45,7 @@ public class DestinationWriterTests
         fileMock.Verify(x => x.Exists(Path.GetFullPath($"{destPath}/2024/05/img1.jpg")), Times.Once);
         fileMock.Verify(x => x.Move(sourcePath, Path.GetFullPath($"{destPath}/2024/05/img1.jpg"), It.IsAny<bool>()),
             Times.Once);
-        result.Should().BeTrue();
+        result.Status.Should().Be(FileOperationResultStatus.Success);
     }
 
     [TestCase(true)]
@@ -80,12 +80,12 @@ public class DestinationWriterTests
         {
             fileMock.Verify(x => x.Move(sourcePath, Path.GetFullPath($"{destPath}/2024/05/img1.jpg"), true),
                 Times.Once);
-            result.Should().BeTrue();
+            result.Status.Should().Be(FileOperationResultStatus.OverwriteSuccess);
         }
         else
         {
             fileMock.Verify(x => x.Move(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
-            result.Should().BeFalse();
+            result.Status.Should().Be(FileOperationResultStatus.Skipped);
         }
     }
 
@@ -123,13 +123,13 @@ public class DestinationWriterTests
                 x => x.CopyToAsync(sourcePath, Path.GetFullPath($"{destPath}/2024/05/img1.jpg"),
                     It.IsAny<CancellationToken>()),
                 Times.Once);
-            result.Should().BeTrue();
+            result.Status.Should().Be(FileOperationResultStatus.OverwriteSuccess);
         }
         else
         {
             fileStreamServiceMock.Verify(
                 x => x.CopyToAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-            result.Should().BeFalse();
+            result.Status.Should().Be(FileOperationResultStatus.Skipped);
         }
     }
 
