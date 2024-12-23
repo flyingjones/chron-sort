@@ -35,7 +35,7 @@ public partial class DestinationWriter : IDestinationWriter
         _directoryWrapper.CreateDirectory(options.DestinationPath);
     }
 
-    public async Task<bool> CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
+    public async Task CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
@@ -47,29 +47,25 @@ public partial class DestinationWriter : IDestinationWriter
             if (fileExists && !_options.OverwriteExistingFiles)
             {
                 LogSkip();
-                return false;
+                return;
             }
 
             if (fileExists) LogOverwrite();
             await _fileStreamService.CopyToAsync(sourcePath, destinationPath, cancellationToken);
-            return true;
         }
         catch (Exception ex)
         {
             LogError(ex, sourcePath, destinationPath);
         }
-
-        return false;
     }
 
-    public bool MoveFile(string sourcePath, DateTime dateTime)
+    public void MoveFile(string sourcePath, DateTime dateTime)
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = Path.GetFullPath($"{monthPath}/{fileName}");
         LogWriting("Moving", sourcePath, destinationPath);
-        // the file is now at the desired location -> return true
-        if (sourcePath == destinationPath) return true;
+        if (sourcePath == destinationPath) return;
 
         try
         {
@@ -77,19 +73,16 @@ public partial class DestinationWriter : IDestinationWriter
             if (fileExists && !_options.OverwriteExistingFiles)
             {
                 LogSkip();
-                return false;
+                return;
             }
             
             if (fileExists) LogOverwrite();
             _fileWrapper.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
-            return true;
         }
         catch (Exception ex)
         {
             LogError(ex, sourcePath, destinationPath);
         }
-
-        return false;
     }
 
     /// <inheritdoc cref="IDestinationWriter.CopyFiles"/>
@@ -100,8 +93,6 @@ public partial class DestinationWriter : IDestinationWriter
 
         var count = yearGroups.SelectMany(x => x).Count();
 
-        GenerateDuplicateDescription(yearGroups.SelectMany(x => x));
-        
         _progressLogger.LogStart("Copying {count} files (this may take a while)", count);
         
         var idx = 0;
@@ -133,8 +124,6 @@ public partial class DestinationWriter : IDestinationWriter
         LogSummaryMessage(FormatSortSummary(yearGroups));
         var count = yearGroups.SelectMany(x => x).Count();
         
-        GenerateDuplicateDescription(yearGroups.SelectMany(x => x));
-        
         _progressLogger.LogStart("Moving {count} files (this may take a while)", count);
         
         var idx = 0;
@@ -159,33 +148,6 @@ public partial class DestinationWriter : IDestinationWriter
         _progressLogger.LogProgressFinished();
 
         DeleteEmptyDirs(_options.SourcePath);
-    }
-
-    private void GenerateDuplicateDescription(IEnumerable<WriteQueueItem> writeQueueItems)
-    {
-        var duplicateCount = writeQueueItems
-            .Select(item =>
-            {
-                var monthPath = _dateDirectory.CreatePathAndDirs(item.DateTaken);
-                var fileName = Path.GetFileName(item.FilePath);
-                return Path.GetFullPath($"{monthPath}/{fileName}");
-            }).CountBy(x => x).Where(x => x.Value > 2).ToList();
-
-        if (duplicateCount.Count > 0)
-        {
-            LogDuplicates(duplicateCount);
-        }
-    }
-
-    private void LogDuplicates(ICollection<KeyValuePair<string, int>> duplicates)
-    {
-        foreach (var file in duplicates)
-        {
-            LogDuplicate(file.Key, file.Value);
-        }
-
-        var totalDuplicateCount = duplicates.Sum(x => x.Value);
-        LogDuplicateCount(totalDuplicateCount);
     }
 
     /// <summary>
@@ -253,12 +215,6 @@ public partial class DestinationWriter : IDestinationWriter
 
         return stringBuilder.ToString();
     }
-    
-    [LoggerMessage(Level = LogLevel.Information, Message = "Sorting with the current configuration will result in {count} files less in the destination because of duplicates in the source")]
-    private partial void LogDuplicateCount(int count);
-
-    [LoggerMessage(Level = LogLevel.Trace, Message = "Target File {targetPath} is found in the source {count} times")]
-    private partial void LogDuplicate(string targetPath, int count);
 
     [LoggerMessage(Level = LogLevel.Trace, Message = "Skipping file since it already exists at the destination")]
     private partial void LogSkip();
