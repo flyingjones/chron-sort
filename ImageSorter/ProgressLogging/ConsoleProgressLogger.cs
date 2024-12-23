@@ -22,8 +22,8 @@ public class ConsoleProgressLogger<T> : IProgressLogger<T>
         _logger = logger;
         _stopwatch = new Stopwatch();
     }
-    /// <inheritdoc/>
 
+    /// <inheritdoc/>
     public void LogStart(string? message, params object?[] args)
     {
         _logger.LogInformation(message, args);
@@ -126,7 +126,7 @@ public class ConsoleProgressLogger<T> : IProgressLogger<T>
         _stopwatch.Stop();
 
         var timeTaken = TimeSpan.FromMilliseconds(_stopwatch.ElapsedMilliseconds);
-        _logger.LogInformation(@"Finished in {timeTaken}", timeTaken);
+        _logger.LogInformation("Finished in {timeTaken}", timeTaken);
         
         _stopwatch.Reset();
     }
