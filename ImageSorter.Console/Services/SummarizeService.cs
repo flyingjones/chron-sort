@@ -43,7 +43,7 @@ public class SummarizeService : ISummarizeService
         builder.AddRow("*", filesToProcess.Length.ToString(), (allFiles.Length - filesToProcess.Length).ToString());
 
         var table = builder.Build();
-        table.SetTextAlignment( HorizontalTextAlignment.Right);
+        table.SetTextAlignment(HorizontalTextAlignment.Right);
         return table;
     }
 
