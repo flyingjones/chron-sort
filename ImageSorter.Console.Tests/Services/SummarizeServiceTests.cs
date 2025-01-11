@@ -1,7 +1,10 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using FluentAssertions;
+using ImageSorter.FileHandling.Directory;
 using ImageSorter.Services;
+using ImageSorter.Services.FileHandling;
+using ImageSorter.Tests.Helpers;
 
 namespace ImageSorter.Tests.Services;
 
@@ -34,28 +37,78 @@ public class SummarizeServiceTests
         result.RowCount.Should().Be(5);
         
         // header
-        result[0, 0].Should().Be("File Ending");
-        result[0, 1].Should().Be("Used Count");
-        result[0, 2].Should().Be("Ignored Count");
-        
+        result.RowShould(0).BeEquivalentTo("File Ending", "Used Count", "Ignored Count");
+
         // jpg
-        result[1, 0].Should().Be("jpg");
-        result[1, 1].Should().Be("2");
-        result[1, 2].Should().Be("0");
-        
+        result.RowShould(1).BeEquivalentTo("jpg", "2", "0");
+
         // png
-        result[2, 0].Should().Be("png");
-        result[2, 1].Should().Be("1");
-        result[2, 2].Should().Be("0");
-        
+        result.RowShould(2).BeEquivalentTo("png", "1", "0");
+
         // md
-        result[3, 0].Should().Be("md");
-        result[3, 1].Should().Be("0");
-        result[3, 2].Should().Be("1");
+        result.RowShould(3).BeEquivalentTo("md", "0", "1");
+
+        // summary
+        result.RowShould(4).BeEquivalentTo("*", "3", "1");
+    }
+
+    [Test]
+    public void SummarizeConflicts()
+    {
+        // arrange
+        var writeQueue = new[]
+        {
+            // three files which have the same month and year and would therefore result in a conflict
+            new WriteQueueItem
+            {
+                DateTaken = DateTime.Parse("2024-05-05"),
+                FilePath = "/home/images/phone/img01.jpg",
+                ParserName = "TestParser"
+            },
+            new WriteQueueItem
+            {
+                DateTaken = DateTime.Parse("2024-05-05"),
+                FilePath = "/home/images/downloads/img01.jpg",
+                ParserName = "TestParser"
+            },
+            new WriteQueueItem
+            {
+                DateTaken = DateTime.Parse("2024-05-05"),
+                FilePath = "/home/images/backup/img01.jpg",
+                ParserName = "TestParser"
+            },
+            // one file for year 2025, should not be a conflict since it should be sorted in a different directory
+            new WriteQueueItem
+            {
+                DateTaken = DateTime.Parse("2025-01-11"),
+                FilePath = "/home/images/memes/img01.jpg"
+            }
+        };
+        
+        _fixture.Inject<IDateDirectory>(new ConfigurableDateDirectory(new DateDirectoryOptions
+        {
+            DestinationPath = "/home/images/sorted",
+            Format = "yyyy/MM"
+        }, new ReadOnlyDirectoryWrapper()));
+        var service = _fixture.Create<SummarizeService>();
+        
+        // act
+        var result = service.SummarizeConflicts(writeQueue);
+        
+        // assert
+        result.RowCount.Should().Be(4);
+        result.ColumnCount.Should().Be(5);
+        
+        // header
+        result.RowShould(0).BeEquivalentTo("Year", "Total", "Conflicts", "Expected Skips", "Expected Count at Destination");
+        
+        // year 2024
+        result.RowShould(1).BeEquivalentTo("2024", "3", "3", "2", "1");
+        
+        // year 2025
+        result.RowShould(2).BeEquivalentTo("2025", "1", "0", "0", "1");
         
         // summary
-        result[4, 0].Should().Be("*");
-        result[4, 1].Should().Be("3");
-        result[4, 2].Should().Be("1");
+        result.RowShould(3).BeEquivalentTo("*", "4", "3", "2", "2");
     }
 }

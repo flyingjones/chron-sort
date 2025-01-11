@@ -10,12 +10,10 @@ public class ConfigurableDateDirectory : IDateDirectory
     private readonly HashSet<string> _createdPaths = new HashSet<string>();
     private readonly string _destinationPath;
     private readonly IDirectoryWrapper _directoryWrapper;
-    private readonly bool _isDryRun;
 
     public ConfigurableDateDirectory(DateDirectoryOptions options, IDirectoryWrapper directoryWrapper)
     {
         _directoryWrapper = directoryWrapper;
-        _isDryRun = options.DryRun;
         if (string.IsNullOrWhiteSpace(options.Format))
         {
             _pathElements = ReadOnlyCollection<string>.Empty;
@@ -32,7 +30,7 @@ public class ConfigurableDateDirectory : IDateDirectory
     {
         var path = BuildPath(dateTime);
 
-        if (!_isDryRun && _createdPaths.Add(path))
+        if (_createdPaths.Add(path))
         {
             _directoryWrapper.CreateDirectory(path);
         }

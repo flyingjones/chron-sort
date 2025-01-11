@@ -52,7 +52,6 @@ public static class DependencySetupHelper
             {
                 DestinationPath = configuration.DestinationPath.FullName,
                 Format = configuration.OutputFormat,
-                DryRun = configuration.IsDryRun
             });
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
