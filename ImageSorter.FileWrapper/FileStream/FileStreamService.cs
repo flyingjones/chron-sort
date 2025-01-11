@@ -1,4 +1,4 @@
-namespace ImageSorter.Services.FileWrapper;
+namespace ImageSorter.FileHandling.FileStream;
 
 /// <inheritdoc cref="IFileStreamService"/>
 public class FileStreamService : IFileStreamService
@@ -6,8 +6,8 @@ public class FileStreamService : IFileStreamService
     /// <inheritdoc cref="IFileStreamService.CopyToAsync"/>
     public async Task CopyToAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken)
     {
-        await using var sourceFileStream = new FileStream(sourcePath, FileMode.Open, FileAccess.Read);
-        await using var destFileStream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write);
+        await using var sourceFileStream = new System.IO.FileStream(sourcePath, FileMode.Open, FileAccess.Read);
+        await using var destFileStream = new System.IO.FileStream(destinationPath, FileMode.Create, FileAccess.Write);
 
         await sourceFileStream.CopyToAsync(destFileStream, cancellationToken);
     }

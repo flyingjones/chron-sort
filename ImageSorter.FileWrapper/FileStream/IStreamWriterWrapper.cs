@@ -1,4 +1,4 @@
-namespace ImageSorter.Services.FileWrapper;
+namespace ImageSorter.FileHandling.FileStream;
 
 /// <summary>
 /// Wrapper for the <see cref="StreamWriter"/> class to enable unit testing

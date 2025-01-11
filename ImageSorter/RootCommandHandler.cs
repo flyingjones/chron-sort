@@ -1,5 +1,9 @@
 using System.CommandLine.Invocation;
 using ImageSorter.DependencyInjection;
+using ImageSorter.FileHandling.FileStream;
+using ImageSorter.Markdown.Model;
+using ImageSorter.Markdown.Services;
+using ImageSorter.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -15,16 +19,64 @@ public static class RootCommandHandler
         // parse arguments and build run config
         var parsedContext = context.ParseResult;
         var runConfiguration = RootCommandFactory.ParseRunConfiguration(parsedContext);
+
+        // TODO add conflict resolution:
+        // - error: (Default) stop sorting if conflicts occur
+        // - keep: rename files with (x) to resolve conflicts
+        // - skip: chose one file and skip the rest
+        // - auto: make a comparison of the conflicting files. if they have the same content, skip one, otherwise keep both
+        // add conflict resolution summary
         
-        // setup the service provider
-        var serviceProvider = runConfiguration.SetupServices().BuildServiceProvider();
+        // also maybe add a new tool to flatten directory names into the file names
+        // e.g. ImagesHoliday/img01.jpg -> ImagesHoliday_img01.jpg
         
+        // create the summary file writer
+        await using var markdownFileWriter = CreateMarkdownFileWriter(
+            runConfiguration.SummaryFileDirectoryPath?.FullName,
+            runConfiguration.SummaryFilePath,
+            runConfiguration.EscapeSummaryFileTables);
+        
+        // set up the service provider
+        var serviceProvider = runConfiguration
+            .SetupServices()
+            .AddSingleton<IMarkdownFileWriter>(markdownFileWriter)
+            .BuildServiceProvider();
+            
         // log the configuration
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
-        DependencyInjection.RunConfigurationHelper.LogRunConfiguration(logger, runConfiguration);
+        var runConfigurationTable = RunConfigurationHelper.FormatRunConfigurationToTable(runConfiguration);
+        RunConfigurationHelper.LogRunConfiguration(logger, runConfigurationTable);
+        WriteToSummaryFile(markdownFileWriter, runConfigurationTable);
 
         // get the sorter and perform the sorting
         var sorter = serviceProvider.GetRequiredService<ISorter>();
         await sorter.PerformSorting(runConfiguration.MoveFiles, context.GetCancellationToken());
+    }
+
+    private static void WriteToSummaryFile(IMarkdownFileWriter writer, MarkdownTable runConfigurationTable)
+    {
+        writer.WriteHeading(MarkdownHeading.H1, "Sorting Summary");
+        writer.WriteHeading(MarkdownHeading.H2, "Configuration");
+        writer.WriteTable(runConfigurationTable);
+        writer.WriteLine();
+    }
+
+    private static IMarkdownFileWriter CreateMarkdownFileWriter(
+        string? directory,
+        string? path,
+        bool escapeTables)
+    {
+        if (!string.IsNullOrWhiteSpace(directory) && !string.IsNullOrWhiteSpace(path))
+        {
+            var streamFactory = new BufferedStreamWriterFactory();
+
+            if (!Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+            return new MarkdownFileWriter(streamFactory.CreateStreamWriter(path, FileMode.CreateNew), escapeTables);
+        }
+
+        return new MockMarkdownFileWriter();
     }
 }

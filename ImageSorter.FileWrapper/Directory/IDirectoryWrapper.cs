@@ -1,4 +1,4 @@
-namespace ImageSorter.Services.FileWrapper;
+namespace ImageSorter.FileHandling.Directory;
 
 /// <summary>
 /// Wrapper for <see cref="Directory"/>

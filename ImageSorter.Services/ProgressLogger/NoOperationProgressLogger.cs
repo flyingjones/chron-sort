@@ -1,6 +1,4 @@
-using ImageSorter.Services.ProgressLogger;
-
-namespace ImageSorter.ProgressLogging;
+namespace ImageSorter.Services.ProgressLogger;
 
 /// <summary>
 /// ProgressLogger which doesn't log at all. Useful when output is piped to a file.

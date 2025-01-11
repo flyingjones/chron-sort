@@ -1,4 +1,4 @@
-using ImageSorter.Services.FileWrapper;
+using ImageSorter.FileHandling.Directory;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.FileHandling;
@@ -17,12 +17,11 @@ public partial class FileLoader : IFileLoader
     }
 
     /// <inheritdoc cref="IFileLoader.GetFilePaths"/>
-    public string[] GetFilePaths()
+    public string[] GetFilePaths(out string[] allFiles)
     {
-        var allFiles = _directoryWrapper.GetFiles(_options.SourcePath, "*", searchOption: SearchOption.AllDirectories);
+        allFiles = _directoryWrapper.GetFiles(_options.SourcePath, "*", searchOption: SearchOption.AllDirectories);
 
         var result = FilterFilePathsByFileEnding(allFiles);
-        LogFileCount(result.Length);
         return result;
     }
 
@@ -35,9 +34,6 @@ public partial class FileLoader : IFileLoader
 
         return filePaths;
     }
-
-    [LoggerMessage(Level = LogLevel.Information, Message = "Found {fileCount} files to sort")]
-    private partial void LogFileCount(int fileCount);
     
     private static string FileEnding(string filePath)
     {

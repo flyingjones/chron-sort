@@ -1,60 +1,65 @@
 using System.Runtime.InteropServices;
-using System.Text;
+using ImageSorter.Markdown.Helper;
+using ImageSorter.Markdown.Model;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.DependencyInjection;
 
 public static partial class RunConfigurationHelper
 {
-    public static void LogRunConfiguration(ILogger logger, RunConfiguration runConfiguration)
+    public static void LogRunConfiguration(ILogger logger, MarkdownTable runConfigurationTable)
     {
-        var summary = FormatRunConfiguration(runConfiguration);
-        LogStartupMessage(logger, summary);
+        LogStartupMessage(logger, $"{Environment.NewLine}{runConfigurationTable.Render(false)}");
     }
-    
-    private static string FormatRunConfiguration(RunConfiguration runConfiguration)
+
+    public static MarkdownTable FormatRunConfigurationToTable(RunConfiguration runConfiguration)
     {
-        var stringBuilder = new StringBuilder();
-        stringBuilder.Append($"{Environment.NewLine}");
-        stringBuilder.Append($"-------------------------");
-        stringBuilder.Append($"{Environment.NewLine}");
-        stringBuilder.Append($"Source Path             : {runConfiguration.SourcePath}{Environment.NewLine}");
-        stringBuilder.Append($"Destination Path        : {runConfiguration.DestinationPath?.FullName ?? "- (running in place)"}{Environment.NewLine}");
+        var builder = new MarkdownTableBuilder();
+
+        builder.AddRow("Setting Name", "Setting Value");
+        
+        builder.AddRow("Source Path", runConfiguration.SourcePath.ToString());
+        builder.AddRow("Destination Path", runConfiguration.DestinationPath?.FullName ?? "- (running in place)");
+        builder.AddRow("Summary Report Path", runConfiguration.SummaryFilePath ?? "-");
+        
         var modeString = runConfiguration.MoveFiles ? "Move" : "Copy";
         var dryRunString = runConfiguration.IsDryRun ? " (dry run)" : string.Empty;
-        stringBuilder.Append($"Mode                    : {modeString}{dryRunString}{Environment.NewLine}");
-        stringBuilder.Append($"Overwrite Existing files: {runConfiguration.Overwrite}{Environment.NewLine}");
-        stringBuilder.Append($"Output format           : {runConfiguration.OutputFormat}{Environment.NewLine}");
+        builder.AddRow("Mode", $"{modeString}{dryRunString}");
+
+        builder.AddRow("Overwrite", runConfiguration.Overwrite.ToString());
+        builder.AddRow("Output Format", runConfiguration.OutputFormat);
+
         var fileEndingsString = runConfiguration.FilterFileEndings
             ? $"[{string.Join(", ", runConfiguration.FileEndings!)}]"
             : "*";
-        stringBuilder.Append($"File Endings            : {fileEndingsString}{Environment.NewLine}");
-        var fromDateString = runConfiguration.From?.ToString("o") ?? "-";
-        stringBuilder.Append($"From Date               : {fromDateString}{Environment.NewLine}");
-        var toDateString = runConfiguration.To?.ToString("o") ?? "-";
-        stringBuilder.Append($"To Date                 : {toDateString}{Environment.NewLine}");
-        stringBuilder.Append($"Scan in parallel        : {runConfiguration.ScanParallel}{Environment.NewLine}");
+        builder.AddRow("File Endings", fileEndingsString);
+        
+        builder.AddRow("From Date", runConfiguration.From?.ToString("o") ?? "-");
+        builder.AddRow("To Date", runConfiguration.To?.ToString("o") ?? "-");
+        builder.AddRow("Scan in parallel", runConfiguration.ScanParallel.ToString());
 
-        stringBuilder.Append($"Sort Configuration      :{Environment.NewLine}");
-        var idx = 0;
+        builder.AddRow("Sort Config");
+        
+        var sortConfigIdx = 0; 
         foreach (var sortConfigEntry in runConfiguration.SortConfiguration!)
         {
-            stringBuilder.Append($"[   {idx++:00}   ] : {sortConfigEntry}{Environment.NewLine}");
+            builder.AddRow($"Sort Config {sortConfigIdx++:00}", sortConfigEntry);
         }
         
-        stringBuilder.Append($"[fallback] : <file system update date>{Environment.NewLine}");
-
-        stringBuilder.Append($"Skip parser before      : {runConfiguration.SkipParserBefore:yyyy-MM-dd}{Environment.NewLine}");
-        stringBuilder.Append($"Skip parser after       : {runConfiguration.SkipParserAfter:yyyy-MM-dd}{Environment.NewLine}");
+        builder.AddRow($"Sort Config {sortConfigIdx:00}", "<file system update date>");
         
-        stringBuilder.Append($"OS                      : {RuntimeInformation.OSDescription}{Environment.NewLine}");
-        stringBuilder.Append($"Version                 : {VersionInformation.Version} (Assembly: {VersionInformation.AssemblyVersion})");
+        builder.AddRow("End Sort Config");
+        
+        builder.AddRow("Skip Parser Before", $"{runConfiguration.SkipParserBefore:yyyy-MM-dd}");
+        builder.AddRow("Skip Parser After", $"{runConfiguration.SkipParserAfter:yyyy-MM-dd}");
+        
+        builder.AddRow("System Date", DateTime.Now.ToString("s"));
+        builder.AddRow("OS Version", RuntimeInformation.OSDescription);
+        builder.AddRow("Sorter Version", $"{VersionInformation.Version} (Assembly: {VersionInformation.AssemblyVersion})");
 
-        return stringBuilder.ToString();
+        return builder.Build();
     }
     
-    [LoggerMessage(Level = LogLevel.Information, Message = "Starting Image Sorter {runSummary}")]
+    [LoggerMessage(Level = LogLevel.Information, Message = "Starting Image Sorter with Configuration {runSummary}")]
     private static partial void LogStartupMessage(ILogger logger, string runSummary);
-    
-    
 }

@@ -1,5 +1,6 @@
 using ImageSorter.Logging;
 using ImageSorter.ProgressLogging;
+using ImageSorter.Services;
 using ImageSorter.Services.DateParser;
 using ImageSorter.Services.DateParser.MetaData;
 using ImageSorter.Services.DateTimeWrapper;
@@ -52,13 +53,12 @@ public static class DependencySetupHelper
                 DestinationPath = configuration.DestinationPath.FullName,
                 Format = configuration.OutputFormat,
                 DryRun = configuration.IsDryRun
-            },
-            configuration.IsDryRun);
+            });
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
             SourcePath = configuration.SourcePath.FullName,
-            FileEndings = configuration.FileEndings
-        });
+            FileEndings = configuration.FileEndings?.SelectMany(x => x.Split(" ")).ToArray()
+        }, configuration.IsDryRun);
 
         if (configuration.ScanParallel)
         {
@@ -87,6 +87,7 @@ public static class DependencySetupHelper
         }
 
         serviceCollection.AddTransient<ISorter, Sorter>();
+        serviceCollection.AddTransient<ISummarizeService, SummarizeService>();
 
         return serviceCollection;
     }

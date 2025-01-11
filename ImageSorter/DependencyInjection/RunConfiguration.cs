@@ -14,6 +14,12 @@ public class RunConfiguration
     
     public required FileInfo DestinationPath { get; set; }
     
+    public required string? SummaryFilePath { get; set; }
+    
+    public required FileInfo? SummaryFileDirectoryPath { get; set; }
+    
+    public required bool EscapeSummaryFileTables { get; set; }
+    
     public required bool MoveFiles { get; set; }
     
     public string[]? FileEndings { get; set; }

@@ -1,4 +1,4 @@
-namespace ImageSorter.Services.FileWrapper;
+namespace ImageSorter.FileHandling.FileStream;
 
 /// <summary>
 /// Factory for creating <see cref="IStreamWriterWrapper"/> instances

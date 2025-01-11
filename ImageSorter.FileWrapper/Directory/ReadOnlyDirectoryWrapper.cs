@@ -1,35 +1,38 @@
-namespace ImageSorter.Services.FileWrapper;
+namespace ImageSorter.FileHandling.Directory;
 
-/// <inheritdoc cref="IDirectoryWrapper"/>
-public class DirectoryWrapper : IDirectoryWrapper
+public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
 {
     /// <inheritdoc cref="IDirectoryWrapper.GetFiles"/>
     public string[] GetFiles(string path, string searchPattern, SearchOption searchOption)
     {
-        return Directory.GetFiles(path, searchPattern, searchOption);
+        return System.IO.Directory.GetFiles(path, searchPattern, searchOption);
     }
 
-    /// <inheritdoc cref="IDirectoryWrapper.CreateDirectory"/>
+    /// <summary>
+    /// Doesn't do anything
+    /// </summary>
     public DirectoryInfo CreateDirectory(string path)
     {
-        return Directory.CreateDirectory(path);
+        return null!;
     }
 
-    /// <inheritdoc cref="IDirectoryWrapper.Delete"/>
+    /// <summary>
+    /// Doesn't do anything
+    /// </summary>
     public void Delete(string path)
     {
-        Directory.Delete(path);
+        // no op
     }
 
     /// <inheritdoc cref="IDirectoryWrapper.EnumerateDirectories"/>
     public IEnumerable<string> EnumerateDirectories(string path)
     {
-        return Directory.EnumerateDirectories(path);
+        return System.IO.Directory.EnumerateDirectories(path);
     }
 
     /// <inheritdoc cref="IDirectoryWrapper.EnumerateFileSystemEntries"/>
     public IEnumerable<string> EnumerateFileSystemEntries(string path)
     {
-        return Directory.EnumerateFileSystemEntries(path);
+        return System.IO.Directory.EnumerateFileSystemEntries(path);
     }
 }

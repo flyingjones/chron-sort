@@ -1,8 +1,8 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using FluentAssertions;
+using ImageSorter.FileHandling.Directory;
 using ImageSorter.Services.FileHandling;
-using ImageSorter.Services.FileWrapper;
 using Moq;
 using NUnit.Framework;
 
@@ -32,7 +32,7 @@ public class FileLoaderTests
         var service = _fixture.Create<FileLoader>();
 
         // act
-        var result = service.GetFilePaths();
+        var result = service.GetFilePaths(out var allFiles);
 
         // assert
         result.Should().BeEquivalentTo(testCase.ExpectedResult);

@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
+using System.Diagnostics.CodeAnalysis;
 using ImageSorter.DependencyInjection;
 using ImageSorter.Services.DateParser.MetaData.ExifTags;
 using ImageSorter.Services.DateParser.MetaData.QuickTimeMovieHeaders;
@@ -45,6 +46,8 @@ public static class RootCommandFactory
         rootCommand.AddOption(Options.BeVerboseOption);
         rootCommand.AddOption(Options.UseProgressBar);
         rootCommand.AddOption(Options.ProgressBarString);
+        rootCommand.AddOption(Options.SummaryFilePathOption);
+        rootCommand.AddOption(Options.EscapeSummaryMarkdownTables);
 
         return rootCommand;
     }
@@ -79,9 +82,22 @@ public static class RootCommandFactory
             IsDryRun = parsedContext.GetValueForOption(Options.IsDryRunOption),
             OutputFormat = parsedContext.GetValueForOption(Options.FormatOption),
             UseProgressBar = parsedContext.GetValueForOption(Options.UseProgressBar),
-            ProgressBarCharacters = parsedContext.GetValueForOption(Options.ProgressBarString)
+            ProgressBarCharacters = parsedContext.GetValueForOption(Options.ProgressBarString),
+            SummaryFileDirectoryPath = parsedContext.GetValueForOption(Options.SummaryFilePathOption),
+            SummaryFilePath = GenerateSummaryFilePath(parsedContext.GetValueForOption(Options.SummaryFilePathOption)?.FullName),
+            EscapeSummaryFileTables = parsedContext.GetValueForOption(Options.EscapeSummaryMarkdownTables)
         };
         return runConfig;
+    }
+
+    [return: NotNullIfNotNull(nameof(basePath))]
+    private static string? GenerateSummaryFilePath(string? basePath)
+    {
+        if (basePath == null) return null;
+
+        var fileName = $"sort_summary_{DateTime.Now:yyyy-MM-dd_hh_mm_ss}.md";
+
+        return Path.GetFullPath(Path.Combine(basePath, fileName));
     }
 
     private static class Arguments
@@ -179,5 +195,14 @@ public static class RootCommandFactory
             aliases: new[] { "--progress-bar-chars" },
             description: "Characters to use for rendering the progress bar",
             getDefaultValue: () => " -=#");
+        
+        public static readonly Option<FileInfo?> SummaryFilePathOption = new(
+            aliases: new[] { "--summary-path" },
+            description: "The path where a summary file should be saved. In case of a directory, the file name is generated.");
+
+        public static readonly Option<bool> EscapeSummaryMarkdownTables = new(
+            aliases: new[] { "--escape-summary-tables" },
+            description: "Escape the content in Markdown tables in the summary file.",
+            getDefaultValue: () => true);
     }
 }

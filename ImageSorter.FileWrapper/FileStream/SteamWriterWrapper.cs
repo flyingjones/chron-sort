@@ -1,4 +1,4 @@
-namespace ImageSorter.Services.FileWrapper;
+namespace ImageSorter.FileHandling.FileStream;
 
 /// <inheritdoc cref="IStreamWriterWrapper"/>
 public sealed class SteamWriterWrapper : IStreamWriterWrapper, IAsyncDisposable

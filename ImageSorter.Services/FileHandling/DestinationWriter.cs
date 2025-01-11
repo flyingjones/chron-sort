@@ -1,6 +1,8 @@
 using System.Text;
+using ImageSorter.FileHandling.Directory;
+using ImageSorter.FileHandling.File;
+using ImageSorter.FileHandling.FileStream;
 using ImageSorter.Services.DateTimeWrapper;
-using ImageSorter.Services.FileWrapper;
 using ImageSorter.Services.ProgressLogger;
 using Microsoft.Extensions.Logging;
 
@@ -42,7 +44,8 @@ public partial class DestinationWriter : IDestinationWriter
         _directoryWrapper.CreateDirectory(options.DestinationPath);
     }
 
-    public async Task<FileOperationResult> CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
+    public async Task<FileOperationResult> CopyFile(string sourcePath, DateTime dateTime,
+        CancellationToken cancellationToken)
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
@@ -54,7 +57,7 @@ public partial class DestinationWriter : IDestinationWriter
             Status = FileOperationResultStatus.Error,
             FileDate = dateTime
         };
-        
+
         LogWriting("Copying", sourcePath, destinationPath);
         try
         {
@@ -90,7 +93,7 @@ public partial class DestinationWriter : IDestinationWriter
             Status = FileOperationResultStatus.Error,
             FileDate = dateTime
         };
-        
+
         LogWriting("Moving", sourcePath, destinationPath);
         // the file is now at the desired location -> return true
         if (sourcePath == destinationPath)
@@ -108,7 +111,7 @@ public partial class DestinationWriter : IDestinationWriter
                 result.Status = FileOperationResultStatus.Skipped;
                 return result;
             }
-            
+
             if (fileExists) LogOverwrite();
             _fileWrapper.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
             result.Status = fileExists ? FileOperationResultStatus.OverwriteSuccess : FileOperationResultStatus.Success;
@@ -122,81 +125,70 @@ public partial class DestinationWriter : IDestinationWriter
     }
 
     /// <inheritdoc cref="IDestinationWriter.CopyFiles"/>
-    public async Task CopyFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
+    public async Task<ICollection<FileOperationResult>> CopyFiles(ICollection<WriteQueueItem> writeQueueItems,
+        CancellationToken cancellationToken)
     {
-        var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
-        LogSummaryMessage(FormatSortSummary(yearGroups));
-
-        var count = yearGroups.SelectMany(x => x).Count();
+        var count = writeQueueItems.Count;
 
         var copySummary = new List<FileOperationResult>();
-        
-        _progressLogger.LogStart("Copying {count} files (this may take a while)", count);
-        
-        var idx = 0;
-        
-        foreach (var yearGroup in yearGroups)
-        {
-            foreach (var item in yearGroup)
-            {
-                _progressLogger.LogProgress((double) idx / count);
-                
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _logger.LogError("Execution Canceled");
-                    return;
-                }
 
-                var copyResult = await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
-                copyResult.ParserName = item.ParserName;
-                copySummary.Add(copyResult);
-                ++idx;
+        _progressLogger.LogStart("Copying {count} files (this may take a while)", count);
+
+        var idx = 0;
+
+        foreach (var item in writeQueueItems)
+        {
+            _progressLogger.LogProgress((double)idx / count);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogError("Execution Canceled");
+                return copySummary;
             }
+
+            var copyResult = await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
+            copyResult.ParserName = item.ParserName;
+            copySummary.Add(copyResult);
+            ++idx;
         }
-        
+
         _progressLogger.LogProgressFinished();
-        
-        _logger.LogInformation("Sorting Result Summary{Summary}", FormatSortResultSummary(copySummary));
-        WriteSummaryFile(_options.DestinationPath, copySummary);
+
+        return copySummary;
     }
 
     /// <inheritdoc cref="IDestinationWriter.MoveFiles"/>
-    public void MoveFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
+    public ICollection<FileOperationResult> MoveFiles(ICollection<WriteQueueItem> writeQueueItems,
+        CancellationToken cancellationToken)
     {
-        var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
-        LogSummaryMessage(FormatSortSummary(yearGroups));
-        var count = yearGroups.SelectMany(x => x).Count();
-        
-        var moveSummary = new List<FileOperationResult>();
-        
-        _progressLogger.LogStart("Moving {count} files (this may take a while)", count);
-        
-        var idx = 0;
-        
-        foreach (var yearGroup in yearGroups)
-        {
-            foreach (var item in yearGroup)
-            {
-                _progressLogger.LogProgress((double) idx / count);
-                
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _logger.LogError("Execution Canceled");
-                    return;
-                }
+        var count = writeQueueItems.Count;
 
-                var moveResult = MoveFile(item.FilePath, item.DateTaken);
-                moveResult.ParserName = item.ParserName;
-                ++idx;
-                moveSummary.Add(moveResult);
+        var moveSummary = new List<FileOperationResult>();
+
+        _progressLogger.LogStart("Moving {count} files (this may take a while)", count);
+
+        var idx = 0;
+
+        foreach (var item in writeQueueItems)
+        {
+            _progressLogger.LogProgress((double)idx / count);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogError("Execution Canceled");
+                return moveSummary;
             }
+
+            var moveResult = MoveFile(item.FilePath, item.DateTaken);
+            moveResult.ParserName = item.ParserName;
+            ++idx;
+            moveSummary.Add(moveResult);
         }
-        
+
         _progressLogger.LogProgressFinished();
 
         DeleteEmptyDirs(_options.SourcePath);
-        _logger.LogInformation("Sorting Result Summary{Summary}", FormatSortResultSummary(moveSummary));
-        WriteSummaryFile(_options.DestinationPath, moveSummary);
+        return moveSummary;
     }
 
     /// <summary>
@@ -232,95 +224,9 @@ public partial class DestinationWriter : IDestinationWriter
         }
     }
 
-    private ICollection<IGrouping<int, WriteQueueItem>> OrderAndGroupWriteQueue(
-        IEnumerable<WriteQueueItem> queue)
-    {
-        return queue.Where(x => _options.From == null || x.DateTaken >= _options.From)
-            .Where(x => _options.To == null || x.DateTaken <= _options.To)
-            .OrderBy(x => x.DateTaken)
-            .GroupBy(x => x.DateTaken.Year)
-            .ToList();
-    }
-
-    private void WriteSummaryFile(string destinationPath, ICollection<FileOperationResult> results)
-    {
-        // TODO move to own class and add flag to generate the summary file
-        var summaryFileName = $"sort_result_summary_{_dateTimeProvider.Now():yyyy-MM-dd_hh_mm_ss}.txt";
-        var summaryFilePath = $"{destinationPath}/{summaryFileName}";
-        using var textWriter = _bufferedStreamWriterFactory.CreateStreamWriter(summaryFilePath, FileMode.CreateNew);
-
-        foreach (var result in results)
-        {
-            textWriter.WriteLine(result.ToString());
-        }
-    }
-
-    private static string FormatSortResultSummary(ICollection<FileOperationResult> operationResults)
-    {
-        var duplicatesFromSourceCount = operationResults
-            .CountBy(x => x.DestinationPath)
-            .Where(x => x.Value > 2)
-            // one file will be moved
-            .Sum(x => x.Value - 1);
-
-        var countByStatus = operationResults
-            .CountBy(x => x.Status)
-            .ToDictionary();
-
-        foreach (var possibleStatus in Enum.GetValues<FileOperationResultStatus>())
-        {
-            countByStatus.TryAdd(possibleStatus, 0);
-        }
-
-        var stringBuilder = new StringBuilder();
-
-        stringBuilder.Append(Environment.NewLine);
-        
-        if (countByStatus[FileOperationResultStatus.AlreadyInCorrectPlace] > 0)
-        {
-            stringBuilder.Append($"[Already Sorted       ]: {countByStatus[FileOperationResultStatus.AlreadyInCorrectPlace],6:#####0}");
-            stringBuilder.Append(Environment.NewLine);
-        }
-        
-        stringBuilder.Append($"[Success              ]: {countByStatus[FileOperationResultStatus.Success],6:#####0}");
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append($"[Success (Overwritten)]: {countByStatus[FileOperationResultStatus.OverwriteSuccess],6:#####0}");
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append($"[Skipped              ]: {countByStatus[FileOperationResultStatus.Skipped],6:#####0} (duplicates in source: {duplicatesFromSourceCount})");
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append($"[Error                ]: {countByStatus[FileOperationResultStatus.Error],6:#####0}");
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append($"[Total                ]: {operationResults.Count,6:#####0}");
-
-        return stringBuilder.ToString();
-    }
-
-    private static string FormatSortSummary(ICollection<IGrouping<int, WriteQueueItem>> yearGroups)
-    {
-        var stringBuilder = new StringBuilder();
-
-        var totalFileCount = yearGroups.SelectMany(x => x).Count();
-        var width = totalFileCount.ToString().Length;
-
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append(new string('-', width + 7));
-
-        foreach (var yearGroup in yearGroups)
-        {
-            var countString = yearGroup.Count().ToString().PadLeft(width);
-            stringBuilder.Append(Environment.NewLine);
-            stringBuilder.Append($"{yearGroup.Key} : {countString}");
-        }
-
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append($"Total: {totalFileCount}");
-
-        return stringBuilder.ToString();
-    }
-
     [LoggerMessage(Level = LogLevel.Trace, Message = "Skipping file since it already exists at the destination")]
     private partial void LogSkip();
-    
+
     [LoggerMessage(Level = LogLevel.Trace, Message = "Overwriting existing file")]
     private partial void LogOverwrite();
 

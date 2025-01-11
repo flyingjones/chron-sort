@@ -1,6 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Text;
-using ImageSorter.Services.FileWrapper;
+using ImageSorter.FileHandling.Directory;
 
 namespace ImageSorter.Services.FileHandling;
 
@@ -40,7 +40,7 @@ public class ConfigurableDateDirectory : IDateDirectory
         return path;
     }
 
-    private string BuildPath(DateTime dateTime)
+    public string BuildPath(DateTime dateTime)
     {
         var stringBuilder = new StringBuilder();
 

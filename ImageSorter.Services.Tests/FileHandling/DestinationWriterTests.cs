@@ -1,8 +1,10 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using FluentAssertions;
+using ImageSorter.FileHandling.Directory;
+using ImageSorter.FileHandling.File;
+using ImageSorter.FileHandling.FileStream;
 using ImageSorter.Services.FileHandling;
-using ImageSorter.Services.FileWrapper;
 using Moq;
 using NUnit.Framework;
 
