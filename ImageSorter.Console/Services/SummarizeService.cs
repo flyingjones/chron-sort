@@ -175,6 +175,14 @@ public class SummarizeService : ISummarizeService
                 $"{groupedResult.Count(x => x.Status == FileOperationResultStatus.Success)}",
                 $"{groupedResult.Count(x => x.Status == FileOperationResultStatus.OverwriteSuccess)}");
         }
+        
+        builder.AddRow("*",
+            $"{fileOperationResults.Count}",
+            $"{fileOperationResults.Count(x => x.Status == FileOperationResultStatus.Error)}",
+            $"{fileOperationResults.Count(x => x.Status == FileOperationResultStatus.Skipped)}",
+            $"{fileOperationResults.Count(x => x.Status == FileOperationResultStatus.AlreadyInCorrectPlace)}",
+            $"{fileOperationResults.Count(x => x.Status == FileOperationResultStatus.Success)}",
+            $"{fileOperationResults.Count(x => x.Status == FileOperationResultStatus.OverwriteSuccess)}");
 
         var table = builder.Build();
         table.SetTextAlignment(HorizontalTextAlignment.Right);

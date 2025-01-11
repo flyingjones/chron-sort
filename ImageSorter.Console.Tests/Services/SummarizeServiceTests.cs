@@ -226,4 +226,48 @@ public class SummarizeServiceTests
         pair2.Value.RowShould(1).BeEquivalentTo("/images/img03.jpg", "/images/sorted/2025/02/img03.jpg", "Success",
             "2025-02-01T00:00:00", "ParserC");
     }
+
+    [Test]
+    public void SummarizeWriteResults()
+    {
+        // arrange
+        var fileOperationResults = new[]
+        {
+            new FileOperationResult
+            {
+                SourcePath = "/images/img01.jpg",
+                DestinationPath = "/images/sorted/2025/01/img01.jpg",
+                Status = FileOperationResultStatus.Success,
+                FileDate = DateTime.Parse("2025-01-01"),
+                ParserName = "ParserA"
+            },
+            new FileOperationResult
+            {
+                SourcePath = "/images/img02.jpg",
+                DestinationPath = "/images/sorted/2025/01/img02.jpg",
+                Status = FileOperationResultStatus.AlreadyInCorrectPlace,
+                FileDate = DateTime.Parse("2025-01-01"),
+                ParserName = "ParserB"
+            },
+            new FileOperationResult
+            {
+                SourcePath = "/images/img03.jpg",
+                DestinationPath = "/images/sorted/2025/02/img03.jpg",
+                Status = FileOperationResultStatus.Success,
+                FileDate = DateTime.Parse("2025-02-01"),
+                ParserName = "ParserC"
+            }
+        };
+
+        var service = _fixture.Create<SummarizeService>();
+
+        // act
+        var result = service.SummarizeWriteResults(fileOperationResults);
+        
+        // assert
+        result.RowShould(0).BeEquivalentTo("Year", "Total", "Error", "Skipped", "Already Sorted", "Success",
+            "Success (Overwritten)");
+        result.RowShould(1).BeEquivalentTo("2025", "3", "0", "0", "1", "2", "0");
+        result.RowShould(2).BeEquivalentTo("*", "3", "0", "0", "1", "2", "0");
+    }
 }
