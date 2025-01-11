@@ -10,6 +10,7 @@
         <InvariantGlobalization>true</InvariantGlobalization>
         <Version>0.1.2.0</Version>
         <Authors>Jonas Kett</Authors>
+        <RootNamespace>ImageSorter</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

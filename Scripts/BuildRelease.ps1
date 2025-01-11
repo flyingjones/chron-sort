@@ -20,7 +20,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 else
 {
-    Copy-Item "../ImageSorter/bin/Release/net9.0/linux-x64/publish/ImageSorter" "../out"
+    Copy-Item "../ImageSorter.Console/bin/Release/net9.0/linux-x64/publish/ImageSorter" "../out"
 }
 
 # Build for Windows
@@ -33,7 +33,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 else
 {
-    Copy-Item "../ImageSorter/bin/Release/net9.0/win-x64/publish/*.exe" "../out"
+    Copy-Item "../ImageSorter.Console/bin/Release/net9.0/win-x64/publish/ImageSorter.exe" "../out"
 }
 
 

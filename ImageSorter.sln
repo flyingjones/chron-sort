@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter", "ImageSorter\ImageSorter.csproj", "{0D81BA37-40BC-4277-9461-1FD915D529D4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter.Console", "ImageSorter.Console\ImageSorter.Console.csproj", "{0D81BA37-40BC-4277-9461-1FD915D529D4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter.Services", "ImageSorter.Services\ImageSorter.Services.csproj", "{08BE2C6E-D51E-4546-81A4-AF100CF84FFC}"
 EndProject
@@ -11,6 +11,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter.FileWrapper", "ImageSorter.FileWrapper\ImageSorter.FileWrapper.csproj", "{76C70AE7-E6F0-497B-B52A-35AD32EBD9D4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter.Markdown.Tests", "ImageSorter.Markdown.Tests\ImageSorter.Markdown.Tests.csproj", "{2139C057-C118-478E-8FEE-0841A5CC6EC8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter.Console.Tests", "ImageSorter.Console.Tests\ImageSorter.Console.Tests.csproj", "{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,5 +42,9 @@ Global
 		{2139C057-C118-478E-8FEE-0841A5CC6EC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2139C057-C118-478E-8FEE-0841A5CC6EC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2139C057-C118-478E-8FEE-0841A5CC6EC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
