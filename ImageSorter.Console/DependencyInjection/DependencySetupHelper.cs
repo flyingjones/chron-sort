@@ -87,6 +87,7 @@ public static class DependencySetupHelper
 
         serviceCollection.AddTransient<ISorter, Sorter>();
         serviceCollection.AddTransient<ISummarizeService, SummarizeService>();
+        serviceCollection.AddTransient<ISummaryReportingService, SummaryReportingService>();
 
         return serviceCollection;
     }
