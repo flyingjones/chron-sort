@@ -11,7 +11,9 @@ public class ParallelDateParsingHandler : IDateParsingHandler
     private readonly ILogger<ParallelDateParsingHandler> _logger;
     private readonly IProgressLogger<ParallelDateParsingHandler> _progressLogger;
 
-    public ParallelDateParsingHandler(IDateParser dateParser, ILogger<ParallelDateParsingHandler> logger,
+    public ParallelDateParsingHandler(
+        IDateParser dateParser,
+        ILogger<ParallelDateParsingHandler> logger,
         IProgressLogger<ParallelDateParsingHandler> progressLogger)
     {
         _dateParser = dateParser;
@@ -33,11 +35,12 @@ public class ParallelDateParsingHandler : IDateParsingHandler
                 throw new TaskCanceledException();
             }
 
-            var dateTaken = _dateParser.ParseDate(filePath);
+            var dateTaken = _dateParser.ParseDate(filePath, out var parserId);
             writeQueue.Push(new WriteQueueItem
             {
                 DateTaken = dateTaken,
-                FilePath = filePath
+                FilePath = filePath,
+                ParserName = parserId
             });
 
             await Task.CompletedTask;

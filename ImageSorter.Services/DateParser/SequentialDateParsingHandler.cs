@@ -30,12 +30,16 @@ public class SequentialDateParsingHandler : IDateParsingHandler
         {
             _progressLogger.LogProgress((double) index / filePaths.Length);
             
-            var dateTaken = await Task.Run(() => _dateParser.ParseDate(filePath), cancellationToken);
-            result[index++] = new WriteQueueItem
+            await Task.Run(() =>
             {
-                DateTaken = dateTaken,
-                FilePath = filePath
-            };
+                var resultItem = _dateParser.ParseDate(filePath, out var parserId);
+                result[index++] = new WriteQueueItem
+                {
+                    DateTaken = resultItem,
+                    FilePath = filePath,
+                    ParserName = parserId
+                };
+            }, cancellationToken);
 
             if (cancellationToken.IsCancellationRequested)
             {

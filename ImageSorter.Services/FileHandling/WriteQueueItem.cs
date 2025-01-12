@@ -5,4 +5,6 @@ public class WriteQueueItem
     public required string FilePath { get; set; }
     
     public required DateTime DateTaken { get; set; }
+    
+    public string? ParserName { get; set; }
 }

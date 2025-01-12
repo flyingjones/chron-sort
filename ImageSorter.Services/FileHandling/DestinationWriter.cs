@@ -1,5 +1,8 @@
 using System.Text;
-using ImageSorter.Services.FileWrapper;
+using ImageSorter.FileHandling.Directory;
+using ImageSorter.FileHandling.File;
+using ImageSorter.FileHandling.FileStream;
+using ImageSorter.Services.DateTimeWrapper;
 using ImageSorter.Services.ProgressLogger;
 using Microsoft.Extensions.Logging;
 
@@ -15,6 +18,8 @@ public partial class DestinationWriter : IDestinationWriter
     private readonly IFileStreamService _fileStreamService;
     private readonly IDateDirectory _dateDirectory;
     private readonly IProgressLogger<DestinationWriter> _progressLogger;
+    private readonly IBufferedStreamWriterFactory _bufferedStreamWriterFactory;
+    private readonly IDateTimeProvider _dateTimeProvider;
 
     public DestinationWriter(
         DestinationWriterOptions options,
@@ -23,7 +28,9 @@ public partial class DestinationWriter : IDestinationWriter
         IDirectoryWrapper directoryWrapper,
         IFileStreamService fileStreamService,
         IDateDirectory dateDirectory,
-        IProgressLogger<DestinationWriter> progressLogger)
+        IProgressLogger<DestinationWriter> progressLogger,
+        IBufferedStreamWriterFactory bufferedStreamWriterFactory,
+        IDateTimeProvider dateTimeProvider)
     {
         _options = options;
         _logger = logger;
@@ -32,14 +39,25 @@ public partial class DestinationWriter : IDestinationWriter
         _fileStreamService = fileStreamService;
         _dateDirectory = dateDirectory;
         _progressLogger = progressLogger;
+        _bufferedStreamWriterFactory = bufferedStreamWriterFactory;
+        _dateTimeProvider = dateTimeProvider;
         _directoryWrapper.CreateDirectory(options.DestinationPath);
     }
 
-    public async Task CopyFile(string sourcePath, DateTime dateTime, CancellationToken cancellationToken)
+    public async Task<FileOperationResult> CopyFile(string sourcePath, DateTime dateTime,
+        CancellationToken cancellationToken)
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = Path.GetFullPath($"{monthPath}/{fileName}");
+        var result = new FileOperationResult
+        {
+            SourcePath = sourcePath,
+            DestinationPath = destinationPath,
+            Status = FileOperationResultStatus.Error,
+            FileDate = dateTime
+        };
+
         LogWriting("Copying", sourcePath, destinationPath);
         try
         {
@@ -47,25 +65,42 @@ public partial class DestinationWriter : IDestinationWriter
             if (fileExists && !_options.OverwriteExistingFiles)
             {
                 LogSkip();
-                return;
+                result.Status = FileOperationResultStatus.Skipped;
+                return result;
             }
 
             if (fileExists) LogOverwrite();
             await _fileStreamService.CopyToAsync(sourcePath, destinationPath, cancellationToken);
+            result.Status = fileExists ? FileOperationResultStatus.OverwriteSuccess : FileOperationResultStatus.Success;
         }
         catch (Exception ex)
         {
             LogError(ex, sourcePath, destinationPath);
         }
+
+        return result;
     }
 
-    public void MoveFile(string sourcePath, DateTime dateTime)
+    public FileOperationResult MoveFile(string sourcePath, DateTime dateTime)
     {
         var monthPath = _dateDirectory.CreatePathAndDirs(dateTime);
         var fileName = Path.GetFileName(sourcePath);
         var destinationPath = Path.GetFullPath($"{monthPath}/{fileName}");
+        var result = new FileOperationResult
+        {
+            SourcePath = sourcePath,
+            DestinationPath = destinationPath,
+            Status = FileOperationResultStatus.Error,
+            FileDate = dateTime
+        };
+
         LogWriting("Moving", sourcePath, destinationPath);
-        if (sourcePath == destinationPath) return;
+        // the file is now at the desired location -> return true
+        if (sourcePath == destinationPath)
+        {
+            result.Status = FileOperationResultStatus.AlreadyInCorrectPlace;
+            return result;
+        }
 
         try
         {
@@ -73,81 +108,87 @@ public partial class DestinationWriter : IDestinationWriter
             if (fileExists && !_options.OverwriteExistingFiles)
             {
                 LogSkip();
-                return;
+                result.Status = FileOperationResultStatus.Skipped;
+                return result;
             }
-            
+
             if (fileExists) LogOverwrite();
             _fileWrapper.Move(sourcePath, destinationPath, _options.OverwriteExistingFiles);
+            result.Status = fileExists ? FileOperationResultStatus.OverwriteSuccess : FileOperationResultStatus.Success;
         }
         catch (Exception ex)
         {
             LogError(ex, sourcePath, destinationPath);
         }
+
+        return result;
     }
 
     /// <inheritdoc cref="IDestinationWriter.CopyFiles"/>
-    public async Task CopyFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
+    public async Task<ICollection<FileOperationResult>> CopyFiles(ICollection<WriteQueueItem> writeQueueItems,
+        CancellationToken cancellationToken)
     {
-        var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
-        LogSummaryMessage(FormatSortSummary(yearGroups));
+        var count = writeQueueItems.Count;
 
-        var count = yearGroups.SelectMany(x => x).Count();
+        var copySummary = new List<FileOperationResult>();
 
         _progressLogger.LogStart("Copying {count} files (this may take a while)", count);
-        
-        var idx = 0;
-        
-        foreach (var yearGroup in yearGroups)
-        {
-            foreach (var item in yearGroup)
-            {
-                _progressLogger.LogProgress((double) idx / count);
-                
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _logger.LogError("Execution Canceled");
-                    return;
-                }
 
-                await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
-                ++idx;
+        var idx = 0;
+
+        foreach (var item in writeQueueItems)
+        {
+            _progressLogger.LogProgress((double)idx / count);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogError("Execution Canceled");
+                return copySummary;
             }
+
+            var copyResult = await CopyFile(item.FilePath, item.DateTaken, cancellationToken);
+            copyResult.ParserName = item.ParserName;
+            copySummary.Add(copyResult);
+            ++idx;
         }
-        
+
         _progressLogger.LogProgressFinished();
+
+        return copySummary;
     }
 
     /// <inheritdoc cref="IDestinationWriter.MoveFiles"/>
-    public void MoveFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken)
+    public ICollection<FileOperationResult> MoveFiles(ICollection<WriteQueueItem> writeQueueItems,
+        CancellationToken cancellationToken)
     {
-        var yearGroups = OrderAndGroupWriteQueue(writeQueueItems);
-        LogSummaryMessage(FormatSortSummary(yearGroups));
-        var count = yearGroups.SelectMany(x => x).Count();
-        
-        _progressLogger.LogStart("Moving {count} files (this may take a while)", count);
-        
-        var idx = 0;
-        
-        foreach (var yearGroup in yearGroups)
-        {
-            foreach (var item in yearGroup)
-            {
-                _progressLogger.LogProgress((double) idx / count);
-                
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _logger.LogError("Execution Canceled");
-                    return;
-                }
+        var count = writeQueueItems.Count;
 
-                MoveFile(item.FilePath, item.DateTaken);
-                ++idx;
+        var moveSummary = new List<FileOperationResult>();
+
+        _progressLogger.LogStart("Moving {count} files (this may take a while)", count);
+
+        var idx = 0;
+
+        foreach (var item in writeQueueItems)
+        {
+            _progressLogger.LogProgress((double)idx / count);
+
+            if (cancellationToken.IsCancellationRequested)
+            {
+                _logger.LogError("Execution Canceled");
+                return moveSummary;
             }
+
+            var moveResult = MoveFile(item.FilePath, item.DateTaken);
+            moveResult.ParserName = item.ParserName;
+            ++idx;
+            moveSummary.Add(moveResult);
         }
-        
+
         _progressLogger.LogProgressFinished();
 
         DeleteEmptyDirs(_options.SourcePath);
+        return moveSummary;
     }
 
     /// <summary>
@@ -183,42 +224,9 @@ public partial class DestinationWriter : IDestinationWriter
         }
     }
 
-    private ICollection<IGrouping<int, WriteQueueItem>> OrderAndGroupWriteQueue(
-        IEnumerable<WriteQueueItem> queue)
-    {
-        return queue.Where(x => _options.From == null || x.DateTaken >= _options.From)
-            .Where(x => _options.To == null || x.DateTaken <= _options.To)
-            .OrderBy(x => x.DateTaken)
-            .GroupBy(x => x.DateTaken.Year)
-            .ToList();
-    }
-
-    private static string FormatSortSummary(ICollection<IGrouping<int, WriteQueueItem>> yearGroups)
-    {
-        var stringBuilder = new StringBuilder();
-
-        var totalFileCount = yearGroups.SelectMany(x => x).Count();
-        var width = totalFileCount.ToString().Length;
-
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append(new string('-', width + 7));
-
-        foreach (var yearGroup in yearGroups)
-        {
-            var countString = yearGroup.Count().ToString().PadLeft(width);
-            stringBuilder.Append(Environment.NewLine);
-            stringBuilder.Append($"{yearGroup.Key} : {countString}");
-        }
-
-        stringBuilder.Append(Environment.NewLine);
-        stringBuilder.Append($"Total: {totalFileCount}");
-
-        return stringBuilder.ToString();
-    }
-
     [LoggerMessage(Level = LogLevel.Trace, Message = "Skipping file since it already exists at the destination")]
     private partial void LogSkip();
-    
+
     [LoggerMessage(Level = LogLevel.Trace, Message = "Overwriting existing file")]
     private partial void LogOverwrite();
 

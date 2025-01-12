@@ -11,10 +11,10 @@ public interface IDestinationWriter
     /// <summary>
     /// Copy the <paramref name="writeQueueItems"/> to the destination in the directory structure year/month
     /// </summary>
-    Task CopyFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken);
+    Task<ICollection<FileOperationResult>> CopyFiles(ICollection<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken);
 
     /// <summary>
     /// Move the <paramref name="writeQueueItems"/> in the source directory to the directory structure year/month
     /// </summary>
-    void MoveFiles(IEnumerable<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken);
+    ICollection<FileOperationResult> MoveFiles(ICollection<WriteQueueItem> writeQueueItems, CancellationToken cancellationToken);
 }

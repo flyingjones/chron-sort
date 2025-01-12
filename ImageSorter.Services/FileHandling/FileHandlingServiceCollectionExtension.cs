@@ -1,35 +1,44 @@
-using ImageSorter.Services.FileWrapper;
+using ImageSorter.FileHandling.Directory;
+using ImageSorter.FileHandling.File;
+using ImageSorter.FileHandling.FileStream;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ImageSorter.Services.FileHandling;
 
 public static class FileHandlingServiceCollectionExtension
 {
-    public static IServiceCollection AddDestinationWriter(this IServiceCollection serviceCollection,
+    public static IServiceCollection AddDestinationWriter(
+        this IServiceCollection serviceCollection,
         DestinationWriterOptions options,
-        DateDirectoryOptions dateDirectoryOptions,
-        bool dryRun)
+        DateDirectoryOptions dateDirectoryOptions)
     {
         serviceCollection.AddSingleton(dateDirectoryOptions);
         serviceCollection.AddSingleton<IDateDirectory, ConfigurableDateDirectory>();
-        serviceCollection.AddSingleton<IFileStreamService, FileStreamService>();
         serviceCollection.AddSingleton(options);
-        if (dryRun)
-        {
-            serviceCollection.AddSingleton<IDestinationWriter, DryRunDestinationWriter>();
-        }
-        else
-        {
-            serviceCollection.AddSingleton<IDestinationWriter, DestinationWriter>();
-        }
+        serviceCollection.AddSingleton<IDestinationWriter, DestinationWriter>();
 
         return serviceCollection;
     }
 
-    public static IServiceCollection AddFileLoader(this IServiceCollection serviceCollection, FileLoaderOptions options)
+    public static IServiceCollection AddFileLoader(
+        this IServiceCollection serviceCollection,
+        FileLoaderOptions options,
+        bool readOnly)
     {
-        serviceCollection.AddSingleton<IDirectoryWrapper, DirectoryWrapper>();
-        serviceCollection.AddSingleton<IFileWrapper, FileWrapper.FileWrapper>();
+        if (readOnly)
+        {
+            serviceCollection.AddSingleton<IDirectoryWrapper, ReadOnlyDirectoryWrapper>();
+            serviceCollection.AddSingleton<IFileWrapper, ReadOnlyFileWrapper>();
+            serviceCollection.AddSingleton<IFileStreamService, ReadOnlyFileStreamService>();
+        }
+        else
+        {
+            serviceCollection.AddSingleton<IDirectoryWrapper, DirectoryWrapper>();
+            serviceCollection.AddSingleton<IFileWrapper, FileWrapper>();
+            serviceCollection.AddSingleton<IFileStreamService, FileStreamService>();
+        }
+        
+       
         serviceCollection.AddSingleton<IBufferedStreamWriterFactory, BufferedStreamWriterFactory>();
         serviceCollection.AddSingleton(options);
         serviceCollection.AddSingleton<IFileLoader, FileLoader>();

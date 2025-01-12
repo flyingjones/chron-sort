@@ -1,8 +1,8 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using FluentAssertions;
+using ImageSorter.FileHandling.Directory;
 using ImageSorter.Services.FileHandling;
-using ImageSorter.Services.FileWrapper;
 using Moq;
 using NUnit.Framework;
 
@@ -19,15 +19,13 @@ public class DateDirectoryTests
         _fixture = new Fixture().Customize(new AutoMoqCustomization());
     }
 
-    [TestCase(true)]
-    [TestCase(false)]
-    public void CreatePathAndDirs(bool dryRun)
+    [Test]
+    public void CreatePathAndDirs()
     {
         // arrange
         var options = _fixture.Freeze<DateDirectoryOptions>();
         options.Format = "yyyy/MM";
         options.DestinationPath = "C:/destination/path";
-        options.DryRun = dryRun;
         var directoryWrapper = _fixture.Freeze<Mock<IDirectoryWrapper>>();
 
         var service = _fixture.Create<ConfigurableDateDirectory>();
@@ -47,20 +45,13 @@ public class DateDirectoryTests
         path4.Should().Be(Path.GetFullPath($"{options.DestinationPath}/2024/06"));
         path5.Should().Be(Path.GetFullPath($"{options.DestinationPath}/2024/06"));
         path6.Should().Be(Path.GetFullPath($"{options.DestinationPath}/2025/01"));
-
-        if (dryRun)
-        {
-            directoryWrapper.Verify(x => x.CreateDirectory(It.IsAny<string>()), Times.Never);
-        }
-        else
-        {
-            directoryWrapper.Verify(x => x.CreateDirectory(Path.GetFullPath($"{options.DestinationPath}/2024/05")),
-                Times.Once);
-            directoryWrapper.Verify(x => x.CreateDirectory(Path.GetFullPath($"{options.DestinationPath}/2024/06")),
-                Times.Once);
-            directoryWrapper.Verify(x => x.CreateDirectory(Path.GetFullPath($"{options.DestinationPath}/2025/01")),
-                Times.Once);
-            directoryWrapper.Verify(x => x.CreateDirectory(It.IsAny<string>()), Times.Exactly(3));
-        }
+        
+        directoryWrapper.Verify(x => x.CreateDirectory(Path.GetFullPath($"{options.DestinationPath}/2024/05")),
+            Times.Once);
+        directoryWrapper.Verify(x => x.CreateDirectory(Path.GetFullPath($"{options.DestinationPath}/2024/06")),
+            Times.Once);
+        directoryWrapper.Verify(x => x.CreateDirectory(Path.GetFullPath($"{options.DestinationPath}/2025/01")),
+            Times.Once);
+        directoryWrapper.Verify(x => x.CreateDirectory(It.IsAny<string>()), Times.Exactly(3));
     }
 }

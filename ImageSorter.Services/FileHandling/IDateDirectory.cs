@@ -11,10 +11,13 @@ namespace ImageSorter.Services.FileHandling;
 public interface IDateDirectory
 {
     /// <summary>
-    /// Creates the directory year/month if necessary. Will only call the OS once per directory.
+    /// Generates a path according to the configured date pattern and creates any missing directories.
+    /// Will only call the OS once per directory.
     /// </summary>
-    /// <returns>
-    /// <see cref="DestinationWriterOptions.DestinationPath"/>/<paramref name="dateTime.Year"/>/<paramref name="dateTime.Month"/>
-    /// </returns>
     string CreatePathAndDirs(DateTime dateTime);
+
+    /// <summary>
+    /// Generates a path according to the configured date pattern. Does not create directories.
+    /// </summary>
+    string BuildPath(DateTime dateTime);
 }
