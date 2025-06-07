@@ -1,4 +1,5 @@
 using ImageSorter.FileHandling.FileStream;
+using ImageSorter.FileWrapper.Abstractions.FileStream;
 using ImageSorter.Markdown.Model;
 
 namespace ImageSorter.Markdown.Services;

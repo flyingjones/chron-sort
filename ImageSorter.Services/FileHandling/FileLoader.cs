@@ -1,4 +1,5 @@
 using ImageSorter.FileHandling.Directory;
+using ImageSorter.FileWrapper.Abstractions.Directory;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.FileHandling;

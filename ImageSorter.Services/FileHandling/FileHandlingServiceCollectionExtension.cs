@@ -1,6 +1,9 @@
 using ImageSorter.FileHandling.Directory;
 using ImageSorter.FileHandling.File;
 using ImageSorter.FileHandling.FileStream;
+using ImageSorter.FileWrapper.Abstractions.Directory;
+using ImageSorter.FileWrapper.Abstractions.File;
+using ImageSorter.FileWrapper.Abstractions.FileStream;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ImageSorter.Services.FileHandling;
@@ -34,7 +37,7 @@ public static class FileHandlingServiceCollectionExtension
         else
         {
             serviceCollection.AddSingleton<IDirectoryWrapper, DirectoryWrapper>();
-            serviceCollection.AddSingleton<IFileWrapper, FileWrapper>();
+            serviceCollection.AddSingleton<IFileWrapper, ImageSorter.FileHandling.File.FileWrapper>();
             serviceCollection.AddSingleton<IFileStreamService, FileStreamService>();
         }
         

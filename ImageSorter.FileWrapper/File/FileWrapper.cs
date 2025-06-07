@@ -1,3 +1,5 @@
+using ImageSorter.FileWrapper.Abstractions.File;
+
 namespace ImageSorter.FileHandling.File;
 
 /// <inheritdoc cref="IFileWrapper"/>

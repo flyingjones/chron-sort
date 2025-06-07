@@ -4,11 +4,6 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>ImageSorter.FileHandling</RootNamespace>
     </PropertyGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\ImageSorter.FileWrapper.Abstractions\ImageSorter.FileWrapper.Abstractions.csproj" />
-    </ItemGroup>
 
 </Project>

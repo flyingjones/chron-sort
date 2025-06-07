@@ -1,3 +1,5 @@
+using ImageSorter.FileWrapper.Abstractions.FileStream;
+
 namespace ImageSorter.FileHandling.FileStream;
 
 public class ReadOnlyFileStreamService : IFileStreamService

@@ -14,6 +14,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter.Markdown.Tests"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter.Console.Tests", "ImageSorter.Console.Tests\ImageSorter.Console.Tests.csproj", "{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "FileSystem", "FileSystem", "{E08B34E7-02AB-4919-93EA-1D35C2CA17AA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageSorter.FileWrapper.Abstractions", "ImageSorter.FileWrapper.Abstractions\ImageSorter.FileWrapper.Abstractions.csproj", "{BF1B1067-B83A-4D07-B818-032B7AC2CB89}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,5 +49,13 @@ Global
 		{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{87B3B7B4-60E6-4BA2-B3D0-6344ECBA599A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF1B1067-B83A-4D07-B818-032B7AC2CB89}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF1B1067-B83A-4D07-B818-032B7AC2CB89}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF1B1067-B83A-4D07-B818-032B7AC2CB89}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF1B1067-B83A-4D07-B818-032B7AC2CB89}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{76C70AE7-E6F0-497B-B52A-35AD32EBD9D4} = {E08B34E7-02AB-4919-93EA-1D35C2CA17AA}
+		{BF1B1067-B83A-4D07-B818-032B7AC2CB89} = {E08B34E7-02AB-4919-93EA-1D35C2CA17AA}
 	EndGlobalSection
 EndGlobal

@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 
-namespace ImageSorter.FileHandling.File;
+namespace ImageSorter.FileWrapper.Abstractions.File;
 
 /// <summary>
 /// Wrapper for <see cref="File"/>

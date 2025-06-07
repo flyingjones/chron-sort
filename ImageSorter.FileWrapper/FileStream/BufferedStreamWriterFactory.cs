@@ -1,3 +1,5 @@
+using ImageSorter.FileWrapper.Abstractions.FileStream;
+
 namespace ImageSorter.FileHandling.FileStream;
 
 /// <inheritdoc cref="IBufferedStreamWriterFactory"/>

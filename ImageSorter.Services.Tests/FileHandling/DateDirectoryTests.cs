@@ -2,6 +2,7 @@ using AutoFixture;
 using AutoFixture.AutoMoq;
 using FluentAssertions;
 using ImageSorter.FileHandling.Directory;
+using ImageSorter.FileWrapper.Abstractions.Directory;
 using ImageSorter.Services.FileHandling;
 using Moq;
 using NUnit.Framework;

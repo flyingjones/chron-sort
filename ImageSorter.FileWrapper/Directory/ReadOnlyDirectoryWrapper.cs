@@ -1,3 +1,5 @@
+using ImageSorter.FileWrapper.Abstractions.Directory;
+
 namespace ImageSorter.FileHandling.Directory;
 
 public class ReadOnlyDirectoryWrapper : IDirectoryWrapper

@@ -1,4 +1,4 @@
-namespace ImageSorter.FileHandling.FileStream;
+namespace ImageSorter.FileWrapper.Abstractions.FileStream;
 
 public interface IFileStreamService
 {
