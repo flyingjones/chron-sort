@@ -14,4 +14,10 @@ public class FileWrapper : IFileWrapper
     {
         System.IO.File.Move(sourceFileName, destFileName, overwrite);
     }
+
+    /// <inheritdoc cref="IFileWrapper.FileLength"/>
+    public long FileLength(string path)
+    {
+        return new FileInfo(path).Length;
+    }
 }

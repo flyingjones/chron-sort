@@ -20,4 +20,10 @@ public class ReadOnlyFileWrapper : IFileWrapper
     {
         // no op
     }
+    
+    /// <inheritdoc cref="IFileWrapper.FileLength"/>
+    public long FileLength(string path)
+    {
+        return new FileInfo(path).Length;
+    }
 }
