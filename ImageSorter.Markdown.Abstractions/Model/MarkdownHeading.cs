@@ -1,4 +1,4 @@
-namespace ImageSorter.Markdown.Model;
+namespace ImageSorter.Markdown.Abstractions.Model;
 
 public enum MarkdownHeading
 {

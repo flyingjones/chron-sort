@@ -1,4 +1,6 @@
 using ImageSorter.Logging;
+using ImageSorter.Markdown.Abstractions.Services;
+using ImageSorter.Markdown.Services;
 using ImageSorter.ProgressLogging;
 using ImageSorter.Services;
 using ImageSorter.Services.DateParser;
@@ -16,6 +18,7 @@ public static class DependencySetupHelper
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddTransient<IDateTimeProvider, DateTimeProvider>();
+        serviceCollection.AddTransient<IMarkdownTableRenderEngine, MarkdownTableRenderEngine>();
         serviceCollection.AddDateParsing(new DateParserConfiguration
         {
             SkipParserAfter = configuration.SkipParserAfter,

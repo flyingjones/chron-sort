@@ -8,6 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ImageSorter.FileWrapper\ImageSorter.FileWrapper.csproj" />
+      <ProjectReference Include="..\ImageSorter.Markdown.Abstractions\ImageSorter.Markdown.Abstractions.csproj" />
     </ItemGroup>
 
 </Project>

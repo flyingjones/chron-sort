@@ -1,14 +1,25 @@
+using AutoFixture;
+using AutoFixture.AutoMoq;
 using FluentAssertions;
+using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Helper;
-using ImageSorter.Markdown.Model;
+using ImageSorter.Markdown.Services;
 
 namespace ImageSorter.Markdown.Tests;
 
 [TestFixture]
-public class MarkdownTableTests
+public class MarkdownTableRenderEngineTests
 {
+    private IFixture _fixture;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _fixture = new Fixture().Customize(new AutoMoqCustomization());
+    }
+    
     [Test]
-    public void TestSimpleTable()
+    public void Render_Success()
     {
         // arrange
         var table = new MarkdownTable(3, 3);
@@ -27,9 +38,11 @@ public class MarkdownTableTests
         table[2, 0] = "sas";
         table[2, 1] = "sas";
         table[2, 2] = "sas";
+
+        var renderEngine = _fixture.Create<MarkdownTableRenderEngine>();
         
         // act
-        var result = table.Render();
+        var result = renderEngine.Render(table);
         
         // assert
         result.Should().NotBeNull();

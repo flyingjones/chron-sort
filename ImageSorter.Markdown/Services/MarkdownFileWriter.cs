@@ -1,6 +1,7 @@
 using ImageSorter.FileHandling.FileStream;
 using ImageSorter.FileWrapper.Abstractions.FileStream;
-using ImageSorter.Markdown.Model;
+using ImageSorter.Markdown.Abstractions.Model;
+using ImageSorter.Markdown.Abstractions.Services;
 
 namespace ImageSorter.Markdown.Services;
 
@@ -9,11 +10,16 @@ public sealed class MarkdownFileWriter : IMarkdownFileWriter
 {
     private readonly IStreamWriterWrapper _fileStream;
     private readonly bool _escapeTables;
+    private readonly IMarkdownTableRenderEngine _markdownTableRenderEngine;
 
-    public MarkdownFileWriter(IStreamWriterWrapper fileStream, bool escapeTables)
+    public MarkdownFileWriter(
+        IStreamWriterWrapper fileStream,
+        IMarkdownTableRenderEngine markdownTableRenderEngine,
+        bool escapeTables)
     {
         _fileStream = fileStream;
         _escapeTables = escapeTables;
+        _markdownTableRenderEngine = markdownTableRenderEngine;
     }
 
     /// <inheritdoc cref="IMarkdownFileWriter.WriteHeading"/>
@@ -25,7 +31,7 @@ public sealed class MarkdownFileWriter : IMarkdownFileWriter
     /// <inheritdoc cref="IMarkdownFileWriter.WriteTable"/>
     public void WriteTable(MarkdownTable table)
     {
-        _fileStream.WriteLine(table.Render(_escapeTables));
+        _fileStream.WriteLine(_markdownTableRenderEngine.Render(table, _escapeTables));
     }
 
     /// <inheritdoc cref="IMarkdownFileWriter.Write"/>

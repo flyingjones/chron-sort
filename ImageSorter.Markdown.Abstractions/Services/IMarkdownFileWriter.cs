@@ -1,6 +1,6 @@
-using ImageSorter.Markdown.Model;
+using ImageSorter.Markdown.Abstractions.Model;
 
-namespace ImageSorter.Markdown.Services;
+namespace ImageSorter.Markdown.Abstractions.Services;
 
 /// <summary>
 /// Interface for writing data to a markdown formatted file

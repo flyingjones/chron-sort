@@ -1,15 +1,19 @@
 using System.Runtime.InteropServices;
+using ImageSorter.Markdown.Abstractions.Model;
+using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Helper;
-using ImageSorter.Markdown.Model;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.DependencyInjection;
 
 public static partial class RunConfigurationHelper
 {
-    public static void LogRunConfiguration(ILogger logger, MarkdownTable runConfigurationTable)
+    public static void LogRunConfiguration(
+        ILogger logger,
+        IMarkdownTableRenderEngine markdownTableRenderEngine,
+        MarkdownTable table)
     {
-        LogStartupMessage(logger, $"{Environment.NewLine}{runConfigurationTable.Render(false)}");
+        LogStartupMessage(logger, $"{Environment.NewLine}{markdownTableRenderEngine.Render(table, false)}");
     }
 
     public static MarkdownTable FormatRunConfigurationToTable(RunConfiguration runConfiguration)

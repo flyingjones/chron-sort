@@ -1,7 +1,8 @@
 using System.CommandLine.Invocation;
 using ImageSorter.DependencyInjection;
 using ImageSorter.FileHandling.FileStream;
-using ImageSorter.Markdown.Model;
+using ImageSorter.Markdown.Abstractions.Model;
+using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
 using ImageSorter.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -44,8 +45,9 @@ public static class RootCommandHandler
             
         // log the configuration
         var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        var markDownRenderEngine = serviceProvider.GetRequiredService<IMarkdownTableRenderEngine>();
         var runConfigurationTable = RunConfigurationHelper.FormatRunConfigurationToTable(runConfiguration);
-        RunConfigurationHelper.LogRunConfiguration(logger, runConfigurationTable);
+        RunConfigurationHelper.LogRunConfiguration(logger, markDownRenderEngine, runConfigurationTable);
         WriteToSummaryFile(markdownFileWriter, runConfigurationTable);
 
         // get the sorter and perform the sorting
@@ -74,7 +76,10 @@ public static class RootCommandHandler
             {
                 Directory.CreateDirectory(directory);
             }
-            return new MarkdownFileWriter(streamFactory.CreateStreamWriter(path, FileMode.CreateNew), escapeTables);
+            return new MarkdownFileWriter(
+                streamFactory.CreateStreamWriter(path, FileMode.CreateNew),
+                new MarkdownTableRenderEngine(),
+                escapeTables);
         }
 
         return new MockMarkdownFileWriter();

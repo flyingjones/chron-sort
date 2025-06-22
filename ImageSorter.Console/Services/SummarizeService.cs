@@ -1,5 +1,5 @@
+using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Helper;
-using ImageSorter.Markdown.Model;
 using ImageSorter.Services.FileHandling;
 
 namespace ImageSorter.Services;

@@ -1,6 +1,6 @@
 using FluentAssertions;
 using FluentAssertions.Collections;
-using ImageSorter.Markdown.Model;
+using ImageSorter.Markdown.Abstractions.Model;
 
 namespace ImageSorter.Tests.Helpers;
 

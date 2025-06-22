@@ -1,4 +1,4 @@
-using ImageSorter.Markdown.Model;
+using ImageSorter.Markdown.Abstractions.Model;
 
 namespace ImageSorter.Markdown.Helper;
 
