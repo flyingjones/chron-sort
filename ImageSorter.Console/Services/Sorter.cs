@@ -1,4 +1,4 @@
-using ImageSorter.Services.DateParser;
+using ImageSorter.DateParsing.Abstractions.Services;
 using ImageSorter.Services.FileHandling;
 using Microsoft.Extensions.Logging;
 

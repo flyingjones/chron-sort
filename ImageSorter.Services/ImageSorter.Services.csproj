@@ -14,7 +14,13 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\ImageParser.Utils\ImageParser.Utils.csproj" />
+      <ProjectReference Include="..\ImageSorter.DateParsing.Abstractions\ImageSorter.DateParsing.Abstractions.csproj" />
       <ProjectReference Include="..\ImageSorter.FileWrapper\ImageSorter.FileWrapper.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="DateParser\" />
     </ItemGroup>
 
 </Project>

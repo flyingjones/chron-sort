@@ -1,3 +1,4 @@
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Services.FileHandling;
 
@@ -40,7 +41,7 @@ public interface ISummarizeService
     ///
     /// The last row will be for all years.
     /// </remarks>
-    MarkdownTable SummarizeConflicts(ICollection<WriteQueueItem> writeQueue);
+    MarkdownTable SummarizeConflicts(ICollection<ParsedFileResult> writeQueue);
 
     /// <summary>
     /// Describes each conflict in the <paramref name="writeQueue"/> in detail as a <see cref="MarkdownTable"/>
@@ -54,7 +55,7 @@ public interface ISummarizeService
     /// | Source Path | Parsed Date | Parser Name |
     /// </code>
     /// </remarks>
-    ICollection<KeyValuePair<string, MarkdownTable>> DescribeConflicts(ICollection<WriteQueueItem> writeQueue);
+    ICollection<KeyValuePair<string, MarkdownTable>> DescribeConflicts(ICollection<ParsedFileResult> writeQueue);
 
     /// <summary>
     /// Creates a summary <see cref="MarkdownTable"/> based on the <paramref name="fileOperationResults"/> grouped by year

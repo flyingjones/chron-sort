@@ -1,9 +1,9 @@
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.DependencyInjection;
-using ImageSorter.Services.DateParser.MetaData.ExifTags;
-using ImageSorter.Services.DateParser.MetaData.QuickTimeMovieHeaders;
+using ImageSorting.DateParsing.MetaData.QuickTimeMovieHeaders;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter;

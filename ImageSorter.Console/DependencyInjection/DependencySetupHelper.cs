@@ -1,13 +1,15 @@
+using ImageParser.Utils.DateTimeWrapper;
+using ImageParser.Utils.ProgressLogger;
+using ImageSorter.DateParsing.Abstractions.Services;
+using ImageSorter.DateParsing.Abstractions.Services.MetaData;
 using ImageSorter.Logging;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
 using ImageSorter.ProgressLogging;
 using ImageSorter.Services;
-using ImageSorter.Services.DateParser;
-using ImageSorter.Services.DateParser.MetaData;
-using ImageSorter.Services.DateTimeWrapper;
 using ImageSorter.Services.FileHandling;
-using ImageSorter.Services.ProgressLogger;
+using ImageSorting.DateParsing;
+using ImageSorting.DateParsing.MetaData;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ImageSorter.DependencyInjection;

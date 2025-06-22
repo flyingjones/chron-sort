@@ -144,19 +144,19 @@ public class DestinationWriterTests
         // arrange
         var writeQueue = new[]
         {
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 FilePath = "/source/path/img1.jpg", DateTaken = DateTime.Parse("2024-05-01"),
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 FilePath = "/source/path/img2.jpg", DateTaken = DateTime.Parse("2024-05-01"),
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 FilePath = "/source/path/img3.jpg", DateTaken = DateTime.Parse("2024-06-01"),
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 FilePath = "/source/path/img4.jpg", DateTaken = DateTime.Parse("2025-06-01"),
             }
@@ -194,19 +194,19 @@ public class DestinationWriterTests
         // arrange
         var writeQueue = new[]
         {
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 FilePath = "/source/path/img1.jpg", DateTaken = DateTime.Parse("2024-05-01"),
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 FilePath = "/source/path/img2.jpg", DateTaken = DateTime.Parse("2024-05-01"),
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 FilePath = "/source/path/img3.jpg", DateTaken = DateTime.Parse("2024-06-01"),
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 FilePath = "/source/path/img4.jpg", DateTaken = DateTime.Parse("2025-06-01"),
             }

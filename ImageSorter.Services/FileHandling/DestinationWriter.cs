@@ -1,12 +1,13 @@
 using System.Text;
+using ImageParser.Utils.DateTimeWrapper;
+using ImageParser.Utils.ProgressLogger;
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.FileHandling.Directory;
 using ImageSorter.FileHandling.File;
 using ImageSorter.FileHandling.FileStream;
 using ImageSorter.FileWrapper.Abstractions.Directory;
 using ImageSorter.FileWrapper.Abstractions.File;
 using ImageSorter.FileWrapper.Abstractions.FileStream;
-using ImageSorter.Services.DateTimeWrapper;
-using ImageSorter.Services.ProgressLogger;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services.FileHandling;
@@ -128,10 +129,10 @@ public partial class DestinationWriter : IDestinationWriter
     }
 
     /// <inheritdoc cref="IDestinationWriter.CopyFiles"/>
-    public async Task<ICollection<FileOperationResult>> CopyFiles(ICollection<WriteQueueItem> writeQueueItems,
+    public async Task<ICollection<FileOperationResult>> CopyFiles(ICollection<ParsedFileResult> parsedFileResults,
         CancellationToken cancellationToken)
     {
-        var count = writeQueueItems.Count;
+        var count = parsedFileResults.Count;
 
         var copySummary = new List<FileOperationResult>();
 
@@ -139,7 +140,7 @@ public partial class DestinationWriter : IDestinationWriter
 
         var idx = 0;
 
-        foreach (var item in writeQueueItems)
+        foreach (var item in parsedFileResults)
         {
             _progressLogger.LogProgress((double)idx / count);
 
@@ -161,10 +162,10 @@ public partial class DestinationWriter : IDestinationWriter
     }
 
     /// <inheritdoc cref="IDestinationWriter.MoveFiles"/>
-    public ICollection<FileOperationResult> MoveFiles(ICollection<WriteQueueItem> writeQueueItems,
+    public ICollection<FileOperationResult> MoveFiles(ICollection<ParsedFileResult> parsedFileResults,
         CancellationToken cancellationToken)
     {
-        var count = writeQueueItems.Count;
+        var count = parsedFileResults.Count;
 
         var moveSummary = new List<FileOperationResult>();
 
@@ -172,7 +173,7 @@ public partial class DestinationWriter : IDestinationWriter
 
         var idx = 0;
 
-        foreach (var item in writeQueueItems)
+        foreach (var item in parsedFileResults)
         {
             _progressLogger.LogProgress((double)idx / count);
 

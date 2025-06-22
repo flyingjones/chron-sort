@@ -1,3 +1,4 @@
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Services.FileHandling;
 
 namespace ImageSorter.Services;
@@ -9,7 +10,7 @@ public interface ISummaryReportingService
 {
     void ReportScanSummary(string[] filesToProcess, string[] allFiles);
 
-    void ReportSortSummary(ICollection<WriteQueueItem> writeQueue);
+    void ReportSortSummary(ICollection<ParsedFileResult> writeQueue);
 
     void ReportWriteSummary(ICollection<FileOperationResult> results);
 }

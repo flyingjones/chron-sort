@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using ImageSorter.Services.ProgressLogger;
+using ImageParser.Utils.ProgressLogger;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.ProgressLogging;

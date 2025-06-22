@@ -1,8 +1,9 @@
 using System.Collections.ObjectModel;
-using ImageSorter.Services.DateParser;
-using ImageSorter.Services.DateParser.MetaData;
-using ImageSorter.Services.DateParser.MetaData.ExifTags;
-using ImageSorter.Services.DateParser.MetaData.QuickTimeMovieHeaders;
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
+using ImageSorter.DateParsing.Abstractions.Services;
+using ImageSorting.DateParsing;
+using ImageSorting.DateParsing.MetaData;
+using ImageSorting.DateParsing.MetaData.QuickTimeMovieHeaders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

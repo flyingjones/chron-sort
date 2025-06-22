@@ -1,3 +1,4 @@
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Helper;
 using ImageSorter.Services.FileHandling;
@@ -48,7 +49,7 @@ public class SummarizeService : ISummarizeService
     }
 
     /// <inheritdoc cref="ISummarizeService.SummarizeConflicts"/>
-    public MarkdownTable SummarizeConflicts(ICollection<WriteQueueItem> writeQueue)
+    public MarkdownTable SummarizeConflicts(ICollection<ParsedFileResult> writeQueue)
     {
         var builder = new MarkdownTableBuilder();
 
@@ -99,7 +100,7 @@ public class SummarizeService : ISummarizeService
     }
 
     /// <inheritdoc cref="ISummarizeService.DescribeConflicts"/>
-    public ICollection<KeyValuePair<string, MarkdownTable>> DescribeConflicts(ICollection<WriteQueueItem> writeQueue)
+    public ICollection<KeyValuePair<string, MarkdownTable>> DescribeConflicts(ICollection<ParsedFileResult> writeQueue)
     {
         return writeQueue
             .OrderBy(x => x.DateTaken)

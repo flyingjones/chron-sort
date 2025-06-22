@@ -59,26 +59,26 @@ public class SummarizeServiceTests
         var writeQueue = new[]
         {
             // three files which have the same month and year and would therefore result in a conflict
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 DateTaken = DateTime.Parse("2024-05-05"),
                 FilePath = "/home/images/phone/img01.jpg",
                 ParserName = "TestParser"
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 DateTaken = DateTime.Parse("2024-05-05"),
                 FilePath = "/home/images/downloads/img01.jpg",
                 ParserName = "TestParser"
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 DateTaken = DateTime.Parse("2024-05-05"),
                 FilePath = "/home/images/backup/img01.jpg",
                 ParserName = "TestParser"
             },
             // one file for year 2025, should not be a conflict since it should be sorted in a different directory
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 DateTaken = DateTime.Parse("2025-01-11"),
                 FilePath = "/home/images/memes/img01.jpg"
@@ -120,26 +120,26 @@ public class SummarizeServiceTests
         var writeQueue = new[]
         {
             // three files which have the same month and year and would therefore result in a conflict
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 DateTaken = DateTime.Parse("2024-05-05"),
                 FilePath = "/home/images/phone/img01.jpg",
                 ParserName = "TestParser1"
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 DateTaken = DateTime.Parse("2024-05-06"),
                 FilePath = "/home/images/downloads/img01.jpg",
                 ParserName = "TestParser2"
             },
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 DateTaken = DateTime.Parse("2024-05-07"),
                 FilePath = "/home/images/backup/img01.jpg",
                 ParserName = "TestParser3"
             },
             // one file for year 2025, should not be a conflict since it should be sorted in a different directory
-            new WriteQueueItem
+            new ParsedFileResult
             {
                 DateTaken = DateTime.Parse("2025-01-11"),
                 FilePath = "/home/images/memes/img01.jpg"

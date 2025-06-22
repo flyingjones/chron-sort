@@ -1,3 +1,4 @@
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
@@ -39,7 +40,7 @@ public class SummaryReportingService : ISummaryReportingService
         _markdownFileWriter.WriteLine();
     }
 
-    public void ReportSortSummary(ICollection<WriteQueueItem> writeQueue)
+    public void ReportSortSummary(ICollection<ParsedFileResult> writeQueue)
     {
         var conflictSummary = _summarizeService.SummarizeConflicts(writeQueue);
         _logger.LogInformation(
