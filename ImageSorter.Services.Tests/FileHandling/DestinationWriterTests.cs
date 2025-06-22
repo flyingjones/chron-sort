@@ -1,6 +1,7 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
 using FluentAssertions;
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.FileHandling.Directory;
 using ImageSorter.FileHandling.File;
 using ImageSorter.FileHandling.FileStream;

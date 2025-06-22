@@ -1,6 +1,5 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using FluentAssertions;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Helper;
 using ImageSorter.Markdown.Services;
@@ -45,7 +44,7 @@ public class MarkdownTableRenderEngineTests
         var result = renderEngine.Render(table);
         
         // assert
-        result.Should().NotBeNull();
+        Assert.That(result, Is.Not.Null);
     }
 
     [Test]
@@ -62,7 +61,10 @@ public class MarkdownTableRenderEngineTests
         var table = builder.Build();
 
         // assert
-        table.RowCount.Should().Be(3);
-        table.ColumnCount.Should().Be(4);
+        Assert.Multiple(() =>
+        {
+            Assert.That(table.RowCount, Is.EqualTo(3));
+            Assert.That(table.ColumnCount, Is.EqualTo(4));
+        });
     }
 }

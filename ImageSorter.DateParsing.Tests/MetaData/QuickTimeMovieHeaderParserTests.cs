@@ -1,9 +1,7 @@
-using FluentAssertions;
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.DateParsing.Abstractions.Services.MetaData;
 using ImageSorting.DateParsing.MetaData.QuickTimeMovieHeaders;
 using Moq;
-using NUnit.Framework;
 
 namespace ImageSorter.DateParsing.Tests.MetaData;
 
@@ -26,10 +24,15 @@ public class QuickTimeMovieHeaderParserTests
 
         var parser = new QuickTimeMovieHeaderParser(header, 0);
         
-        // act & assert
+        // act
         var canParse = parser.TryParseDate(fileHandleMock.Object, out var result);
-        canParse.Should().BeTrue();
-        result.Should().NotBeNull();
+        
+        // assert
+        Assert.Multiple(() =>
+        {
+            Assert.That(canParse, Is.True);
+            Assert.That(result, Is.Not.Null);
+        });
         return result!.Value.ToString("yyyy-MM-ddTHH:mm:ss");
     }
 }
