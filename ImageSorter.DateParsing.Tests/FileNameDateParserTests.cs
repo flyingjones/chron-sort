@@ -1,10 +1,9 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using FluentAssertions;
-using ImageSorter.Services.DateParser;
+using ImageSorting.DateParsing;
 using NUnit.Framework;
 
-namespace ImageSorter.Services.Tests.DateParser;
+namespace ImageSorter.DateParsing.Tests;
 
 [TestFixture]
 public class FileNameDateParserTests
@@ -40,10 +39,10 @@ public class FileNameDateParserTests
         {
             var filenameDateParser = new FilenameDateParser(fileNameRegex, 0);
         });
-
-        exception.Should().NotBeNull();
-        exception?.ParamName.Should().Be("fileNameRegex");
         
+        Assert.That(exception, Is.Not.Null);
+        Assert.That(exception?.ParamName, Is.EqualTo("fileNameRegex"));
+
         return exception?.Message;
     }
 }

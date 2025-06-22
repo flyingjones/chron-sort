@@ -4,10 +4,11 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <RootNamespace>ImageSorting.DateParsing</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ImageParser.Utils\ImageParser.Utils.csproj" />
+      <ProjectReference Include="..\ImageSorter.Utils\ImageSorter.Utils.csproj" />
       <ProjectReference Include="..\ImageSorter.DateParsing.Abstractions\ImageSorter.DateParsing.Abstractions.csproj" />
     </ItemGroup>
 

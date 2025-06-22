@@ -1,10 +1,11 @@
 using FluentAssertions;
-using ImageSorter.Services.DateParser.MetaData;
-using ImageSorter.Services.DateParser.MetaData.QuickTimeMovieHeaders;
+using ImageSorter.DateParsing.Abstractions.Model.MetaData;
+using ImageSorter.DateParsing.Abstractions.Services.MetaData;
+using ImageSorting.DateParsing.MetaData.QuickTimeMovieHeaders;
 using Moq;
 using NUnit.Framework;
 
-namespace ImageSorter.Services.Tests.DateParser.MetaData;
+namespace ImageSorter.DateParsing.Tests.MetaData;
 
 [TestFixture]
 public class QuickTimeMovieHeaderParserTests

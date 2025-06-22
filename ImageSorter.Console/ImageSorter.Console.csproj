@@ -22,10 +22,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\ImageParser.Utils\ImageParser.Utils.csproj" />
+      <ProjectReference Include="..\ImageSorter.Utils\ImageSorter.Utils.csproj" />
       <ProjectReference Include="..\ImageSorter.Markdown\ImageSorter.Markdown.csproj" />
       <ProjectReference Include="..\ImageSorter.Services\ImageSorter.Services.csproj" />
-      <ProjectReference Include="..\ImageSorting.DateParsing\ImageSorting.DateParsing.csproj" />
+      <ProjectReference Include="..\ImageSorter.DateParsing\ImageSorter.DateParsing.csproj" />
     </ItemGroup>
 
 </Project>
