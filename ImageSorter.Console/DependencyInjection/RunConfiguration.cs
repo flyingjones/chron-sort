@@ -1,4 +1,5 @@
 using ImageSorter.Sorting.Model;
+using ImageSorter.Sorting.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.DependencyInjection;
@@ -54,4 +55,6 @@ public class RunConfiguration
     public required ConflictReducerMode ConflictReducerMode { get; set; }
     
     public required DestinationConflictMode DestinationConflictMode { get; set; }
+    
+    public required ConflictResolverMode ConflictResolverMode { get; set; }
 }

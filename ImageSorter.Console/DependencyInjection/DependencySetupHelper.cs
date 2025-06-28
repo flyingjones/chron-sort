@@ -1,5 +1,6 @@
 using ImageParser.Utils.DateTimeWrapper;
 using ImageParser.Utils.ProgressLogger;
+using ImageParser.Utils.RandomWrapper;
 using ImageSorter.DateParsing.Abstractions.Services;
 using ImageSorter.DateParsing.Abstractions.Services.MetaData;
 using ImageSorter.Logging;
@@ -23,6 +24,8 @@ public static class DependencySetupHelper
     {
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddTransient<IDateTimeProvider, DateTimeProvider>();
+        serviceCollection.AddTransient<IRandomStringGenerator>(_ => RandomStringGenerator.CreateForLowerCaseLetters());
+
         serviceCollection.AddTransient<IMarkdownTableRenderEngine, MarkdownTableRenderEngine>();
         serviceCollection.AddDateParsing(new DateParserConfiguration
         {
@@ -108,7 +111,9 @@ public static class DependencySetupHelper
                 DestinationPath = configuration.DestinationPath.FullName,
                 Format = configuration.OutputFormat
             },
-            configuration.ConflictReducerMode);
+            configuration.DestinationConflictMode,
+            configuration.ConflictReducerMode,
+            configuration.ConflictResolverMode);
 
         return serviceCollection;
     }

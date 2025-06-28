@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.DependencyInjection;
 using ImageSorter.Sorting.Model;
+using ImageSorter.Sorting.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter;
@@ -49,6 +50,8 @@ public static class RootCommandFactory
         rootCommand.AddOption(Options.SummaryFilePathOption);
         rootCommand.AddOption(Options.EscapeSummaryMarkdownTables);
         rootCommand.AddOption(Options.ConflictReducerModeOption);
+        rootCommand.AddOption(Options.DestinationConflictModeOption);
+        rootCommand.AddOption(Options.ConflictResolverModeOption);
 
         return rootCommand;
     }
@@ -88,7 +91,8 @@ public static class RootCommandFactory
             SummaryFilePath = GenerateSummaryFilePath(parsedContext.GetValueForOption(Options.SummaryFilePathOption)?.FullName),
             EscapeSummaryFileTables = parsedContext.GetValueForOption(Options.EscapeSummaryMarkdownTables),
             ConflictReducerMode = parsedContext.GetValueForOption(Options.ConflictReducerModeOption) ?? ConflictReducerMode.None,
-            DestinationConflictMode = parsedContext.GetValueForOption(Options.DestinationConflictModeOption) ?? DestinationConflictMode.Joint
+            DestinationConflictMode = parsedContext.GetValueForOption(Options.DestinationConflictModeOption) ?? DestinationConflictMode.Joint,
+            ConflictResolverMode = parsedContext.GetValueForOption(Options.ConflictResolverModeOption) ?? ConflictResolverMode.Throw
         };
         return runConfig;
     }
@@ -217,5 +221,10 @@ public static class RootCommandFactory
             aliases: new[] { "--destination-conflict-mode" },
             description: "How conflicting files between source and destination are handled",
             getDefaultValue: () => DestinationConflictMode.Joint);
+        
+        public static readonly Option<ConflictResolverMode?> ConflictResolverModeOption = new(
+            aliases: new[] { "--conflict-resolution-mode" },
+            description: "How conflicts are resolved",
+            getDefaultValue: () => ConflictResolverMode.Throw);
     }
 }

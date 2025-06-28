@@ -31,6 +31,11 @@ public record ReducedSortingConflict
         ChosenFiles.Count == 0 ||
         // file is not present at destination but all files at source are equal
         (ChosenFiles.Count == 1 && ConflictingFiles.All(x => x.IsFromSource));
+    
+    /// <summary>
+    /// Conflict is resolved when existing files shall be overwritten
+    /// </summary>
+    public bool IsResolvedInSource => ChosenFiles.Count <= 1;
 
     public DateTime DateTime => ConflictingFiles.First(x => x.IsFromSource).SortedFilePath!.DateTime;
 }

@@ -1,4 +1,4 @@
-namespace ImageSorter.DependencyInjection;
+namespace ImageSorter.Sorting.Model;
 
 public enum DestinationConflictMode
 {

@@ -20,4 +20,7 @@ public interface IDirectoryWrapper
     /// <inheritdoc cref="Directory.EnumerateFileSystemEntries(string)"/>
     IEnumerable<string> EnumerateFileSystemEntries(string path);
 
+    /// <inheritdoc cref="Directory.GetParent"/>
+    string? GetParentDirectory(string path);
+
 }

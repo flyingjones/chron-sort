@@ -4,6 +4,8 @@ using ImageSorter.DependencyInjection;
 using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
 using ImageSorter.Sorting.Abstractions.Services;
+using ImageSorter.Sorting.Model;
+using ImageSorter.Sorting.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services;
@@ -19,6 +21,7 @@ public partial class Sorter : ISorter
     private readonly Sorting.Abstractions.Services.ISorter _newSorter;
     private readonly IConflictFinder _conflictFinder;
     private readonly IConflictReducer _conflictReducer;
+    private readonly IConflictResolver _conflictResolver;
 
     public Sorter(
         ILogger<Sorter> logger,
@@ -27,7 +30,10 @@ public partial class Sorter : ISorter
         IDestinationWriter destinationWriter,
         ISummaryReportingService summaryReportingService,
         Sorting.Abstractions.Services.ISorter newSorter,
-        IConflictFinder conflictFinder, IConflictReducer conflictReducer, SortRunConfiguration sortRunConfiguration)
+        IConflictFinder conflictFinder,
+        IConflictReducer conflictReducer,
+        SortRunConfiguration sortRunConfiguration,
+        IConflictResolver conflictResolver)
     {
         _logger = logger;
         _fileLoader = fileLoader;
@@ -38,6 +44,7 @@ public partial class Sorter : ISorter
         _conflictFinder = conflictFinder;
         _conflictReducer = conflictReducer;
         _sortRunConfiguration = sortRunConfiguration;
+        _conflictResolver = conflictResolver;
     }
 
     public async Task PerformSorting(bool moveFiles, CancellationToken cancellationToken)
@@ -59,36 +66,27 @@ public partial class Sorter : ISorter
         var rawSorting = _newSorter.SortFiles(parsedFiles);
         // _summaryReportingService.ReportSortSummary(rawSorting);
 
-        string[] filesAtDestination = [];
-        if (_sortRunConfiguration is { IsInPlace: false, DestinationConflictMode: DestinationConflictMode.Joint })
-        {
-            _logger.LogInformation("Scanning Destination Directory");
-            filesAtDestination = _fileLoader.GetFilePaths(_sortRunConfiguration.DestinationPath, out var _);
-        }
-        
+        _logger.LogInformation("Scanning Destination Directory");
+        string[] filesAtDestination = _fileLoader.GetFilePaths(_sortRunConfiguration.DestinationPath, out var _);
+
         _logger.LogInformation("Searching for Conflicts");
         var conflicts = _conflictFinder.FindConflicts(rawSorting, filesAtDestination);
 
         _logger.LogInformation("Performing Conflict Reduction");
         var reducedConflicts = _conflictReducer.ReduceConflicts(conflicts);
-        
-        _summaryReportingService.ReportConflictSummary(reducedConflicts);
 
-        // files to write after sorting and conflict reduction
-        var writeTarget = reducedConflicts.NonConflictingFiles
-            .Concat(reducedConflicts.ReducedSortingConflicts.SelectMany(x => x.ChosenFiles))
-            .ToArray();
+        _summaryReportingService.ReportConflictSummary(reducedConflicts);
 
         // remaining conflicts after reduction
         var sortConflictSummaryAfterReduction = new SortingConflictSummary
         {
             NonConflictingFiles = reducedConflicts.NonConflictingFiles
                 .Concat(reducedConflicts.ReducedSortingConflicts
-                    .Where(x => x.IsResolved)
+                    .Where(ConflictIsResolved)
                     .SelectMany(x => x.ChosenFiles))
                 .ToArray(),
             Conflicts = reducedConflicts.ReducedSortingConflicts
-                .Where(x => !x.IsResolved)
+                .Where(x => !ConflictIsResolved(x))
                 .Select(x => new SortingConflict
                 {
                     ConflictingFiles = x.ChosenFiles
@@ -98,14 +96,17 @@ public partial class Sorter : ISorter
                 })
                 .ToArray()
         };
-        
+
         // TBD implement conflict resolution (Throw / ChooseOne / SemanticRename / RandomRename)
-        
+
+        var filesAtDestinationSet = filesAtDestination.ToHashSet();
+        var filesToWrite = _conflictResolver.ResolveConflicts(sortConflictSummaryAfterReduction, filesAtDestinationSet);
+
         // TBD implement writing of results, pass overwrite true only if DestinationConflict is set to Overwrite
-        
+
         // TBD        
-        
-        _logger.LogInformation("blub ({Sas})", sortConflictSummaryAfterReduction);
+
+        _logger.LogInformation("blub ({Sas})", filesToWrite);
 
         // _summaryReportingService.ReportSortSummary(writeQueue);
         //
@@ -123,5 +124,12 @@ public partial class Sorter : ISorter
         // _summaryReportingService.ReportWriteSummary(writeSummary);
         //
         // _logger.LogInformation("Finished");
+    }
+
+    private bool ConflictIsResolved(ReducedSortingConflict reducedSortingConflict)
+    {
+        return reducedSortingConflict.IsResolved ||
+               (_sortRunConfiguration.DestinationConflictMode == DestinationConflictMode.Overwrite &&
+                reducedSortingConflict.IsResolvedInSource);
     }
 }

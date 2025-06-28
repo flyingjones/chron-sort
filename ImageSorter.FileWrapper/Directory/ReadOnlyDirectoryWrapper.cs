@@ -37,4 +37,10 @@ public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
     {
         return System.IO.Directory.EnumerateFileSystemEntries(path);
     }
+    
+    /// <inheritdoc cref="IDirectoryWrapper.GetParentDirectory"/>
+    public string? GetParentDirectory(string path)
+    {
+        return System.IO.Directory.GetParent(path)?.FullName;
+    }
 }

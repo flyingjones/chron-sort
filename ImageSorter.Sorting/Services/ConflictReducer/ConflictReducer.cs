@@ -9,19 +9,25 @@ public class ConflictReducer : IConflictReducer
 {
     private readonly IFileEqualityMetricImplementation _fileEqualityMetricImplementation;
     private readonly IProgressLogger<ConflictReducer> _progressLogger;
+    private readonly IDestinationConflictQuickResolver _destinationConflictQuickResolver;
 
     public ConflictReducer(
         IFileEqualityMetricImplementation fileEqualityMetricImplementation,
-        IProgressLogger<ConflictReducer> progressLogger)
+        IProgressLogger<ConflictReducer> progressLogger,
+        IDestinationConflictQuickResolver destinationConflictQuickResolver)
     {
         _fileEqualityMetricImplementation = fileEqualityMetricImplementation;
         _progressLogger = progressLogger;
+        _destinationConflictQuickResolver = destinationConflictQuickResolver;
     }
 
     public ReducedSortingConflict ReduceConflicts(SortingConflict sortingConflict)
     {
-        // check each file for each other file for equality. If two files are equal, 
-
+        if (_destinationConflictQuickResolver.TryQuickResolve(sortingConflict, out var reducedConflict))
+        {
+            return reducedConflict;
+        }
+        
         var equalityClasses = sortingConflict
             .ConflictingFiles
             .Select(x => new FileEqualityClass(x))

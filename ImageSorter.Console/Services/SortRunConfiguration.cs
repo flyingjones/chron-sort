@@ -1,4 +1,6 @@
 using ImageSorter.DependencyInjection;
+using ImageSorter.Sorting.Model;
+using ImageSorter.Sorting.Services;
 
 namespace ImageSorter.Services;
 
