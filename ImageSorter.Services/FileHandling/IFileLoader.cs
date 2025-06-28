@@ -14,5 +14,5 @@ public interface IFileLoader
     /// <remarks>
     /// Will filter by file endings if <see cref="FileLoaderOptions.FileEndings"/> is not null and not empty
     /// </remarks>
-    string[] GetFilePaths(out string[] allFiles);
+    string[] GetFilePaths(string directoryPath, out string[] allFiles);
 }

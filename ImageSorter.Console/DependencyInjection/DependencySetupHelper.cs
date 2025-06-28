@@ -8,6 +8,9 @@ using ImageSorter.Markdown.Services;
 using ImageSorter.ProgressLogging;
 using ImageSorter.Services;
 using ImageSorter.Services.FileHandling;
+using ImageSorter.Sorting;
+using ImageSorter.Sorting.Model;
+using ImageSorter.Sorting.SubServices.PathBuilder;
 using ImageSorting.DateParsing;
 using ImageSorting.DateParsing.MetaData;
 using Microsoft.Extensions.DependencyInjection;
@@ -60,7 +63,6 @@ public static class DependencySetupHelper
             });
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
-            SourcePath = configuration.SourcePath.FullName,
             FileEndings = configuration.FileEndings?.SelectMany(x => x.Split(" ")).ToArray()
         }, configuration.IsDryRun);
 
@@ -81,7 +83,7 @@ public static class DependencySetupHelper
             {
                 progressLoggerConfig.ProgressCharsString = configuration.ProgressBarCharacters;
             }
-            
+
             serviceCollection.AddSingleton(progressLoggerConfig);
             serviceCollection.AddTransient(typeof(IProgressLogger<>), typeof(ConsoleProgressLogger<>));
         }
@@ -90,9 +92,23 @@ public static class DependencySetupHelper
             serviceCollection.AddTransient(typeof(IProgressLogger<>), typeof(NoOperationProgressLogger<>));
         }
 
+        serviceCollection.AddSingleton(new SortRunConfiguration
+        {
+            DestinationConflictMode = configuration.DestinationConflictMode,
+            SourcePath = configuration.SourcePath.FullName,
+            DestinationPath = configuration.DestinationPath.FullName
+        });
         serviceCollection.AddTransient<ISorter, Sorter>();
         serviceCollection.AddTransient<ISummarizeService, SummarizeService>();
         serviceCollection.AddTransient<ISummaryReportingService, SummaryReportingService>();
+
+        serviceCollection.AddSorting(
+            new PathBuilderOptions
+            {
+                DestinationPath = configuration.DestinationPath.FullName,
+                Format = configuration.OutputFormat
+            },
+            configuration.ConflictReducerMode);
 
         return serviceCollection;
     }

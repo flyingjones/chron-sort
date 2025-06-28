@@ -2,6 +2,7 @@ using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Helper;
 using ImageSorter.Services.FileHandling;
+using ImageSorter.Sorting.Abstractions.Model;
 
 namespace ImageSorter.Services;
 
@@ -48,7 +49,7 @@ public class SummarizeService : ISummarizeService
         return table;
     }
 
-    /// <inheritdoc cref="ISummarizeService.SummarizeConflicts"/>
+    /// <inheritdoc />
     public MarkdownTable SummarizeConflicts(ICollection<ParsedFileResult> writeQueue)
     {
         var builder = new MarkdownTableBuilder();
@@ -97,6 +98,81 @@ public class SummarizeService : ISummarizeService
         var table = builder.Build();
         table.SetTextAlignment(HorizontalTextAlignment.Right);
         return table;
+    }
+
+    /// <inheritdoc />
+    public MarkdownTable SummarizeConflicts(ReducedSortingConflictSummary reducedSortingConflicts)
+    {
+        var builder = new MarkdownTableBuilder();
+
+        // header row
+        builder.AddRow(
+            "Year",
+            "Total",
+            "Non Conflicting",
+            "Conflicting",
+            "Present at Destination",
+            "Remaining Conflicting after Reduction",
+            "Discarded",
+            "Remaining Total");
+
+        // body
+        var yearNonConflictGroups = reducedSortingConflicts.NonConflictingFiles
+            .GroupBy(x => x.DateTime.Year)
+            .ToDictionary(x => x.First().DateTime.Year, x => x.ToArray());
+            
+        var yearConflictGroups = reducedSortingConflicts.ReducedSortingConflicts
+            .GroupBy(x => x.DateTime.Year)
+            .ToDictionary(x => x.First().DateTime.Year, x => x.ToArray());
+
+        var years = yearNonConflictGroups.Keys.Concat(yearConflictGroups.Keys).Distinct().Order().ToArray();
+        
+        foreach (var year in years)
+        {
+            SortedFilePath[] nonConflicting = [];
+            if (yearNonConflictGroups.TryGetValue(year, out var tmp1))
+                nonConflicting = tmp1;
+
+            ReducedSortingConflict[] reducedConflicts = [];
+            if (yearConflictGroups.TryGetValue(year, out var tmp2))
+                reducedConflicts = tmp2;
+            
+            var conflictingFileCount =
+                reducedConflicts.Sum(x =>
+                    x.ConflictingFiles.Count(y => y.IsFromSource));            
+
+            var totalFileAmount = nonConflicting.Length + conflictingFileCount;
+
+            var remainingConflicting = reducedConflicts
+                .Where(x => x.ChosenFiles.Count > 1)
+                .Sum(x => x.ChosenFiles.Count);
+
+            var discardedFileCount =
+                reducedConflicts.Sum(x => x.DiscardedFiles.Count);
+
+            var remainingFileCount =
+                reducedConflicts.Sum(x => x.ChosenFiles.Count) +
+                nonConflicting.Length;
+
+            var presentAtDestinationCount = reducedConflicts
+                .Where(x => x.ChosenFiles.Count == 0)
+                .Sum(x => x.ConflictingFiles.Where(y => y.IsFromSource).Count());
+
+            builder.AddRow(
+                year.ToString(),
+                totalFileAmount.ToString(),
+                nonConflicting.Length.ToString(),
+                conflictingFileCount.ToString(),
+                presentAtDestinationCount.ToString(),
+                remainingConflicting.ToString(),
+                discardedFileCount.ToString(),
+                remainingFileCount.ToString()
+            );
+        }
+        
+        
+
+        return builder.Build();
     }
 
     /// <inheritdoc cref="ISummarizeService.DescribeConflicts"/>
@@ -176,7 +252,7 @@ public class SummarizeService : ISummarizeService
                 $"{groupedResult.Count(x => x.Status == FileOperationResultStatus.Success)}",
                 $"{groupedResult.Count(x => x.Status == FileOperationResultStatus.OverwriteSuccess)}");
         }
-        
+
         builder.AddRow("*",
             $"{fileOperationResults.Count}",
             $"{fileOperationResults.Count(x => x.Status == FileOperationResultStatus.Error)}",

@@ -26,17 +26,18 @@ public static partial class RunConfigurationHelper
         builder.AddRow("Destination Path", runConfiguration.DestinationPath?.FullName ?? "- (running in place)");
         builder.AddRow("Summary Report Path", runConfiguration.SummaryFilePath ?? "-");
         
-        var modeString = runConfiguration.MoveFiles ? "Move" : "Copy";
-        var dryRunString = runConfiguration.IsDryRun ? " (dry run)" : string.Empty;
-        builder.AddRow("Mode", $"{modeString}{dryRunString}");
-
-        builder.AddRow("Overwrite", runConfiguration.Overwrite.ToString());
-        builder.AddRow("Output Format", runConfiguration.OutputFormat);
-
         var fileEndingsString = runConfiguration.FilterFileEndings
             ? $"[{string.Join(", ", runConfiguration.FileEndings!)}]"
             : "*";
         builder.AddRow("File Endings", fileEndingsString);
+        
+        var modeString = runConfiguration.MoveFiles ? "Move" : "Copy";
+        var dryRunString = runConfiguration.IsDryRun ? " (dry run)" : string.Empty;
+        builder.AddRow("Mode", $"{modeString}{dryRunString}");
+
+        builder.AddRow("Conflict Reduction Mode", runConfiguration.ConflictReducerMode.ToString("G"));
+        builder.AddRow("Destination Conflict Mode", runConfiguration.DestinationConflictMode.ToString("G"));
+        builder.AddRow("Output Format", runConfiguration.OutputFormat);
         
         builder.AddRow("From Date", runConfiguration.From?.ToString("o") ?? "-");
         builder.AddRow("To Date", runConfiguration.To?.ToString("o") ?? "-");

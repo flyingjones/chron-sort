@@ -3,7 +3,7 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.DependencyInjection;
-using ImageSorting.DateParsing.MetaData.QuickTimeMovieHeaders;
+using ImageSorter.Sorting.Model;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter;
@@ -48,6 +48,7 @@ public static class RootCommandFactory
         rootCommand.AddOption(Options.ProgressBarString);
         rootCommand.AddOption(Options.SummaryFilePathOption);
         rootCommand.AddOption(Options.EscapeSummaryMarkdownTables);
+        rootCommand.AddOption(Options.ConflictReducerModeOption);
 
         return rootCommand;
     }
@@ -85,7 +86,9 @@ public static class RootCommandFactory
             ProgressBarCharacters = parsedContext.GetValueForOption(Options.ProgressBarString),
             SummaryFileDirectoryPath = parsedContext.GetValueForOption(Options.SummaryFilePathOption),
             SummaryFilePath = GenerateSummaryFilePath(parsedContext.GetValueForOption(Options.SummaryFilePathOption)?.FullName),
-            EscapeSummaryFileTables = parsedContext.GetValueForOption(Options.EscapeSummaryMarkdownTables)
+            EscapeSummaryFileTables = parsedContext.GetValueForOption(Options.EscapeSummaryMarkdownTables),
+            ConflictReducerMode = parsedContext.GetValueForOption(Options.ConflictReducerModeOption) ?? ConflictReducerMode.None,
+            DestinationConflictMode = parsedContext.GetValueForOption(Options.DestinationConflictModeOption) ?? DestinationConflictMode.Joint
         };
         return runConfig;
     }
@@ -204,5 +207,15 @@ public static class RootCommandFactory
             aliases: new[] { "--escape-summary-tables" },
             description: "Escape the content in Markdown tables in the summary file.",
             getDefaultValue: () => true);
+
+        public static readonly Option<ConflictReducerMode?> ConflictReducerModeOption = new(
+            aliases: new[] { "--conflict-reduction-mode" },
+            description: "How conflicting files are compared to skip duplicate equal files",
+            getDefaultValue: () => ConflictReducerMode.None);
+        
+        public static readonly Option<DestinationConflictMode?> DestinationConflictModeOption = new(
+            aliases: new[] { "--destination-conflict-mode" },
+            description: "How conflicting files between source and destination are handled",
+            getDefaultValue: () => DestinationConflictMode.Joint);
     }
 }

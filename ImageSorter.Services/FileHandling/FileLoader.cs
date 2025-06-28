@@ -18,9 +18,9 @@ public partial class FileLoader : IFileLoader
     }
 
     /// <inheritdoc cref="IFileLoader.GetFilePaths"/>
-    public string[] GetFilePaths(out string[] allFiles)
+    public string[] GetFilePaths(string directoryPath, out string[] allFiles)
     {
-        allFiles = _directoryWrapper.GetFiles(_options.SourcePath, "*", searchOption: SearchOption.AllDirectories);
+        allFiles = _directoryWrapper.GetFiles(directoryPath, "*", searchOption: SearchOption.AllDirectories);
 
         var result = FilterFilePathsByFileEnding(allFiles);
         return result;

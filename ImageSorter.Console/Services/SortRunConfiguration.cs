@@ -1,0 +1,14 @@
+using ImageSorter.DependencyInjection;
+
+namespace ImageSorter.Services;
+
+public record SortRunConfiguration
+{
+    public required string SourcePath { get; init; }
+    
+    public required string DestinationPath { get; init; }
+
+    public bool IsInPlace => SourcePath == DestinationPath;
+    
+    public required DestinationConflictMode DestinationConflictMode { get; init; }
+}

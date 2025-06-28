@@ -22,4 +22,10 @@ public class ReadOnlyFileWrapper : IFileWrapper
     {
         // no op
     }
+    
+    /// <inheritdoc/>
+    public long FileSize(string path)
+    {
+        return new FileInfo(path).Length;
+    }
 }

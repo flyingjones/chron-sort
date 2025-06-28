@@ -1,3 +1,4 @@
+using ImageSorter.Sorting.Model;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.DependencyInjection;
@@ -49,4 +50,8 @@ public class RunConfiguration
     public required bool UseProgressBar { get; set; }
     
     public required string? ProgressBarCharacters { get; set; }
+    
+    public required ConflictReducerMode ConflictReducerMode { get; set; }
+    
+    public required DestinationConflictMode DestinationConflictMode { get; set; }
 }

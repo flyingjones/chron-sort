@@ -1,6 +1,7 @@
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Services.FileHandling;
+using ImageSorter.Sorting.Abstractions.Model;
 
 namespace ImageSorter.Services;
 
@@ -42,6 +43,18 @@ public interface ISummarizeService
     /// The last row will be for all years.
     /// </remarks>
     MarkdownTable SummarizeConflicts(ICollection<ParsedFileResult> writeQueue);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <remarks>
+    /// The table has the following columns:
+    /// 
+    /// <code>
+    /// TBD
+    /// </code>
+    /// </remarks>
+    MarkdownTable SummarizeConflicts(ReducedSortingConflictSummary reducedSortingConflicts);
 
     /// <summary>
     /// Describes each conflict in the <paramref name="writeQueue"/> in detail as a <see cref="MarkdownTable"/>

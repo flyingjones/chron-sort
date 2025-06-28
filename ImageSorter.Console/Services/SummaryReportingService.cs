@@ -3,6 +3,7 @@ using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
 using ImageSorter.Services.FileHandling;
+using ImageSorter.Sorting.Abstractions.Model;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services;
@@ -80,5 +81,17 @@ public class SummaryReportingService : ISummaryReportingService
             _markdownFileWriter.WriteHeading(MarkdownHeading.H3, writeDescription.Key);
             _markdownFileWriter.WriteTable(writeDescription.Value);
         }
+    }
+
+    public void ReportConflictSummary(ReducedSortingConflictSummary result)
+    {
+        var conflictSummaryTable = _summarizeService.SummarizeConflicts(result);
+        
+        _logger.LogInformation(
+            "Sort Conflict Summary {SortConflictSummary}",
+            Environment.NewLine + _markdownTableRenderEngine.Render(conflictSummaryTable, false));
+        
+        _markdownFileWriter.WriteHeading(MarkdownHeading.H2, "Sort Conflict Summary");
+        _markdownFileWriter.WriteTable(conflictSummaryTable);
     }
 }

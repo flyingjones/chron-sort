@@ -12,4 +12,9 @@ public interface IFileWrapper
 
     /// <inheritdoc cref="File.Move(string, string, bool)"/>
     void Move(string sourceFileName, string destFileName, bool overwrite);
+
+    /// <summary>
+    /// The length of a file in bytes.
+    /// </summary>
+    long FileSize(string path);
 }
