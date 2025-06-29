@@ -6,5 +6,6 @@ public interface IConflictResolver
 {
     ICollection<SortedFilePath> ResolveConflicts(
         SortingConflictSummary sortingConflictSummary,
-        string[] filesAtDestination);
+        string[] filesAtDestination,
+        out ICollection<SortedFilePath> discardedFiles);
 }

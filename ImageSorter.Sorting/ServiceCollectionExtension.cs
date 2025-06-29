@@ -4,6 +4,7 @@ using ImageSorter.Sorting.Services;
 using ImageSorter.Sorting.Services.ConflictReducer;
 using ImageSorter.Sorting.Services.ConflictReducer.FileEqualityMetricImplementation;
 using ImageSorter.Sorting.Services.ConflictResolver;
+using ImageSorter.Sorting.Services.ConflictResolver.PathHashing;
 using ImageSorter.Sorting.Services.FilePath;
 using ImageSorter.Sorting.SubServices.PathBuilder;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,6 +70,7 @@ public static class ServiceCollectionExtension
                 throw new ArgumentOutOfRangeException(nameof(conflictReducerMode), conflictReducerMode, null);
         }
 
+        serviceCollection.AddTransient<IPathHashingService, PathHashingService>();
         switch (conflictResolverMode)
         {
             case ConflictResolverMode.Throw:
@@ -82,6 +84,9 @@ public static class ServiceCollectionExtension
                 break;
             case ConflictResolverMode.RandomRename:
                 serviceCollection.AddTransient<IConflictResolver, RandomRenameConflictResolver>();
+                break;
+            case ConflictResolverMode.HashRename:
+                serviceCollection.AddTransient<IConflictResolver, HashRenameConflictResolver>();
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(conflictResolverMode), conflictResolverMode, null);

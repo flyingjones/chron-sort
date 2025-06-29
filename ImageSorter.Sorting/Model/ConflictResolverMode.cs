@@ -5,5 +5,6 @@ public enum ConflictResolverMode
     Throw,
     ChooseOne,
     SemanticRename,
-    RandomRename
+    RandomRename,
+    HashRename
 }

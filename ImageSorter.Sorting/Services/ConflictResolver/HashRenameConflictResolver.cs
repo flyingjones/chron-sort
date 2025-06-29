@@ -1,46 +1,47 @@
-using ImageParser.Utils.RandomWrapper;
 using ImageSorter.FileWrapper.Abstractions.Directory;
 using ImageSorter.FileWrapper.Abstractions.Path;
 using ImageSorter.Sorting.Abstractions.Model;
-using ImageSorter.Sorting.Abstractions.Services;
+using ImageSorter.Sorting.Services.ConflictResolver.PathHashing;
 using ImageSorter.Sorting.Services.FilePath;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Sorting.Services.ConflictResolver;
 
-public class RandomRenameConflictResolver : AbstractRenameBasedConflictResolver
+public class HashRenameConflictResolver : AbstractRenameBasedConflictResolver
 {
-    private const int RandomNameLength = 5;
+    private const int HashNameLength = 6;
+    private readonly IPathHashingService _pathHashingService;
     private readonly IPathWrapper _pathWrapper;
-    private readonly IRandomStringGenerator _randomStringGenerator;
 
-    public RandomRenameConflictResolver(
+    public HashRenameConflictResolver(
         IPathWrapper pathWrapper,
         IDirectoryWrapper directoryWrapper,
-        ILogger<RandomRenameConflictResolver> logger, 
-        IRandomStringGenerator randomStringGenerator, 
-        IFilePathWrapperFactory filePathWrapperFactory) 
+        ILogger<HashRenameConflictResolver> logger,
+        IFilePathWrapperFactory filePathWrapperFactory,
+        IPathHashingService pathHashingService) 
         : base(pathWrapper, directoryWrapper, logger, filePathWrapperFactory)
     {
         _pathWrapper = pathWrapper;
-        _randomStringGenerator = randomStringGenerator;
+        _pathHashingService = pathHashingService;
     }
 
     protected override ICollection<KeyValuePair<SortedFilePath, string>> GetProposedRenameNames(
-        IEnumerable<SortedFilePath> filePaths,
+        IEnumerable<SortedFilePath> filePaths, 
         int depth,
         out bool stopRetries)
     {
-        stopRetries = false;
+        // same hash means probably from the same source so stop retrying
+        stopRetries = true;
         return filePaths.Select(filePath => new KeyValuePair<SortedFilePath, string>(
                 filePath,
-                BuildRandomFileName(filePath.SourceFilePath)))
+                BuildHashBasedFileName(filePath.SourceFilePath)))
             .ToArray();
     }
 
-    private string BuildRandomFileName(string originalPath)
+    private string BuildHashBasedFileName(string originalPath)
     {
         var fileName = _pathWrapper.GetFileName(originalPath)!;
-        return $"{_randomStringGenerator.GenerateRandomString(RandomNameLength)}_{fileName}";
+        var hash = _pathHashingService.HashPath(originalPath, HashNameLength);
+        return $"{hash}_{fileName}";
     }
 }

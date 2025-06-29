@@ -62,5 +62,12 @@ public class DirectoryGroup
         }
     }
 
+    public void AddRenamedFile(SortedFilePath renamedFile)
+    {
+        _renamedFiles.Add(renamedFile);
+        var fileName = _pathWrapper.GetFileName(renamedFile.DestinationFilePath)!;
+        _usedFileNames.Add(_filePathWrapperFactory.GetNormalizedPath(fileName));
+    }
+
     public ICollection<SortedFilePath> FilesInDirectory => _nonConflictingFiles.Concat(_renamedFiles).ToArray();
 }

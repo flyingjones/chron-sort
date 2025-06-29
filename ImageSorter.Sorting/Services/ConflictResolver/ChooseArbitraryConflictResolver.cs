@@ -8,12 +8,22 @@ namespace ImageSorter.Sorting.Services.ConflictResolver;
 /// </summary>
 public class ChooseArbitraryConflictResolver : IConflictResolver
 {
-    public ICollection<SortedFilePath> ResolveConflicts(SortingConflictSummary sortingConflictSummary, string[] filesAtDestination)
+    public ICollection<SortedFilePath> ResolveConflicts(
+        SortingConflictSummary sortingConflictSummary,
+        string[] filesAtDestination,
+        out ICollection<SortedFilePath> discardedFiles)
     {
-        return sortingConflictSummary.NonConflictingFiles.Concat(
+        var chosenFiles = sortingConflictSummary.NonConflictingFiles.Concat(
                 sortingConflictSummary.Conflicts
                     .Where(x => x.ConflictingFiles.All(file => file.IsFromSource))
                     .Select(conflict => conflict.ConflictingFiles.First().SortedFilePath!))
             .ToArray();
+
+        discardedFiles = sortingConflictSummary.Conflicts
+            .Where(x => x.ConflictingFiles.All(file => file.IsFromSource))
+            .Select(conflict => conflict.ConflictingFiles.First().SortedFilePath!)
+            .Where(x => !chosenFiles.Contains(x))
+            .ToArray();
+        return chosenFiles;
     }
 }

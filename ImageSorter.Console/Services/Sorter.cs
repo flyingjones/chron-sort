@@ -102,8 +102,13 @@ public partial class Sorter : ISorter
                 .ToArray()
         };
 
-        var filesToWrite = _conflictResolver.ResolveConflicts(sortConflictSummaryAfterReduction, filesAtDestination);
+        var filesToWrite = _conflictResolver.ResolveConflicts(
+            sortConflictSummaryAfterReduction,
+            filesAtDestination,
+            out var discardedFiles);
 
+        // TODO log resolution result: total file count, number of renames and discards
+        
         var writeDtos = filesToWrite.Select(x => new FileWriteDto
         {
             // this ensures that the casing of the writes are consistent with the input
@@ -113,11 +118,6 @@ public partial class Sorter : ISorter
         }).ToArray();
         
         var writeResults = await _resultWriter.Write(writeDtos, default);
-
-
-        // TODO implement smart case sensitivity handling ->
-        // check before doing anything else by creating a file at dest
-        // then configure everything to return toLower for paths or not, depending on file system case sensitivity
         
         // TODO implement error handling
         

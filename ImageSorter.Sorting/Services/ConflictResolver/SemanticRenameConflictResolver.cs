@@ -33,9 +33,16 @@ public class SemanticRenameConflictResolver : AbstractRenameBasedConflictResolve
     }
 
     protected override ICollection<KeyValuePair<SortedFilePath, string>> GetProposedRenameNames(
-        IEnumerable<SortedFilePath> filePaths, int depth)
+        IEnumerable<SortedFilePath> filePaths,
+        int depth,
+        out bool stopRetries)
     {
-        return filePaths.Select(x => new KeyValuePair<SortedFilePath, string>(
+        var filePathArray = filePaths.ToArray();
+        var maxSourceDirPathLength = filePathArray
+            .Select(x => GetDirectories(x.SourceFilePath).Length)
+            .Max();
+        stopRetries = depth > maxSourceDirPathLength;
+        return filePathArray.Select(x => new KeyValuePair<SortedFilePath, string>(
                 x,
                 BuildAltFileName(GetDirectories(x.SourceFilePath), _pathWrapper.GetFileName(x.SourceFilePath)!, depth)))
             .ToArray();
@@ -51,17 +58,8 @@ public class SemanticRenameConflictResolver : AbstractRenameBasedConflictResolve
 
     private string BuildAltFileName(string[] sourceDirectoryPath, string currentFileName, int depth)
     {
-        if (depth > sourceDirectoryPath.Length)
-        {
-            var sourcePath = string.Join(Path.DirectorySeparatorChar, sourceDirectoryPath);
-            _logger.LogError("Could not rename file {FileName} because its source path {Path} is not distinct enough!",
-                currentFileName, sourcePath);
-            throw new ArgumentException(
-                $"Could not rename file {currentFileName} because its source path {sourcePath} is not distinct enough!");
-        }
-
         var builder = new StringBuilder();
-        for (int i = sourceDirectoryPath.Length - depth; i < sourceDirectoryPath.Length; i++)
+        for (int i = Math.Max(sourceDirectoryPath.Length - depth, 0); i < sourceDirectoryPath.Length; i++)
         {
             builder.Append($"{sourceDirectoryPath[i]}_");
         }

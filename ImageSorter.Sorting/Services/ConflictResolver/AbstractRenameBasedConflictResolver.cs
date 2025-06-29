@@ -26,18 +26,21 @@ public abstract class AbstractRenameBasedConflictResolver : IConflictResolver
         _logger = logger;
         _filePathWrapperFactory = filePathWrapperFactory;
     }
-    
-    public ICollection<SortedFilePath> ResolveConflicts(SortingConflictSummary sortingConflictSummary,
-        string[] filesAtDestination)
+
+    public ICollection<SortedFilePath> ResolveConflicts(
+        SortingConflictSummary sortingConflictSummary,
+        string[] filesAtDestination,
+        out ICollection<SortedFilePath> discardedFiles)
     {
-        // TODO
+        var tmpDiscardedFiles = new List<SortedFilePath>();
         // first group everything by directory ... renames must check for new collisions in their directory
         var directories = new DirectoryDictionary(_pathWrapper, _filePathWrapperFactory);
 
         // initialize data structure with non-conflicting files
         foreach (var group in sortingConflictSummary.NonConflictingFiles
-                     .GroupBy(x => 
-                         _filePathWrapperFactory.GetNormalizedPath(_directoryWrapper.GetParentDirectory(x.DestinationFilePath))))
+                     .GroupBy(x =>
+                         _filePathWrapperFactory.GetNormalizedPath(
+                             _directoryWrapper.GetParentDirectory(x.DestinationFilePath))))
         {
             if (group.Key == null)
             {
@@ -50,7 +53,7 @@ public abstract class AbstractRenameBasedConflictResolver : IConflictResolver
         }
 
         // then add existing files
-        foreach (var group in filesAtDestination.GroupBy(x => 
+        foreach (var group in filesAtDestination.GroupBy(x =>
                      _filePathWrapperFactory.GetNormalizedPath(_directoryWrapper.GetParentDirectory(x))))
         {
             if (group.Key == null)
@@ -79,38 +82,63 @@ public abstract class AbstractRenameBasedConflictResolver : IConflictResolver
             // iterate rename for each file in conflict
             foreach (var conflict in group)
             {
+                ICollection<KeyValuePair<SortedFilePath, string>> proposedFileNames =
+                    new List<KeyValuePair<SortedFilePath, string>>();
                 for (int i = 1; i <= MaxTries; i++)
                 {
-                    var proposedFileNames = GetProposedRenameNames(
+                    proposedFileNames = GetProposedRenameNames(
                         conflict.ConflictingFiles
                             .Where(x => x.SortedFilePath != null)
                             .Select(x => x.SortedFilePath!),
-                        i);
+                        i, out var stop);
+
+                    if (stop)
+                    {
+                        i = MaxTries;
+                    }
 
                     if (proposedFileNames.Select(x => x.Value).Distinct().Count() < proposedFileNames.Count)
                     {
                         // rename resulted in renaming all files the same way, try again!
-                        break;
+                        continue;
                     }
 
                     if (proposedFileNames.All(x => directoryGroup.FileNameAvailable(x.Value)))
                     {
-                        var tmp = proposedFileNames.Select(x => new SortedFilePath
-                        {
-                            SourceFilePath = x.Key.SourceFilePath,
-                            DestinationFilePath = _pathWrapper.Combine(group.Key, x.Value),
-                            DateTime = x.Key.DateTime
-                        }).ToArray();
-                        directoryGroup.AddRenamedFiles(tmp);
+                        // we found a way to rename the files without any conflict, break and apply
                         break;
                     }
                 }
+
+                // add renamed files which can be added
+                foreach (var proposedFileName in proposedFileNames)
+                {
+                    if (directoryGroup.FileNameAvailable(proposedFileName.Value))
+                    {
+                        directoryGroup.AddRenamedFile(
+                            new SortedFilePath
+                            {
+                                SourceFilePath = proposedFileName.Key.SourceFilePath,
+                                DestinationFilePath = _pathWrapper.Combine(group.Key, proposedFileName.Value),
+                                DateTime = proposedFileName.Key.DateTime
+                            });
+                    }
+                    else
+                    {
+                        tmpDiscardedFiles.Add(proposedFileName.Key);
+                    }
+                }
+
+                tmpDiscardedFiles.AddRange(conflict.ConflictingFiles
+                    .Where(x => x.SortedFilePath != null)
+                    .Select(x => x.SortedFilePath!));
             }
         }
 
+        discardedFiles = tmpDiscardedFiles;
         return directories.AllFiles.ToArray();
     }
 
     protected abstract ICollection<KeyValuePair<SortedFilePath, string>> GetProposedRenameNames(
-        IEnumerable<SortedFilePath> filePaths, int depth);
+        IEnumerable<SortedFilePath> filePaths, int depth, out bool stopRetries);
 }

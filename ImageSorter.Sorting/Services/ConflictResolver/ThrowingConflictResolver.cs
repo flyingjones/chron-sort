@@ -9,13 +9,17 @@ namespace ImageSorter.Sorting.Services.ConflictResolver;
 /// </summary>
 public class ThrowingConflictResolver : IConflictResolver
 {
-    public ICollection<SortedFilePath> ResolveConflicts(SortingConflictSummary sortingConflictSummary, string[] filesAtDestination)
+    public ICollection<SortedFilePath> ResolveConflicts(
+        SortingConflictSummary sortingConflictSummary,
+        string[] filesAtDestination,
+        out ICollection<SortedFilePath> discardedFiles)
     {
         if (sortingConflictSummary.Conflicts.Count > 0)
         {
             throw new ConflictException("Sorting conflict detected but resolving is disabled!");
         }
 
+        discardedFiles = ArraySegment<SortedFilePath>.Empty;
         return sortingConflictSummary.NonConflictingFiles;
     }
 }
