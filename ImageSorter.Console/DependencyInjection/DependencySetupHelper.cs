@@ -7,6 +7,8 @@ using ImageSorter.Logging;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
 using ImageSorter.ProgressLogging;
+using ImageSorter.ResultWriting;
+using ImageSorter.ResultWriting.Abstractions;
 using ImageSorter.Services;
 using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting;
@@ -50,23 +52,40 @@ public static class DependencySetupHelper
 
         serviceCollection.ConfigureSorting(configuration.SortConfiguration!);
 
-        serviceCollection.AddDestinationWriter(new DestinationWriterOptions
+        // serviceCollection.AddDestinationWriter(new DestinationWriterOptions
+        //     {
+        //         SourcePath = configuration.SourcePath.FullName,
+        //         DestinationPath = configuration.DestinationPath.FullName,
+        //         OverwriteExistingFiles = configuration.DestinationConflictMode == DestinationConflictMode.Overwrite,
+        //         From = configuration.From,
+        //         To = configuration.To,
+        //         ProgressCount = configuration.ProgressAt > 0 ? configuration.ProgressAt.Value : int.MaxValue
+        //     },
+        //     new DateDirectoryOptions
+        //     {
+        //         DestinationPath = configuration.DestinationPath.FullName,
+        //         Format = configuration.OutputFormat,
+        //     });
+        serviceCollection.AddSingleton(
+            new ResultWriterConfig
             {
-                SourcePath = configuration.SourcePath.FullName,
-                DestinationPath = configuration.DestinationPath.FullName,
-                OverwriteExistingFiles = configuration.Overwrite,
-                From = configuration.From,
-                To = configuration.To,
-                ProgressCount = configuration.ProgressAt > 0 ? configuration.ProgressAt.Value : int.MaxValue
-            },
-            new DateDirectoryOptions
-            {
-                DestinationPath = configuration.DestinationPath.FullName,
-                Format = configuration.OutputFormat,
+                ShouldOverwrite = configuration.DestinationConflictMode == DestinationConflictMode.Overwrite,
+                // skips should only happen if skip is selected, otherwise all conflicts should be resolved earlier!
+                ReportSkipAsWarning = configuration.DestinationConflictMode != DestinationConflictMode.Skip,
+                SourcePath = configuration.SourcePath.FullName
             });
+        if (configuration.MoveFiles)
+        {
+            serviceCollection.AddTransient<IResultWriter, MoveFileResultWriter>();
+        }
+        else
+        {
+            serviceCollection.AddTransient<IResultWriter, CopyFileResultWriter>();
+        }
+
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
-            FileEndings = configuration.FileEndings?.SelectMany(x => x.Split(" ")).ToArray()
+            FileEndings = configuration.FileEndings?.SelectMany(x => x.ToLower().Split(" ")).ToArray()
         }, configuration.IsDryRun);
 
         if (configuration.ScanParallel)

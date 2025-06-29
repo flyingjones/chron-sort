@@ -6,6 +6,6 @@ public class TrivialFileContentEqualityMetricImplementation : IFileEqualityMetri
 {
     public bool FilesAreEqual(string path1, string path2)
     {
-        return false;
+        return path1 == path2;
     }
 }

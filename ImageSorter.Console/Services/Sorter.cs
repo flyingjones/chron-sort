@@ -1,6 +1,8 @@
 using System.Reflection;
 using ImageSorter.DateParsing.Abstractions.Services;
 using ImageSorter.DependencyInjection;
+using ImageSorter.ResultWriting.Abstractions;
+using ImageSorter.ResultWriting.Abstractions.Model;
 using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
 using ImageSorter.Sorting.Abstractions.Services;
@@ -16,35 +18,35 @@ public partial class Sorter : ISorter
     private readonly ILogger<Sorter> _logger;
     private readonly IFileLoader _fileLoader;
     private readonly IDateParsingHandler _dateParsingHandler;
-    private readonly IDestinationWriter _destinationWriter;
     private readonly ISummaryReportingService _summaryReportingService;
     private readonly Sorting.Abstractions.Services.ISorter _newSorter;
     private readonly IConflictFinder _conflictFinder;
     private readonly IConflictReducer _conflictReducer;
     private readonly IConflictResolver _conflictResolver;
+    private readonly IResultWriter _resultWriter;
 
     public Sorter(
         ILogger<Sorter> logger,
         IFileLoader fileLoader,
         IDateParsingHandler dateParsingHandler,
-        IDestinationWriter destinationWriter,
         ISummaryReportingService summaryReportingService,
         Sorting.Abstractions.Services.ISorter newSorter,
         IConflictFinder conflictFinder,
         IConflictReducer conflictReducer,
         SortRunConfiguration sortRunConfiguration,
-        IConflictResolver conflictResolver)
+        IConflictResolver conflictResolver,
+        IResultWriter resultWriter)
     {
         _logger = logger;
         _fileLoader = fileLoader;
         _dateParsingHandler = dateParsingHandler;
-        _destinationWriter = destinationWriter;
         _summaryReportingService = summaryReportingService;
         _newSorter = newSorter;
         _conflictFinder = conflictFinder;
         _conflictReducer = conflictReducer;
         _sortRunConfiguration = sortRunConfiguration;
         _conflictResolver = conflictResolver;
+        _resultWriter = resultWriter;
     }
 
     public async Task PerformSorting(bool moveFiles, CancellationToken cancellationToken)
@@ -64,7 +66,6 @@ public partial class Sorter : ISorter
 
         _logger.LogInformation("Sorting Files");
         var rawSorting = _newSorter.SortFiles(parsedFiles);
-        // _summaryReportingService.ReportSortSummary(rawSorting);
 
         _logger.LogInformation("Scanning Destination Directory");
         string[] filesAtDestination = _fileLoader.GetFilePaths(_sortRunConfiguration.DestinationPath, out var _);
@@ -97,33 +98,33 @@ public partial class Sorter : ISorter
                 .ToArray()
         };
 
-        // TBD implement conflict resolution (Throw / ChooseOne / SemanticRename / RandomRename)
-
         var filesAtDestinationSet = filesAtDestination.ToHashSet();
         var filesToWrite = _conflictResolver.ResolveConflicts(sortConflictSummaryAfterReduction, filesAtDestinationSet);
 
-        // TBD implement writing of results, pass overwrite true only if DestinationConflict is set to Overwrite
+        var writeResults = await _resultWriter.Write(
+            filesToWrite.Select(x => new FileWriteDto
+            {
+                DestinationPath = x.DestinationFilePath,
+                SourcePath = x.SourceFilePath,
+                DateTime = x.DateTime
+            }).ToArray(), 
+            default);
 
-        // TBD        
 
-        _logger.LogInformation("blub ({Sas})", filesToWrite);
-
-        // _summaryReportingService.ReportSortSummary(writeQueue);
-        //
-        // _logger.LogInformation("Writing results");
-        // ICollection<FileOperationResult> writeSummary;
-        // if (!moveFiles)
-        // {
-        //     writeSummary = await _destinationWriter.CopyFiles(writeQueue, cancellationToken);
-        // }
-        // else
-        // {
-        //     writeSummary = _destinationWriter.MoveFiles(writeQueue, cancellationToken);
-        // }
-        //
-        // _summaryReportingService.ReportWriteSummary(writeSummary);
-        //
-        // _logger.LogInformation("Finished");
+        // TODO implement smart case sensitivity handling ->
+        // check before doing anything else by creating a file at dest
+        // then configure everything to return toLower for paths or not, depending on file system case sensitivity
+        
+        // TODO implement error handling
+        
+        // TODO implement write result reporting (maybe add option to exactly write which file got where and
+        // what happened to it) summarize total ops inkluding renames
+        
+        // TODO unit tests
+        
+        // todo docs
+        _summaryReportingService.ReportWriteSummary(writeResults);
+        _logger.LogInformation("Finished");
     }
 
     private bool ConflictIsResolved(ReducedSortingConflict reducedSortingConflict)

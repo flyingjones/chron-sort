@@ -44,6 +44,12 @@ public class ConflictReducer : IConflictReducer
             {
                 var rightEqualityClass = equalityClasses
                     .First(x => x.RepresentsPath(conflictingFilesArray[j]));
+
+                if (ReferenceEquals(leftEqualityClass, rightEqualityClass))
+                {
+                    // happens when we get equality classes with size more than 2
+                    continue;
+                }
                 
                 var classesAreEqual = _fileEqualityMetricImplementation.FilesAreEqual(
                     leftEqualityClass.RepresentativePath,

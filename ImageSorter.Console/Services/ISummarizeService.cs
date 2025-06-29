@@ -1,5 +1,6 @@
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
+using ImageSorter.ResultWriting.Abstractions.Model;
 using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
 
@@ -28,23 +29,6 @@ public interface ISummarizeService
     MarkdownTable SummarizeFileScan(string[] filesToProcess, string[] allFiles);
 
     /// <summary>
-    /// Creates a summary of the conflicts occurring in the <paramref name="writeQueue"/> as a <see cref="MarkdownTable"/> grouped by year.
-    /// Depends on the used target directory structure.
-    /// </summary>
-    /// <remarks>
-    /// The table has the following columns:
-    ///
-    /// <code>
-    /// | Year | Total | Conflicts | Excepted Skips | Expected Count at Destination |
-    /// </code>
-    ///
-    /// The number of conflicts and expected skips are not directly related. One conflict can result in any number of skips!
-    ///
-    /// The last row will be for all years.
-    /// </remarks>
-    MarkdownTable SummarizeConflicts(ICollection<ParsedFileResult> writeQueue);
-
-    /// <summary>
     /// 
     /// </summary>
     /// <remarks>
@@ -57,20 +41,6 @@ public interface ISummarizeService
     MarkdownTable SummarizeConflicts(ReducedSortingConflictSummary reducedSortingConflicts);
 
     /// <summary>
-    /// Describes each conflict in the <paramref name="writeQueue"/> in detail as a <see cref="MarkdownTable"/>
-    /// </summary>
-    /// <remarks>
-    /// The key of each pair will be the destination path of all files of this conflict.
-    ///
-    /// The table has the following columns:
-    ///
-    /// <code>
-    /// | Source Path | Parsed Date | Parser Name |
-    /// </code>
-    /// </remarks>
-    ICollection<KeyValuePair<string, MarkdownTable>> DescribeConflicts(ICollection<ParsedFileResult> writeQueue);
-
-    /// <summary>
     /// Creates a summary <see cref="MarkdownTable"/> based on the <paramref name="fileOperationResults"/> grouped by year
     /// </summary>
     /// <remarks>
@@ -80,7 +50,7 @@ public interface ISummarizeService
     /// | Year | Total | Error | Skipped | Already Sorted | Success | Success (Overwritten) |
     /// </code>
     /// </remarks>
-    MarkdownTable SummarizeWriteResults(ICollection<FileOperationResult> fileOperationResults);
+    MarkdownTable SummarizeWriteResults(ICollection<FileWriteResultDto> fileOperationResults);
 
     /// <summary>
     /// Describe each write operation as a row in a <see cref="MarkdownTable"/> grouped by the result directory path.

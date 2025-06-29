@@ -8,7 +8,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ImageSorter.FileWrapper.Abstractions\ImageSorter.FileWrapper.Abstractions.csproj" />
-      <ProjectReference Include="..\ImageSorter.Sorting.Abstractions\ImageSorter.Sorting.Abstractions.csproj" />
+      <ProjectReference Include="..\ImageSorter.ResultWriting.Abstractions\ImageSorter.ResultWriting.Abstractions.csproj" />
       <ProjectReference Include="..\ImageSorter.Utils\ImageSorter.Utils.csproj" />
     </ItemGroup>
 

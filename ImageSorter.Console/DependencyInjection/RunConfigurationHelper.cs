@@ -37,6 +37,7 @@ public static partial class RunConfigurationHelper
 
         builder.AddRow("Conflict Reduction Mode", runConfiguration.ConflictReducerMode.ToString("G"));
         builder.AddRow("Destination Conflict Mode", runConfiguration.DestinationConflictMode.ToString("G"));
+        builder.AddRow("Conflict Resolution Mode", runConfiguration.ConflictResolverMode.ToString("G"));
         builder.AddRow("Output Format", runConfiguration.OutputFormat);
         
         builder.AddRow("From Date", runConfiguration.From?.ToString("o") ?? "-");

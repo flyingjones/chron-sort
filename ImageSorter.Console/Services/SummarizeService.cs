@@ -1,20 +1,14 @@
-using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Helper;
+using ImageSorter.ResultWriting.Abstractions.Model;
 using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
+using FileOperationResultStatus = ImageSorter.ResultWriting.Abstractions.Model.FileOperationResultStatus;
 
 namespace ImageSorter.Services;
 
 public class SummarizeService : ISummarizeService
 {
-    private readonly IDateDirectory _dateDirectory;
-
-    public SummarizeService(IDateDirectory dateDirectory)
-    {
-        _dateDirectory = dateDirectory;
-    }
-
     /// <inheritdoc cref="ISummarizeService.SummarizeFileScan"/>
     public MarkdownTable SummarizeFileScan(string[] filesToProcess, string[] allFiles)
     {
@@ -50,57 +44,6 @@ public class SummarizeService : ISummarizeService
     }
 
     /// <inheritdoc />
-    public MarkdownTable SummarizeConflicts(ICollection<ParsedFileResult> writeQueue)
-    {
-        var builder = new MarkdownTableBuilder();
-
-        // header row
-        builder.AddRow(
-            "Year",
-            "Total",
-            "Conflicts",
-            "Expected Skips",
-            "Expected Count at Destination");
-
-        // row for each year
-        var totalConflicts = 0;
-        var totalSkips = 0;
-        var expectedTotalCount = 0;
-        foreach (var yearCount in writeQueue.CountBy(x => x.DateTaken.Year).OrderBy(x => x.Key))
-        {
-            var totalCount = writeQueue
-                .Where(x => x.DateTaken.Year == yearCount.Key)
-                .CountBy(x => Path.Combine(_dateDirectory.BuildPath(x.DateTaken), Path.GetFileName(x.FilePath)))
-                .ToArray();
-            var conflictCount = totalCount
-                .Where(x => x.Value > 1)
-                .ToArray();
-            var skippedFileCount = conflictCount
-                .Select(x => x.Value - 1)
-                .Sum();
-
-            var conflictCountNumber = conflictCount.Sum(x => x.Value);
-            totalConflicts += conflictCountNumber;
-            totalSkips += skippedFileCount;
-            expectedTotalCount += totalCount.Length;
-            builder.AddRow(
-                $"{yearCount.Key}",
-                $"{yearCount.Value.ToString()}",
-                $"{conflictCountNumber}",
-                $"{skippedFileCount}",
-                totalCount.Length.ToString());
-        }
-
-        // summary row
-        builder.AddRow("*", writeQueue.Count.ToString(), totalConflicts.ToString(), totalSkips.ToString(),
-            expectedTotalCount.ToString());
-
-        var table = builder.Build();
-        table.SetTextAlignment(HorizontalTextAlignment.Right);
-        return table;
-    }
-
-    /// <inheritdoc />
     public MarkdownTable SummarizeConflicts(ReducedSortingConflictSummary reducedSortingConflicts)
     {
         var builder = new MarkdownTableBuilder();
@@ -126,12 +69,20 @@ public class SummarizeService : ISummarizeService
             .ToDictionary(x => x.First().DateTime.Year, x => x.ToArray());
 
         var years = yearNonConflictGroups.Keys.Concat(yearConflictGroups.Keys).Distinct().Order().ToArray();
-        
+
+        var totalTotalCount = 0;
+        var totalRemainingConflicting = 0;
+        var totalDiscarded = 0;
+        var totalRemaining = 0;
+        var totalPresentAtDestination = 0;
+        var totalNonConflicting = 0;
+        var totalConflicting = 0;
         foreach (var year in years)
         {
             SortedFilePath[] nonConflicting = [];
             if (yearNonConflictGroups.TryGetValue(year, out var tmp1))
                 nonConflicting = tmp1;
+            totalNonConflicting += nonConflicting.Length;
 
             ReducedSortingConflict[] reducedConflicts = [];
             if (yearConflictGroups.TryGetValue(year, out var tmp2))
@@ -139,24 +90,30 @@ public class SummarizeService : ISummarizeService
             
             var conflictingFileCount =
                 reducedConflicts.Sum(x =>
-                    x.ConflictingFiles.Count(y => y.IsFromSource));            
+                    x.ConflictingFiles.Count(y => y.IsFromSource));
+            totalConflicting += conflictingFileCount;
 
             var totalFileAmount = nonConflicting.Length + conflictingFileCount;
+            totalTotalCount += totalFileAmount;
 
             var remainingConflicting = reducedConflicts
                 .Where(x => x.ChosenFiles.Count > 1)
                 .Sum(x => x.ChosenFiles.Count);
+            totalRemainingConflicting += remainingConflicting;
 
             var discardedFileCount =
                 reducedConflicts.Sum(x => x.DiscardedFiles.Count);
+            totalDiscarded += discardedFileCount;
 
             var remainingFileCount =
                 reducedConflicts.Sum(x => x.ChosenFiles.Count) +
                 nonConflicting.Length;
+            totalRemaining += remainingFileCount;
 
             var presentAtDestinationCount = reducedConflicts
                 .Where(x => x.ChosenFiles.Count == 0)
                 .Sum(x => x.ConflictingFiles.Where(y => y.IsFromSource).Count());
+            totalPresentAtDestination += presentAtDestinationCount;
 
             builder.AddRow(
                 year.ToString(),
@@ -170,35 +127,20 @@ public class SummarizeService : ISummarizeService
             );
         }
         
-        
+        builder.AddRow(
+            "****",
+            totalTotalCount.ToString(),
+            totalNonConflicting.ToString(),
+            totalConflicting.ToString(),
+            totalPresentAtDestination.ToString(),
+            totalRemainingConflicting.ToString(),
+            totalDiscarded.ToString(),
+            totalRemaining.ToString()
+        );
 
-        return builder.Build();
-    }
-
-    /// <inheritdoc cref="ISummarizeService.DescribeConflicts"/>
-    public ICollection<KeyValuePair<string, MarkdownTable>> DescribeConflicts(ICollection<ParsedFileResult> writeQueue)
-    {
-        return writeQueue
-            .OrderBy(x => x.DateTaken)
-            // the group key is the destination file path of the sorting
-            .GroupBy(x => Path.Combine(_dateDirectory.BuildPath(x.DateTaken), Path.GetFileName(x.FilePath)))
-            .Where(x => x.Count() > 1)
-            .Select(conflict =>
-            {
-                var tableBuilder = new MarkdownTableBuilder();
-
-                // header row for each  conflict
-                tableBuilder.AddRow("Source Path", "Parsed Date", "Parser Name");
-
-                // body rows for each conflict
-                foreach (var item in conflict)
-                {
-                    tableBuilder.AddRow(item.FilePath, item.DateTaken.ToString("s"), item.ParserName);
-                }
-
-                return new KeyValuePair<string, MarkdownTable>(conflict.Key, tableBuilder.Build());
-            })
-            .ToList();
+        var table = builder.Build();
+        table.SetTextAlignment(HorizontalTextAlignment.Right);
+        return table;
     }
 
     /// <inheritdoc cref="ISummarizeService.DescribeWrites"/>
@@ -231,14 +173,14 @@ public class SummarizeService : ISummarizeService
     }
 
     /// <inheritdoc cref="ISummarizeService.SummarizeWriteResults"/>
-    public MarkdownTable SummarizeWriteResults(ICollection<FileOperationResult> fileOperationResults)
+    public MarkdownTable SummarizeWriteResults(ICollection<FileWriteResultDto> fileOperationResults)
     {
         var builder = new MarkdownTableBuilder();
 
         builder.AddRow("Year", "Total", "Error", "Skipped", "Already Sorted", "Success", "Success (Overwritten)");
 
         var groupedResults = fileOperationResults
-            .GroupBy(x => x.FileDate.Year)
+            .GroupBy(x => x.DateTime.Year)
             .OrderBy(x => x.Key)
             .ToList();
 
@@ -253,7 +195,7 @@ public class SummarizeService : ISummarizeService
                 $"{groupedResult.Count(x => x.Status == FileOperationResultStatus.OverwriteSuccess)}");
         }
 
-        builder.AddRow("*",
+        builder.AddRow("****",
             $"{fileOperationResults.Count}",
             $"{fileOperationResults.Count(x => x.Status == FileOperationResultStatus.Error)}",
             $"{fileOperationResults.Count(x => x.Status == FileOperationResultStatus.Skipped)}",

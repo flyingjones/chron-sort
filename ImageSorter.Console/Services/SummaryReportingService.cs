@@ -2,6 +2,7 @@ using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
+using ImageSorter.ResultWriting.Abstractions.Model;
 using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
 using Microsoft.Extensions.Logging;
@@ -41,32 +42,7 @@ public class SummaryReportingService : ISummaryReportingService
         _markdownFileWriter.WriteLine();
     }
 
-    public void ReportSortSummary(ICollection<ParsedFileResult> writeQueue)
-    {
-        var conflictSummary = _summarizeService.SummarizeConflicts(writeQueue);
-        _logger.LogInformation(
-            "Sorting Summary {ConflictTable}",
-            Environment.NewLine + _markdownTableRenderEngine.Render(conflictSummary, false));
-        _markdownFileWriter.WriteHeading(MarkdownHeading.H2, "Sort Summary");
-        _markdownFileWriter.WriteHeading(MarkdownHeading.H3, "Conflict Summary");
-        _markdownFileWriter.WriteTable(conflictSummary);
-        
-
-        var conflictDescription = _summarizeService.DescribeConflicts(writeQueue);
-
-        if (conflictDescription.Count != 0)
-        {
-            _markdownFileWriter.WriteHeading(MarkdownHeading.H3, "Conflicts");
-        }
-
-        foreach (var conflict in conflictDescription)
-        {
-            _markdownFileWriter.WriteHeading(MarkdownHeading.H4, conflict.Key);
-            _markdownFileWriter.WriteTable(conflict.Value);
-        }
-    }
-
-    public void ReportWriteSummary(ICollection<FileOperationResult> results)
+    public void ReportWriteSummary(ICollection<FileWriteResultDto> results)
     {
         var sortSummaryTable = _summarizeService.SummarizeWriteResults(results);
         _logger.LogInformation(
@@ -75,12 +51,12 @@ public class SummaryReportingService : ISummaryReportingService
         _markdownFileWriter.WriteHeading(MarkdownHeading.H2, "Write Summary");
         _markdownFileWriter.WriteTable(sortSummaryTable);
 
-        var writeDescriptions = _summarizeService.DescribeWrites(results);
-        foreach (var writeDescription in writeDescriptions)
-        {
-            _markdownFileWriter.WriteHeading(MarkdownHeading.H3, writeDescription.Key);
-            _markdownFileWriter.WriteTable(writeDescription.Value);
-        }
+        // var writeDescriptions = _summarizeService.DescribeWrites(results);
+        // foreach (var writeDescription in writeDescriptions)
+        // {
+        //     _markdownFileWriter.WriteHeading(MarkdownHeading.H3, writeDescription.Key);
+        //     _markdownFileWriter.WriteTable(writeDescription.Value);
+        // }
     }
 
     public void ReportConflictSummary(ReducedSortingConflictSummary result)

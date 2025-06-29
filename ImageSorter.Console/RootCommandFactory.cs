@@ -28,7 +28,6 @@ public static class RootCommandFactory
         // main settings
         rootCommand.AddOption(Options.DestinationPathOption);
         rootCommand.AddOption(Options.MoveOption);
-        rootCommand.AddOption(Options.OverwriteOption);
         rootCommand.AddOption(Options.IsDryRunOption);
         rootCommand.AddOption(Options.FormatOption);
         // parser config
@@ -74,7 +73,6 @@ public static class RootCommandFactory
             DestinationPath = destPath ?? parsedContext.GetValueForArgument(Arguments.SourcePathArgument),
             MoveFiles = isMoveFiles,
             FileEndings = parsedContext.GetValueForOption(Options.FileEndingFilterOption),
-            Overwrite = parsedContext.GetValueForOption(Options.OverwriteOption),
             From = parsedContext.GetValueForOption(Options.UseFromDateFilterOption),
             To = parsedContext.GetValueForOption(Options.UseToDateFilterOption),
             ScanParallel = parsedContext.GetValueForOption(Options.UseParallelScanningOption),
@@ -128,11 +126,6 @@ public static class RootCommandFactory
         public static readonly Option<string[]> FileEndingFilterOption = new(
             aliases: new[] { "--types", "-t" },
             description: "Space seperated list of file endings to sort");
-
-        public static readonly Option<bool> OverwriteOption = new(
-            aliases: new[] { "--overwrite" },
-            description: "Overwrite files in destination",
-            getDefaultValue: () => false);
 
         public static readonly Option<bool> UseParallelScanningOption = new(
             aliases: new[] { "--scan-parallel" },

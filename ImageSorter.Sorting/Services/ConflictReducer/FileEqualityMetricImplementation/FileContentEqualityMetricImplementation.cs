@@ -20,6 +20,12 @@ public class FileContentEqualityMetricImplementation : IFileEqualityMetricImplem
     public bool FilesAreEqual(string path1, string path2)
     {
         _logger.LogDebug("Comparing content of {path1} and {path2}", path1, path2);
+
+        if (path1 == path2)
+        {
+            return true;
+        }
+        
         return _fileStreamService.FileContentAreEqual(path1, path2);
     }
 }

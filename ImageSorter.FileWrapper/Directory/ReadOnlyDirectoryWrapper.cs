@@ -7,7 +7,9 @@ public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
     /// <inheritdoc cref="IDirectoryWrapper.GetFiles"/>
     public string[] GetFiles(string path, string searchPattern, SearchOption searchOption)
     {
-        return System.IO.Directory.GetFiles(path, searchPattern, searchOption);
+        // to lower to prevent weird issues since on windows the file system is case-insensitive, and we need to
+        // have equal paths in case of os says file exists so yay
+        return System.IO.Directory.GetFiles(path, searchPattern, searchOption).Select(x => x.ToLower()).ToArray();
     }
 
     /// <summary>
@@ -41,6 +43,8 @@ public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
     /// <inheritdoc cref="IDirectoryWrapper.GetParentDirectory"/>
     public string? GetParentDirectory(string path)
     {
-        return System.IO.Directory.GetParent(path)?.FullName;
+        // to lower to prevent weird issues since on windows the file system is case-insensitive, and we need to
+        // have equal paths in case of os says file exists so yay
+        return System.IO.Directory.GetParent(path)?.FullName.ToLower();
     }
 }

@@ -1,4 +1,4 @@
-namespace ImageSorter.Services.FileHandling;
+namespace ImageSorter.ResultWriting.Abstractions.Model;
 
 public enum FileOperationResultStatus
 {

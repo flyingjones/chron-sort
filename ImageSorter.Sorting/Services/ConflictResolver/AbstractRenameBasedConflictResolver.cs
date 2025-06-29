@@ -79,6 +79,12 @@ public abstract class AbstractRenameBasedConflictResolver : IConflictResolver
                             .Select(x => x.SortedFilePath!),
                         i);
 
+                    if (proposedFileNames.Select(x => x.Value).Distinct().Count() < proposedFileNames.Count)
+                    {
+                        // rename resulted in renaming all files the same way, try again!
+                        break;
+                    }
+
                     if (proposedFileNames.All(x => directoryGroup.FileNameAvailable(x.Value)))
                     {
                         var tmp = proposedFileNames.Select(x => new SortedFilePath

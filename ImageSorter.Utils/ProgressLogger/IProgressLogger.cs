@@ -4,7 +4,11 @@ namespace ImageParser.Utils.ProgressLogger;
 /// Interface for a service which can report the progress of a task to the user
 /// </summary>
 /// <typeparam name="T">The of the Service which uses the logger</typeparam>
-public interface IProgressLogger<T>
+public interface IProgressLogger<T> : IProgressLogger
+{
+}
+
+public interface IProgressLogger
 {
     /// <summary>
     /// Log that the task was started
