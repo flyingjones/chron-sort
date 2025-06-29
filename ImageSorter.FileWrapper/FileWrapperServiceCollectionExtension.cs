@@ -15,13 +15,8 @@ public static class FileWrapperServiceCollectionExtension
 {
     public static IServiceCollection AddFileWrappers(
         this IServiceCollection serviceCollection,
-        bool readOnly,
-        bool fileSystemIsCaseSensitive)
+        bool readOnly)
     {
-        serviceCollection.AddSingleton(new CaseSensitivityConfiguration
-        {
-            IsCaseSensitive = fileSystemIsCaseSensitive
-        });
         if (readOnly)
         {
             serviceCollection.AddSingleton<IDirectoryWrapper, ReadOnlyDirectoryWrapper>();

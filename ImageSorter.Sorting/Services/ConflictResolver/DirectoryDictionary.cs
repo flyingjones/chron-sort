@@ -1,15 +1,18 @@
 using ImageSorter.FileWrapper.Abstractions.Path;
 using ImageSorter.Sorting.Abstractions.Model;
+using ImageSorter.Sorting.Services.FilePath;
 
 namespace ImageSorter.Sorting.Services.ConflictResolver;
 
 public class DirectoryDictionary
 {
     private readonly IPathWrapper _pathWrapper;
+    private readonly IFilePathWrapperFactory _filePathWrapperFactory;
 
-    public DirectoryDictionary(IPathWrapper pathWrapper)
+    public DirectoryDictionary(IPathWrapper pathWrapper, IFilePathWrapperFactory filePathWrapperFactory)
     {
         _pathWrapper = pathWrapper;
+        _filePathWrapperFactory = filePathWrapperFactory;
     }
 
     private readonly Dictionary<string, DirectoryGroup> _underlyingDictionary = new Dictionary<string, DirectoryGroup>();
@@ -21,7 +24,7 @@ public class DirectoryDictionary
             return result;
         }
 
-        var newValue = new DirectoryGroup(_pathWrapper);
+        var newValue = new DirectoryGroup(_pathWrapper, _filePathWrapperFactory);
         _underlyingDictionary[directory] = newValue;
 
         return newValue;

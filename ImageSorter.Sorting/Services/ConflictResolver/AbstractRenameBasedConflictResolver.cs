@@ -2,6 +2,7 @@ using ImageSorter.FileWrapper.Abstractions.Directory;
 using ImageSorter.FileWrapper.Abstractions.Path;
 using ImageSorter.Sorting.Abstractions.Model;
 using ImageSorter.Sorting.Abstractions.Services;
+using ImageSorter.Sorting.Services.FilePath;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Sorting.Services.ConflictResolver;
@@ -12,26 +13,31 @@ public abstract class AbstractRenameBasedConflictResolver : IConflictResolver
     private readonly IPathWrapper _pathWrapper;
     private readonly IDirectoryWrapper _directoryWrapper;
     private readonly ILogger _logger;
+    private readonly IFilePathWrapperFactory _filePathWrapperFactory;
 
     protected AbstractRenameBasedConflictResolver(
         IPathWrapper pathWrapper,
         IDirectoryWrapper directoryWrapper,
-        ILogger logger)
+        ILogger logger,
+        IFilePathWrapperFactory filePathWrapperFactory)
     {
         _pathWrapper = pathWrapper;
         _directoryWrapper = directoryWrapper;
         _logger = logger;
+        _filePathWrapperFactory = filePathWrapperFactory;
     }
     
     public ICollection<SortedFilePath> ResolveConflicts(SortingConflictSummary sortingConflictSummary,
-        HashSet<string> filesAtDestination)
+        string[] filesAtDestination)
     {
+        // TODO
         // first group everything by directory ... renames must check for new collisions in their directory
-        var directories = new DirectoryDictionary(_pathWrapper);
+        var directories = new DirectoryDictionary(_pathWrapper, _filePathWrapperFactory);
 
         // initialize data structure with non-conflicting files
         foreach (var group in sortingConflictSummary.NonConflictingFiles
-                     .GroupBy(x => _directoryWrapper.GetParentDirectory(x.DestinationFilePath)))
+                     .GroupBy(x => 
+                         _filePathWrapperFactory.GetNormalizedPath(_directoryWrapper.GetParentDirectory(x.DestinationFilePath))))
         {
             if (group.Key == null)
             {
@@ -44,7 +50,8 @@ public abstract class AbstractRenameBasedConflictResolver : IConflictResolver
         }
 
         // then add existing files
-        foreach (var group in filesAtDestination.GroupBy(x => _directoryWrapper.GetParentDirectory(x)))
+        foreach (var group in filesAtDestination.GroupBy(x => 
+                     _filePathWrapperFactory.GetNormalizedPath(_directoryWrapper.GetParentDirectory(x))))
         {
             if (group.Key == null)
             {
@@ -59,7 +66,8 @@ public abstract class AbstractRenameBasedConflictResolver : IConflictResolver
         // finally enumerate groups of conflicts by directory and rename them as needed
         foreach (var group in sortingConflictSummary.Conflicts
                      .GroupBy(x =>
-                         _directoryWrapper.GetParentDirectory(x.ConflictingFiles.First().DestinationFilePath)))
+                         _filePathWrapperFactory.GetNormalizedPath(
+                             _directoryWrapper.GetParentDirectory(x.ConflictingFiles.First().DestinationFilePath))))
         {
             if (group.Key == null)
             {

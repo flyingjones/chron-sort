@@ -3,6 +3,7 @@ using ImageSorter.FileWrapper.Abstractions.Directory;
 using ImageSorter.FileWrapper.Abstractions.Path;
 using ImageSorter.Sorting.Abstractions.Model;
 using ImageSorter.Sorting.Abstractions.Services;
+using ImageSorter.Sorting.Services.FilePath;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Sorting.Services.ConflictResolver;
@@ -18,7 +19,10 @@ public class RandomRenameConflictResolver : AbstractRenameBasedConflictResolver
     public RandomRenameConflictResolver(
         IPathWrapper pathWrapper,
         IDirectoryWrapper directoryWrapper,
-        ILogger<RandomRenameConflictResolver> logger, IRandomStringGenerator randomStringGenerator) : base(pathWrapper, directoryWrapper, logger)
+        ILogger<RandomRenameConflictResolver> logger, 
+        IRandomStringGenerator randomStringGenerator, 
+        IFilePathWrapperFactory filePathWrapperFactory) 
+        : base(pathWrapper, directoryWrapper, logger, filePathWrapperFactory)
     {
         _pathWrapper = pathWrapper;
         _directoryWrapper = directoryWrapper;

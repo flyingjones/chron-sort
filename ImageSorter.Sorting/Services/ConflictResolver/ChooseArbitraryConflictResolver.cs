@@ -8,7 +8,7 @@ namespace ImageSorter.Sorting.Services.ConflictResolver;
 /// </summary>
 public class ChooseArbitraryConflictResolver : IConflictResolver
 {
-    public ICollection<SortedFilePath> ResolveConflicts(SortingConflictSummary sortingConflictSummary, HashSet<string> filesAtDestination)
+    public ICollection<SortedFilePath> ResolveConflicts(SortingConflictSummary sortingConflictSummary, string[] filesAtDestination)
     {
         return sortingConflictSummary.NonConflictingFiles.Concat(
                 sortingConflictSummary.Conflicts

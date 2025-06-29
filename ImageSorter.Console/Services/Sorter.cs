@@ -8,6 +8,7 @@ using ImageSorter.Sorting.Abstractions.Model;
 using ImageSorter.Sorting.Abstractions.Services;
 using ImageSorter.Sorting.Model;
 using ImageSorter.Sorting.Services;
+using ImageSorter.Sorting.Services.FilePath;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Services;
@@ -24,6 +25,7 @@ public partial class Sorter : ISorter
     private readonly IConflictReducer _conflictReducer;
     private readonly IConflictResolver _conflictResolver;
     private readonly IResultWriter _resultWriter;
+    private readonly IFilePathWrapperFactory _filePathWrapperFactory;
 
     public Sorter(
         ILogger<Sorter> logger,
@@ -35,7 +37,8 @@ public partial class Sorter : ISorter
         IConflictReducer conflictReducer,
         SortRunConfiguration sortRunConfiguration,
         IConflictResolver conflictResolver,
-        IResultWriter resultWriter)
+        IResultWriter resultWriter,
+        IFilePathWrapperFactory filePathWrapperFactory)
     {
         _logger = logger;
         _fileLoader = fileLoader;
@@ -47,6 +50,7 @@ public partial class Sorter : ISorter
         _sortRunConfiguration = sortRunConfiguration;
         _conflictResolver = conflictResolver;
         _resultWriter = resultWriter;
+        _filePathWrapperFactory = filePathWrapperFactory;
     }
 
     public async Task PerformSorting(bool moveFiles, CancellationToken cancellationToken)
@@ -91,15 +95,14 @@ public partial class Sorter : ISorter
                 .Select(x => new SortingConflict
                 {
                     ConflictingFiles = x.ChosenFiles
-                        .Select(chosenFile => new FilePathWrapper(chosenFile))
+                        .Select(chosenFile => _filePathWrapperFactory.Create(chosenFile))
                         .Concat(x.ConflictingFiles.Where(y => !y.IsFromSource))
                         .ToArray()
                 })
                 .ToArray()
         };
 
-        var filesAtDestinationSet = filesAtDestination.ToHashSet();
-        var filesToWrite = _conflictResolver.ResolveConflicts(sortConflictSummaryAfterReduction, filesAtDestinationSet);
+        var filesToWrite = _conflictResolver.ResolveConflicts(sortConflictSummaryAfterReduction, filesAtDestination);
 
         var writeDtos = filesToWrite.Select(x => new FileWriteDto
         {

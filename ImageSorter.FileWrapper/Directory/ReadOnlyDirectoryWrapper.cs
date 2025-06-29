@@ -5,21 +5,10 @@ namespace ImageSorter.FileHandling.Directory;
 
 public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
 {
-    private readonly CaseSensitivityConfiguration _caseSensitivityConfiguration;
-
-    public ReadOnlyDirectoryWrapper(CaseSensitivityConfiguration caseSensitivityConfiguration)
-    {
-        _caseSensitivityConfiguration = caseSensitivityConfiguration;
-    }
-
     /// <inheritdoc cref="IDirectoryWrapper.GetFiles"/>
     public string[] GetFiles(string path, string searchPattern, SearchOption searchOption)
     {
-        // if the file system is case-insensitive, we cast everything to lower so comparison of paths yields the same
-        // equality as the file system
-        return _caseSensitivityConfiguration.IsCaseSensitive
-            ? System.IO.Directory.GetFiles(path, searchPattern, searchOption).ToArray()
-            : System.IO.Directory.GetFiles(path, searchPattern, searchOption).Select(x => x.ToLower()).ToArray();
+        return System.IO.Directory.GetFiles(path, searchPattern, searchOption).ToArray();
     }
 
     /// <summary>
@@ -53,12 +42,6 @@ public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
     /// <inheritdoc cref="IDirectoryWrapper.GetParentDirectory"/>
     public string? GetParentDirectory(string path)
     {
-        var resultPath = System.IO.Directory.GetParent(path)?.FullName;
-
-        // if the file system is case-insensitive, we cast everything to lower so comparison of paths yields the same
-        // equality as the file system
-        return _caseSensitivityConfiguration.IsCaseSensitive ? 
-            resultPath :
-            resultPath?.ToLower();
+        return System.IO.Directory.GetParent(path)?.FullName;
     }
 }

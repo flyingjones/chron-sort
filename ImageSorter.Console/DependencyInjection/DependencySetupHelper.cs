@@ -30,7 +30,7 @@ public static class DependencySetupHelper
         serviceCollection.AddTransient<IRandomStringGenerator>(_ => RandomStringGenerator.CreateForLowerCaseLetters());
         serviceCollection.AddTransient<IMarkdownTableRenderEngine, MarkdownTableRenderEngine>();
 
-        serviceCollection.AddFileWrappers(configuration.IsDryRun, configuration.FileSystemIsCaseSensitive);
+        serviceCollection.AddFileWrappers(configuration.IsDryRun);
         
         serviceCollection.AddDateParsing(new DateParserConfiguration
         {
@@ -143,7 +143,8 @@ public static class DependencySetupHelper
             },
             configuration.DestinationConflictMode,
             configuration.ConflictReducerMode,
-            configuration.ConflictResolverMode);
+            configuration.ConflictResolverMode,
+            configuration.FileSystemIsCaseSensitive);
 
         return serviceCollection;
     }

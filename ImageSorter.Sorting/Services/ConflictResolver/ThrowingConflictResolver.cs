@@ -9,7 +9,7 @@ namespace ImageSorter.Sorting.Services.ConflictResolver;
 /// </summary>
 public class ThrowingConflictResolver : IConflictResolver
 {
-    public ICollection<SortedFilePath> ResolveConflicts(SortingConflictSummary sortingConflictSummary, HashSet<string> filesAtDestination)
+    public ICollection<SortedFilePath> ResolveConflicts(SortingConflictSummary sortingConflictSummary, string[] filesAtDestination)
     {
         if (sortingConflictSummary.Conflicts.Count > 0)
         {

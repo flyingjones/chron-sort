@@ -4,6 +4,7 @@ using ImageSorter.Sorting.Services;
 using ImageSorter.Sorting.Services.ConflictReducer;
 using ImageSorter.Sorting.Services.ConflictReducer.FileEqualityMetricImplementation;
 using ImageSorter.Sorting.Services.ConflictResolver;
+using ImageSorter.Sorting.Services.FilePath;
 using ImageSorter.Sorting.SubServices.PathBuilder;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,7 +17,8 @@ public static class ServiceCollectionExtension
         PathBuilderOptions pathBuilderOptions,
         DestinationConflictMode destinationConflictMode,
         ConflictReducerMode conflictReducerMode,
-        ConflictResolverMode conflictResolverMode)
+        ConflictResolverMode conflictResolverMode,
+        bool isFileSystemCaseSensitive)
     {
         // sorting
         serviceCollection.AddSingleton(pathBuilderOptions);
@@ -24,6 +26,11 @@ public static class ServiceCollectionExtension
         serviceCollection.AddTransient<ISorter, Sorter>();
 
         // conflict finder
+        serviceCollection.AddSingleton(new FileSystemConfig
+        {
+            IsCaseSensitive = isFileSystemCaseSensitive
+        });
+        serviceCollection.AddTransient<IFilePathWrapperFactory, FilePathWrapperFactory>();
         switch (destinationConflictMode)
         {
             case DestinationConflictMode.Skip:
@@ -62,7 +69,6 @@ public static class ServiceCollectionExtension
                 throw new ArgumentOutOfRangeException(nameof(conflictReducerMode), conflictReducerMode, null);
         }
 
-        // TODO add config
         switch (conflictResolverMode)
         {
             case ConflictResolverMode.Throw:
