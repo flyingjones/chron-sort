@@ -1,3 +1,4 @@
+using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.Sorting.Model;
 using ImageSorter.Sorting.Services;
 using Microsoft.Extensions.Logging;
@@ -34,8 +35,6 @@ public class RunConfiguration
     
     public required bool ScanParallel { get; set; }
     
-    public int? ProgressAt { get; set; }
-    
     public LogLevel LogLevel { get; set; }
     
     public required DateTime SkipParserBefore { get; set; }
@@ -55,4 +54,8 @@ public class RunConfiguration
     public required DestinationConflictMode DestinationConflictMode { get; set; }
     
     public required ConflictResolverMode ConflictResolverMode { get; set; }
+    
+    public required CaseSensitivityDetectionMode CaseSensitivityDetectionMode { get; set; }
+    
+    public bool FileSystemIsCaseSensitive { get; set; }
 }

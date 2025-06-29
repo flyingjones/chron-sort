@@ -1,5 +1,6 @@
 using System.CommandLine.Invocation;
 using ImageSorter.DependencyInjection;
+using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.FileHandling.FileStream;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Abstractions.Services;
@@ -36,6 +37,11 @@ public static class RootCommandHandler
             runConfiguration.SummaryFileDirectoryPath?.FullName,
             runConfiguration.SummaryFilePath,
             runConfiguration.EscapeSummaryFileTables);
+        
+        // check file system sensitivity
+        runConfiguration.FileSystemIsCaseSensitive = GetCaseSensitivity(
+            runConfiguration.DestinationPath.FullName,
+            runConfiguration.CaseSensitivityDetectionMode);
         
         // set up the service provider
         var serviceProvider = runConfiguration
@@ -83,5 +89,23 @@ public static class RootCommandHandler
         }
 
         return new MockMarkdownFileWriter();
+    }
+
+    private static bool GetCaseSensitivity(
+        string destinationPath,
+        CaseSensitivityDetectionMode caseSensitivityDetectionMode)
+    {
+        switch (caseSensitivityDetectionMode)
+        {
+            case CaseSensitivityDetectionMode.Insensitive:
+                return false;
+            case CaseSensitivityDetectionMode.Auto:
+                var sensitivityDetector = new CaseSensitivityAutoDetector();
+                return sensitivityDetector.CheckIfIsCaseSensitive(destinationPath);
+            case CaseSensitivityDetectionMode.Sensitive:
+                return true;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(caseSensitivityDetectionMode), caseSensitivityDetectionMode, null);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.DependencyInjection;
+using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.Sorting.Model;
 using ImageSorter.Sorting.Services;
 using Microsoft.Extensions.Logging;
@@ -90,7 +91,8 @@ public static class RootCommandFactory
             EscapeSummaryFileTables = parsedContext.GetValueForOption(Options.EscapeSummaryMarkdownTables),
             ConflictReducerMode = parsedContext.GetValueForOption(Options.ConflictReducerModeOption) ?? ConflictReducerMode.None,
             DestinationConflictMode = parsedContext.GetValueForOption(Options.DestinationConflictModeOption) ?? DestinationConflictMode.Joint,
-            ConflictResolverMode = parsedContext.GetValueForOption(Options.ConflictResolverModeOption) ?? ConflictResolverMode.Throw
+            ConflictResolverMode = parsedContext.GetValueForOption(Options.ConflictResolverModeOption) ?? ConflictResolverMode.Throw,
+            CaseSensitivityDetectionMode = parsedContext.GetValueForOption(Options.CaseSensitivityDetectionOption) ?? CaseSensitivityDetectionMode.Auto
         };
         return runConfig;
     }
@@ -219,5 +221,11 @@ public static class RootCommandFactory
             aliases: new[] { "--conflict-resolution-mode" },
             description: "How conflicts are resolved",
             getDefaultValue: () => ConflictResolverMode.Throw);
+
+        public static readonly Option<CaseSensitivityDetectionMode?> CaseSensitivityDetectionOption = new(
+            aliases: new[] { "--case-sensitivity" },
+            description: "Weather file names differing only in casing should be treated as equal or not",
+            getDefaultValue: () => CaseSensitivityDetectionMode.Auto
+        );
     }
 }

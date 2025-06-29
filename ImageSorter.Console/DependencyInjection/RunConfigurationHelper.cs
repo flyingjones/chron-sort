@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Helper;
@@ -61,6 +62,14 @@ public static partial class RunConfigurationHelper
         
         builder.AddRow("System Date", DateTime.Now.ToString("s"));
         builder.AddRow("OS Version", RuntimeInformation.OSDescription);
+        var fsCasingString = runConfiguration.CaseSensitivityDetectionMode switch
+        {
+            CaseSensitivityDetectionMode.Insensitive => $"{runConfiguration.FileSystemIsCaseSensitive} (Configured)",
+            CaseSensitivityDetectionMode.Auto => $"{runConfiguration.FileSystemIsCaseSensitive} (Auto Detected)",
+            CaseSensitivityDetectionMode.Sensitive => $"{runConfiguration.FileSystemIsCaseSensitive} (Configured)",
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        builder.AddRow("File System Case-Sensitive", fsCasingString);
         builder.AddRow("Sorter Version", $"{VersionInformation.Version} (Assembly: {VersionInformation.AssemblyVersion})");
 
         return builder.Build();

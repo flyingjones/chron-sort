@@ -101,14 +101,15 @@ public partial class Sorter : ISorter
         var filesAtDestinationSet = filesAtDestination.ToHashSet();
         var filesToWrite = _conflictResolver.ResolveConflicts(sortConflictSummaryAfterReduction, filesAtDestinationSet);
 
-        var writeResults = await _resultWriter.Write(
-            filesToWrite.Select(x => new FileWriteDto
-            {
-                DestinationPath = x.DestinationFilePath,
-                SourcePath = x.SourceFilePath,
-                DateTime = x.DateTime
-            }).ToArray(), 
-            default);
+        var writeDtos = filesToWrite.Select(x => new FileWriteDto
+        {
+            // this ensures that the casing of the writes are consistent with the input
+            DestinationPath = _sortRunConfiguration.OriginalDestinationPath + x.DestinationFilePath[_sortRunConfiguration.OriginalDestinationPath.Length..],
+            SourcePath = x.SourceFilePath,
+            DateTime = x.DateTime
+        }).ToArray();
+        
+        var writeResults = await _resultWriter.Write(writeDtos, default);
 
 
         // TODO implement smart case sensitivity handling ->

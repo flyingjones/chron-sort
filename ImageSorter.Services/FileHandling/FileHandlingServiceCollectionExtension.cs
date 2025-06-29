@@ -30,21 +30,6 @@ public static class FileHandlingServiceCollectionExtension
         FileLoaderOptions options,
         bool readOnly)
     {
-        if (readOnly)
-        {
-            serviceCollection.AddSingleton<IDirectoryWrapper, ReadOnlyDirectoryWrapper>();
-            serviceCollection.AddSingleton<IFileWrapper, ReadOnlyFileWrapper>();
-            serviceCollection.AddSingleton<IFileStreamService, ReadOnlyFileStreamService>();
-        }
-        else
-        {
-            serviceCollection.AddSingleton<IDirectoryWrapper, DirectoryWrapper>();
-            serviceCollection.AddSingleton<IFileWrapper, ImageSorter.FileHandling.File.FileWrapper>();
-            serviceCollection.AddSingleton<IFileStreamService, FileStreamService>();
-        }
-        
-        serviceCollection.AddSingleton<IPathWrapper, PathWrapper>();
-        serviceCollection.AddSingleton<IBufferedStreamWriterFactory, BufferedStreamWriterFactory>();
         serviceCollection.AddSingleton(options);
         serviceCollection.AddSingleton<IFileLoader, FileLoader>();
         return serviceCollection;

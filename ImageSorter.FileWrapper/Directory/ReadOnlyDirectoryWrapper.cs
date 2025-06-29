@@ -1,15 +1,25 @@
+using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.FileWrapper.Abstractions.Directory;
 
 namespace ImageSorter.FileHandling.Directory;
 
 public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
 {
+    private readonly CaseSensitivityConfiguration _caseSensitivityConfiguration;
+
+    public ReadOnlyDirectoryWrapper(CaseSensitivityConfiguration caseSensitivityConfiguration)
+    {
+        _caseSensitivityConfiguration = caseSensitivityConfiguration;
+    }
+
     /// <inheritdoc cref="IDirectoryWrapper.GetFiles"/>
     public string[] GetFiles(string path, string searchPattern, SearchOption searchOption)
     {
-        // to lower to prevent weird issues since on windows the file system is case-insensitive, and we need to
-        // have equal paths in case of os says file exists so yay
-        return System.IO.Directory.GetFiles(path, searchPattern, searchOption).Select(x => x.ToLower()).ToArray();
+        // if the file system is case-insensitive, we cast everything to lower so comparison of paths yields the same
+        // equality as the file system
+        return _caseSensitivityConfiguration.IsCaseSensitive
+            ? System.IO.Directory.GetFiles(path, searchPattern, searchOption).ToArray()
+            : System.IO.Directory.GetFiles(path, searchPattern, searchOption).Select(x => x.ToLower()).ToArray();
     }
 
     /// <summary>
@@ -43,8 +53,12 @@ public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
     /// <inheritdoc cref="IDirectoryWrapper.GetParentDirectory"/>
     public string? GetParentDirectory(string path)
     {
-        // to lower to prevent weird issues since on windows the file system is case-insensitive, and we need to
-        // have equal paths in case of os says file exists so yay
-        return System.IO.Directory.GetParent(path)?.FullName.ToLower();
+        var resultPath = System.IO.Directory.GetParent(path)?.FullName;
+
+        // if the file system is case-insensitive, we cast everything to lower so comparison of paths yields the same
+        // equality as the file system
+        return _caseSensitivityConfiguration.IsCaseSensitive ? 
+            resultPath :
+            resultPath?.ToLower();
     }
 }

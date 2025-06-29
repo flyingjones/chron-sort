@@ -3,6 +3,7 @@ using ImageParser.Utils.ProgressLogger;
 using ImageParser.Utils.RandomWrapper;
 using ImageSorter.DateParsing.Abstractions.Services;
 using ImageSorter.DateParsing.Abstractions.Services.MetaData;
+using ImageSorter.FileHandling;
 using ImageSorter.Logging;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
@@ -27,8 +28,10 @@ public static class DependencySetupHelper
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddTransient<IDateTimeProvider, DateTimeProvider>();
         serviceCollection.AddTransient<IRandomStringGenerator>(_ => RandomStringGenerator.CreateForLowerCaseLetters());
-
         serviceCollection.AddTransient<IMarkdownTableRenderEngine, MarkdownTableRenderEngine>();
+
+        serviceCollection.AddFileWrappers(configuration.IsDryRun, configuration.FileSystemIsCaseSensitive);
+        
         serviceCollection.AddDateParsing(new DateParserConfiguration
         {
             SkipParserAfter = configuration.SkipParserAfter,
@@ -83,9 +86,13 @@ public static class DependencySetupHelper
             serviceCollection.AddTransient<IResultWriter, CopyFileResultWriter>();
         }
 
+        var fileEndings =
+            configuration.FileSystemIsCaseSensitive
+                ? configuration.FileEndings?.SelectMany(x => x.Split(" ")).ToArray()
+                : configuration.FileEndings?.SelectMany(x => x.ToLower().Split(" ")).ToArray();
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
-            FileEndings = configuration.FileEndings?.SelectMany(x => x.ToLower().Split(" ")).ToArray()
+            FileEndings = fileEndings
         }, configuration.IsDryRun);
 
         if (configuration.ScanParallel)
@@ -114,11 +121,15 @@ public static class DependencySetupHelper
             serviceCollection.AddTransient(typeof(IProgressLogger<>), typeof(NoOperationProgressLogger<>));
         }
 
+        var casingAwareDestPath = configuration.FileSystemIsCaseSensitive
+            ? configuration.DestinationPath.FullName
+            : configuration.DestinationPath.FullName.ToLower();
         serviceCollection.AddSingleton(new SortRunConfiguration
         {
             DestinationConflictMode = configuration.DestinationConflictMode,
             SourcePath = configuration.SourcePath.FullName,
-            DestinationPath = configuration.DestinationPath.FullName
+            DestinationPath = casingAwareDestPath,
+            OriginalDestinationPath = configuration.DestinationPath.FullName
         });
         serviceCollection.AddTransient<ISorter, Sorter>();
         serviceCollection.AddTransient<ISummarizeService, SummarizeService>();
@@ -127,7 +138,7 @@ public static class DependencySetupHelper
         serviceCollection.AddSorting(
             new PathBuilderOptions
             {
-                DestinationPath = configuration.DestinationPath.FullName,
+                DestinationPath = casingAwareDestPath,
                 Format = configuration.OutputFormat
             },
             configuration.DestinationConflictMode,
