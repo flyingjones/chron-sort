@@ -4,7 +4,7 @@ using ImageSorter.Sorting.Abstractions.Model;
 namespace ImageSorter.Sorting.Services.ConflictReducer;
 
 /// <summary>
-/// reduces a conflict by choosing no file if the file(s) are already present at the destination
+/// Resolves a conflict by choosing no file if the file(s) are already present at the destination
 /// </summary>
 public class SkipIfPresentDestinationConflictQuickResolver : IDestinationConflictQuickResolver
 {
@@ -12,8 +12,10 @@ public class SkipIfPresentDestinationConflictQuickResolver : IDestinationConflic
         SortingConflict sortingConflict,
         [NotNullWhen(true)] out ReducedSortingConflict? reducedSortingConflict)
     {
+        // check that we have a conflict where a file is already present at the destination
         if (sortingConflict.ConflictingFiles.Any(x => !x.IsFromSource))
         {
+            // in this case choose no file (the file is already there!)
             reducedSortingConflict = new ReducedSortingConflict
             {
                 ChosenFiles = ArraySegment<SortedFilePath>.Empty,

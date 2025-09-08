@@ -21,12 +21,17 @@ public class FileStreamService : IFileStreamService
         var first = new FileInfo(firstPath);
         var second = new FileInfo(secondPath);
         
+        // if the file size is not equal, the content can't be equal so return directly
         if (first.Length != second.Length)
             return false;
 
-        if (string.Equals(first.FullName, second.FullName, StringComparison.OrdinalIgnoreCase))
+        // if the full paths are equal, the file content will also be equal, so return directly
+        // we don't know if the underlying file system is case-sensitive, so we use the case-sensitive comparison to be
+        // safe. The OS should return the same paths on case-insensitive file systems anyway.
+        if (string.Equals(first.FullName, second.FullName, StringComparison.Ordinal))
             return true;
         
+        // to minimize cpu ops, we read the data in 64 bit chunks and compare them as longs
         var iterations = (int)Math.Ceiling((double)first.Length / bytesToRead);
 
         using var fs1 = first.OpenRead();

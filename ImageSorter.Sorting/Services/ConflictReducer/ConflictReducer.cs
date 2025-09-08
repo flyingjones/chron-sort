@@ -7,16 +7,16 @@ namespace ImageSorter.Sorting.Services.ConflictReducer;
 
 public class ConflictReducer : IConflictReducer
 {
-    private readonly IFileEqualityMetricImplementation _fileEqualityMetricImplementation;
+    private readonly IFileEquivalenceMetricImplementation _iFileEquivalenceMetricImplementation;
     private readonly IProgressLogger<ConflictReducer> _progressLogger;
     private readonly IDestinationConflictQuickResolver _destinationConflictQuickResolver;
 
     public ConflictReducer(
-        IFileEqualityMetricImplementation fileEqualityMetricImplementation,
+        IFileEquivalenceMetricImplementation iFileEquivalenceMetricImplementation,
         IProgressLogger<ConflictReducer> progressLogger,
         IDestinationConflictQuickResolver destinationConflictQuickResolver)
     {
-        _fileEqualityMetricImplementation = fileEqualityMetricImplementation;
+        _iFileEquivalenceMetricImplementation = iFileEquivalenceMetricImplementation;
         _progressLogger = progressLogger;
         _destinationConflictQuickResolver = destinationConflictQuickResolver;
     }
@@ -30,7 +30,7 @@ public class ConflictReducer : IConflictReducer
         
         var equalityClasses = sortingConflict
             .ConflictingFiles
-            .Select(x => new FileEqualityClass(x))
+            .Select(x => new FileEquivalenceClass(x))
             .ToList();
 
         var conflictingFilesArray = sortingConflict.ConflictingFiles.ToArray();
@@ -51,7 +51,7 @@ public class ConflictReducer : IConflictReducer
                     continue;
                 }
                 
-                var classesAreEqual = _fileEqualityMetricImplementation.FilesAreEqual(
+                var classesAreEqual = _iFileEquivalenceMetricImplementation.FilesAreEquivalent(
                     leftEqualityClass.RepresentativePath,
                     rightEqualityClass.RepresentativePath);
 

@@ -7,5 +7,8 @@ public interface IFileStreamService
     /// </summary>
     Task CopyToAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Checks that the file content of two files are byte-wise equal
+    /// </summary>
     bool FileContentAreEqual(string firstPath, string secondPath);
 }

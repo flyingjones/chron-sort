@@ -13,6 +13,7 @@ public class SkipIfTrivialOverwriteDestinationConflictQuickResolver : IDestinati
         SortingConflict sortingConflict,
         [NotNullWhen(true)] out ReducedSortingConflict? reducedSortingConflict)
     {
+        // check that the conflict consists of exactly one file in the source and exactly one file at the destination
         if (sortingConflict.ConflictingFiles.Count == 2 && sortingConflict.ConflictingFiles.Any(x => !x.IsFromSource))
         {
             reducedSortingConflict = new ReducedSortingConflict

@@ -56,15 +56,15 @@ public static class ServiceCollectionExtension
         {
             case ConflictReducerMode.None:
                 serviceCollection
-                    .AddTransient<IFileEqualityMetricImplementation, TrivialFileContentEqualityMetricImplementation>();
+                    .AddTransient<IFileEquivalenceMetricImplementation, TrivialIFileContentEquivalenceMetricImplementation>();
                 break;
             case ConflictReducerMode.FileLength:
                 serviceCollection
-                    .AddTransient<IFileEqualityMetricImplementation, FileLengthEqualityMetricImplementation>();
+                    .AddTransient<IFileEquivalenceMetricImplementation, FileLengthEquivalenceMetricImplementation>();
                 break;
             case ConflictReducerMode.FileContent:
                 serviceCollection
-                    .AddTransient<IFileEqualityMetricImplementation, FileContentEqualityMetricImplementation>();
+                    .AddTransient<IFileEquivalenceMetricImplementation, FileContentEquivalenceMetricImplementation>();
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(conflictReducerMode), conflictReducerMode, null);
