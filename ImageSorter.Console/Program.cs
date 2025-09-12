@@ -1,5 +1,8 @@
 ﻿using System.CommandLine;
+using System.Numerics;
 using ImageSorter;
+
+Console.WriteLine($"Vector<byte> size: {Vector<byte>.Count}");
 
 Console.CursorVisible = false;
 var rootCommand = RootCommandFactory.BuildRootCommand();
