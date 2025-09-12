@@ -5,6 +5,52 @@ namespace ImageSorter.FileWrapper.Tests.FileStream;
 [TestFixture]
 public class FileStreamServiceTests
 {
+    private const string TestFileDirectoryPath = "FileStream/TestFiles";
+    private string _copiedTestFileName;
+
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        _copiedTestFileName = $"{Guid.NewGuid()}.md";
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        // clean up written files after each test
+        var destinationFilePath = Path.Combine(
+            TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, _copiedTestFileName);
+
+        if (File.Exists(destinationFilePath))
+        {
+            File.Delete(destinationFilePath);
+        }
+    }
+
+    [TestCase("EmptyFile01.md")]
+    [TestCase("FileClass01File01.md")]
+    [TestCase("ShortFile01.md")]
+    public async Task CopyToAsync(string sourceFileName)
+    {
+        // arrange
+        var service = new FileStreamService();
+
+        var sourceFilePath =
+            Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, sourceFileName);
+        var destinationFilePath =
+            Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, _copiedTestFileName);
+
+        // act
+        await service.CopyToAsync(sourceFilePath, destinationFilePath, default);
+
+        // assert
+        var exists = File.Exists(destinationFilePath);
+        Assert.That(exists, Is.True);
+        
+        var areEqual = service.FileContentAreEqual(sourceFilePath, destinationFilePath);
+        Assert.That(areEqual, Is.True);
+    }
+
     [TestCase("FileClass01File01.md", "FileClass01File02.md", ExpectedResult = true)]
     [TestCase("EmptyFile01.md", "EmptyFile02.md", ExpectedResult = true)]
     [TestCase("ShortFile01.md", "ShortFile02.md", ExpectedResult = true)]
@@ -19,8 +65,8 @@ public class FileStreamServiceTests
 
         // act
         var result = service.FileContentAreEqual(
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "FileStream/TestFiles", path1),
-            Path.Combine(TestContext.CurrentContext.TestDirectory, "FileStream/TestFiles", path2));
+            Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, path1),
+            Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, path2));
 
         // assert
         return result;

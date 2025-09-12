@@ -11,7 +11,8 @@ public class ReadOnlyFileStreamService : IFileStreamService
     {
         return Task.CompletedTask;
     }
-    
+
+    /// <inheritdoc cref="FastFileContentCompare.FileContentAreEqual"/>
     public bool FileContentAreEqual(string firstPath, string secondPath)
     {
         return FastFileContentCompare.FileContentAreEqual(firstPath, secondPath);

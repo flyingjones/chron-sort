@@ -5,8 +5,17 @@ namespace ImageSorter.FileHandling.FileStream;
 public static class FastFileContentCompare
 {
     /// <summary>
-    /// Compare the content of two files using SIMD instructions
+    /// Compares the content of two files using SIMD instructions (byte-wise)
     /// </summary>
+    /// <remarks>
+    /// Will return <c>true</c> without opening the files if the both point to the same file in the file system.
+    /// This is checked by comparing the FileInfo.<see cref="FileInfo.FullName"/> of both files.
+    /// <br/>
+    /// Will return <c>false</c> without opening the files if the files have different lengths.
+    /// </remarks>
+    /// <returns>
+    /// <c>true</c> only if the files have the same binary content.
+    /// </returns>
     public static bool FileContentAreEqual(string firstPath, string secondPath)
     {
         // TODO think (and profile) using the Vector256<> or Vector512<> classes instead

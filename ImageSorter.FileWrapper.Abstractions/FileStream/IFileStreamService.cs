@@ -8,7 +8,10 @@ public interface IFileStreamService
     Task CopyToAsync(string sourcePath, string destinationPath, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Checks that the file content of two files are byte-wise equal
+    /// Compares the content of two files using SIMD instructions (byte-wise)
     /// </summary>
+    /// <returns>
+    /// <c>true</c> only if the files have the same binary content.
+    /// </returns>
     bool FileContentAreEqual(string firstPath, string secondPath);
 }

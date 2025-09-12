@@ -5,6 +5,36 @@ namespace ImageSorter.FileWrapper.Tests.FileStream;
 [TestFixture]
 public class ReadOnlyFileStreamServiceTests
 {
+    private const string TestFileDirectoryPath = "FileStream/TestFiles";
+    private string _copiedTestFileName;
+
+    [OneTimeSetUp]
+    public void OneTimeSetUp()
+    {
+        _copiedTestFileName = $"{Guid.NewGuid()}.md";
+    }
+    
+    [TestCase("EmptyFile01.md")]
+    [TestCase("FileClass01File01.md")]
+    [TestCase("ShortFile01.md")]
+    public async Task CopyToAsync(string sourceFileName)
+    {
+        // arrange
+        var service = new ReadOnlyFileStreamService();
+
+        var sourceFilePath =
+            Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, sourceFileName);
+        var destinationFilePath =
+            Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, _copiedTestFileName);
+
+        // act
+        await service.CopyToAsync(sourceFilePath, destinationFilePath, default);
+
+        // assert
+        var exists = File.Exists(destinationFilePath);
+        Assert.That(exists, Is.False);
+    }
+    
     [TestCase("FileClass01File01.md", "FileClass01File02.md", ExpectedResult = true)]
     [TestCase("EmptyFile01.md", "EmptyFile02.md", ExpectedResult = true)]
     [TestCase("ShortFile01.md", "ShortFile02.md", ExpectedResult = true)]

@@ -15,6 +15,7 @@ public class FileStreamService : IFileStreamService
         await sourceFileStream.CopyToAsync(destFileStream, cancellationToken);
     }
 
+    /// <inheritdoc cref="FastFileContentCompare.FileContentAreEqual"/>
     public bool FileContentAreEqual(string firstPath, string secondPath)
     {
         return FastFileContentCompare.FileContentAreEqual(firstPath, secondPath);
