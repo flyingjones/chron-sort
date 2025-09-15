@@ -7,22 +7,25 @@ namespace ImageSorter.Sorting.Services.ConflictReducer;
 
 public class ConflictReducer : IConflictReducer
 {
-    private readonly IFileEquivalenceMetricImplementation _iFileEquivalenceMetricImplementation;
+    private readonly IFileEquivalenceMetricImplementation _fileEquivalenceMetricImplementation;
     private readonly IProgressLogger<ConflictReducer> _progressLogger;
     private readonly IDestinationConflictQuickResolver _destinationConflictQuickResolver;
 
     public ConflictReducer(
-        IFileEquivalenceMetricImplementation iFileEquivalenceMetricImplementation,
+        IFileEquivalenceMetricImplementation fileEquivalenceMetricImplementation,
         IProgressLogger<ConflictReducer> progressLogger,
         IDestinationConflictQuickResolver destinationConflictQuickResolver)
     {
-        _iFileEquivalenceMetricImplementation = iFileEquivalenceMetricImplementation;
+        _fileEquivalenceMetricImplementation = fileEquivalenceMetricImplementation;
         _progressLogger = progressLogger;
         _destinationConflictQuickResolver = destinationConflictQuickResolver;
     }
 
     public ReducedSortingConflict ReduceConflicts(SortingConflict sortingConflict)
     {
+        // this algorithm finds the equivalence classes for all input files using the injected
+        // equivalence metric. (after performing a quick resolve)
+        
         if (_destinationConflictQuickResolver.TryQuickResolve(sortingConflict, out var reducedConflict))
         {
             return reducedConflict;
@@ -35,6 +38,14 @@ public class ConflictReducer : IConflictReducer
 
         var conflictingFilesArray = sortingConflict.ConflictingFiles.ToArray();
         
+        // think of the given files as a matrix where each entry represents a comparison
+        // we only need to check one triangle of the matrix without the diagonal:
+        // we know that if ( A == B ) then ( B == A) and also that ( A == A ) is always true
+        
+        // we could optimize this further if we track the different files for each equivalence class explicitly and
+        // merge those as well. Maybe get someone to get the paper
+        // https://link.springer.com/chapter/10.1007/978-3-319-21840-3_36
+        // doi:10.1007/978-3-319-21840-3_36
         for (int i = 0; i < conflictingFilesArray.Length; i++)
         {
             var leftEqualityClass = equalityClasses
@@ -48,10 +59,11 @@ public class ConflictReducer : IConflictReducer
                 if (ReferenceEquals(leftEqualityClass, rightEqualityClass))
                 {
                     // happens when we get equality classes with size more than 2
+                    // we already found the equivalence, so we just continue here
                     continue;
                 }
                 
-                var classesAreEqual = _iFileEquivalenceMetricImplementation.FilesAreEquivalent(
+                var classesAreEqual = _fileEquivalenceMetricImplementation.FilesAreEquivalent(
                     leftEqualityClass.RepresentativePath,
                     rightEqualityClass.RepresentativePath);
 
@@ -88,6 +100,8 @@ public class ConflictReducer : IConflictReducer
 
     public ReducedSortingConflictSummary ReduceConflicts(SortingConflictSummary sortingConflictSummary)
     {
+        // we need at max BinomialCoefficient(n, 2) comparisons since we need to check for each unique pair of files if
+        // they are equal if all files are different.
         var totalCompareAmount = sortingConflictSummary
             .Conflicts.Select(conflict =>
                 BinomialCoefficient.CalculateBinomialCoefficient(conflict.ConflictingFiles.Count, 2))
