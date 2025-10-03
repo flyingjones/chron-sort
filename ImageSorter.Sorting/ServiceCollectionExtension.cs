@@ -1,3 +1,4 @@
+using ImageSorter.Sorting.Abstractions.Model;
 using ImageSorter.Sorting.Abstractions.Services;
 using ImageSorter.Sorting.Model;
 using ImageSorter.Sorting.Services;
@@ -5,6 +6,7 @@ using ImageSorter.Sorting.Services.ConflictReducer;
 using ImageSorter.Sorting.Services.ConflictReducer.FileEqualityMetricImplementation;
 using ImageSorter.Sorting.Services.ConflictResolver;
 using ImageSorter.Sorting.Services.ConflictResolver.PathHashing;
+using ImageSorter.Sorting.Services.EquivalenceClassFinder;
 using ImageSorter.Sorting.Services.FilePath;
 using ImageSorter.Sorting.SubServices.PathBuilder;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,6 +24,7 @@ public static class ServiceCollectionExtension
         bool isFileSystemCaseSensitive)
     {
         // sorting
+        serviceCollection.AddTransient<IEquivalenceClassFinder, EquivalenceClassFinder>();
         serviceCollection.AddSingleton(pathBuilderOptions);
         serviceCollection.AddSingleton<IPathBuilder, PathBuilder>();
         serviceCollection.AddTransient<ISorter, Sorter>();
