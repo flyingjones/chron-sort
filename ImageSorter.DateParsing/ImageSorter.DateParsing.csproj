@@ -14,7 +14,7 @@
 
     <ItemGroup>
       <PackageReference Include="MetadataExtractor" Version="2.8.1" />
-      <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.9" />
     </ItemGroup>
 
 </Project>
