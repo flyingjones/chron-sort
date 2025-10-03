@@ -42,6 +42,11 @@ public static class RootCommandFactory
         // optimizations
         rootCommand.AddOption(Options.PreferFileNameParsingOption);
         rootCommand.AddOption(Options.UseParallelScanningOption);
+        // conflict reduction
+        rootCommand.AddOption(Options.ConflictReducerModeOption);
+        rootCommand.AddOption(Options.DestinationConflictModeOption);
+        // conflict resolution
+        rootCommand.AddOption(Options.ConflictResolverModeOption);
         // logging
         rootCommand.AddOption(Options.LogLevelOption);
         rootCommand.AddOption(Options.BeVerboseOption);
@@ -49,10 +54,7 @@ public static class RootCommandFactory
         rootCommand.AddOption(Options.ProgressBarString);
         rootCommand.AddOption(Options.SummaryFilePathOption);
         rootCommand.AddOption(Options.EscapeSummaryMarkdownTables);
-        rootCommand.AddOption(Options.ConflictReducerModeOption);
-        rootCommand.AddOption(Options.DestinationConflictModeOption);
-        rootCommand.AddOption(Options.ConflictResolverModeOption);
-
+        
         return rootCommand;
     }
 
@@ -210,7 +212,7 @@ public static class RootCommandFactory
         public static readonly Option<ConflictReducerMode?> ConflictReducerModeOption = new(
             aliases: new[] { "--conflict-reduction-mode" },
             description: "How conflicting files are compared to skip duplicate equal files",
-            getDefaultValue: () => ConflictReducerMode.None);
+            getDefaultValue: () => ConflictReducerMode.FileContent);
         
         public static readonly Option<DestinationConflictMode?> DestinationConflictModeOption = new(
             aliases: new[] { "--destination-conflict-mode" },
@@ -220,11 +222,11 @@ public static class RootCommandFactory
         public static readonly Option<ConflictResolverMode?> ConflictResolverModeOption = new(
             aliases: new[] { "--conflict-resolution-mode" },
             description: "How conflicts are resolved",
-            getDefaultValue: () => ConflictResolverMode.Throw);
+            getDefaultValue: () => ConflictResolverMode.HashRename);
 
         public static readonly Option<CaseSensitivityDetectionMode?> CaseSensitivityDetectionOption = new(
             aliases: new[] { "--case-sensitivity" },
-            description: "Weather file names differing only in casing should be treated as equal or not",
+            description: "Whether file names differing only in casing should be treated as equal or not",
             getDefaultValue: () => CaseSensitivityDetectionMode.Auto
         );
     }
