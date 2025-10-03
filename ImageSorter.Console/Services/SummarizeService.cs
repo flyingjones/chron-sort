@@ -29,13 +29,13 @@ public class SummarizeService : ISummarizeService
         builder.AddRow("File Ending", "Used Count", "Ignored Count");
 
         var allFileEndingsCount = allFiles
-            .Select(path => path.Split(".")[^1])
+            .Select(path => _pathWrapper.GetExtension(path))
             .CountBy(x => x)
             .OrderByDescending(x => x.Value)
             .ToArray();
 
         var usedFileEndingsCount = filesToProcess
-            .Select(path => path.Split(".")[^1])
+            .Select(path => _pathWrapper.GetExtension(path))
             .CountBy(x => x)
             .ToDictionary();
 
