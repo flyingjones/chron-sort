@@ -116,22 +116,13 @@ public abstract class AbstractRenameBasedConflictResolver : IConflictResolver
                     if (directoryGroup.FileNameAvailable(proposedFileName.Value))
                     {
                         directoryGroup.AddRenamedFile(
-                            new SortedFilePath
-                            {
-                                SourceFilePath = proposedFileName.Key.SourceFilePath,
-                                DestinationFilePath = _pathWrapper.Combine(group.Key, proposedFileName.Value),
-                                DateTime = proposedFileName.Key.DateTime
-                            });
+                            proposedFileName.Key with { DestinationFilePath = _pathWrapper.Combine(group.Key, proposedFileName.Value) });
                     }
                     else
                     {
                         tmpDiscardedFiles.Add(proposedFileName.Key);
                     }
                 }
-
-                tmpDiscardedFiles.AddRange(conflict.ConflictingFiles
-                    .Where(x => x.SortedFilePath != null)
-                    .Select(x => x.SortedFilePath!));
             }
         }
 

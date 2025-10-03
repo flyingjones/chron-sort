@@ -10,7 +10,7 @@ namespace ImageSorter.Sorting.Services.ConflictResolver;
 
 public class RandomRenameConflictResolver : AbstractRenameBasedConflictResolver
 {
-    private const int RandomNameLength = 5;
+    private const int RandomNameLength = 6;
     private readonly IPathWrapper _pathWrapper;
     private readonly IRandomStringGenerator _randomStringGenerator;
 
@@ -40,7 +40,8 @@ public class RandomRenameConflictResolver : AbstractRenameBasedConflictResolver
 
     private string BuildRandomFileName(string originalPath)
     {
-        var fileName = _pathWrapper.GetFileName(originalPath)!;
-        return $"{_randomStringGenerator.GenerateRandomString(RandomNameLength)}_{fileName}";
+        var fileName = _pathWrapper.GetFileNameWithoutExtension(originalPath);
+        var fileExtension = _pathWrapper.GetExtension(originalPath);
+        return $"{fileName}_{_randomStringGenerator.GenerateRandomString(RandomNameLength)}{fileExtension}";
     }
 }

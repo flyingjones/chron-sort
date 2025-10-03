@@ -27,7 +27,6 @@ public class ConflictReducer : IConflictReducer
 
     public ReducedSortingConflict ReduceConflicts(SortingConflict sortingConflict)
     {
-        
         if (_destinationConflictQuickResolver.TryQuickResolve(sortingConflict, out var reducedConflict))
         {
             return reducedConflict;
@@ -71,6 +70,7 @@ public class ConflictReducer : IConflictReducer
     {
         // we need at max BinomialCoefficient(n, 2) comparisons since we need to check for each unique pair of files if
         // they are equal if all files are different.
+        // this is just the worst case, we may not need to perform all comparisons.
         var totalCompareAmount = sortingConflictSummary
             .Conflicts.Select(conflict =>
                 BinomialCoefficient.CalculateBinomialCoefficient(conflict.ConflictingFiles.Count, 2))

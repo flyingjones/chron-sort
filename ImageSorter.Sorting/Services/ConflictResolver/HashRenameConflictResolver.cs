@@ -40,8 +40,9 @@ public class HashRenameConflictResolver : AbstractRenameBasedConflictResolver
 
     private string BuildHashBasedFileName(string originalPath)
     {
-        var fileName = _pathWrapper.GetFileName(originalPath)!;
+        var fileName = _pathWrapper.GetFileNameWithoutExtension(originalPath);
+        var fileExtension = _pathWrapper.GetExtension(originalPath);
         var hash = _pathHashingService.HashPath(originalPath, HashNameLength);
-        return $"{hash}_{fileName}";
+        return $"{fileName}_{hash}{fileExtension}";
     }
 }

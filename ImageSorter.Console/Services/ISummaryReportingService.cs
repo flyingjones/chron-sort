@@ -13,4 +13,7 @@ public interface ISummaryReportingService
     void ReportWriteSummary(ICollection<FileWriteResultDto> results);
 
     void ReportConflictSummary(ReducedSortingConflictSummary result);
+
+    void ReportConflictResolution(ICollection<SortedFilePath> filesToWrite,
+        ICollection<SortedFilePath> discardedFiles, SortingConflictSummary sortingConflictsAfterReduction);
 }

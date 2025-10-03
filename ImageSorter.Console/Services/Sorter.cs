@@ -55,10 +55,12 @@ public partial class Sorter : ISorter
 
     public async Task PerformSorting(bool moveFiles, CancellationToken cancellationToken)
     {
+        // find all relevant files in the source directory and filter them by file extension if filtering is used
         _logger.LogInformation("Scanning Source Directory");
         var filesToProcess = _fileLoader.GetFilePaths(_sortRunConfiguration.SourcePath, out var allFiles);
         _summaryReportingService.ReportScanSummary(filesToProcess, allFiles);
 
+        // assign a date to each file using the given configuration
         _logger.LogInformation("Parsing Dates");
         var parsedFiles = (await _dateParsingHandler.ScanFiles(filesToProcess, cancellationToken))
             .Select(x => new FilePathWithParsedDate
@@ -68,22 +70,65 @@ public partial class Sorter : ISorter
             })
             .ToArray();
 
+        // group the files according to the given output path and the grouping pattern, e.g. yyyy/MM
         _logger.LogInformation("Sorting Files");
         var rawSorting = _newSorter.SortFiles(parsedFiles);
 
+        // also load the file paths at the destination directory for better conflict handling
         _logger.LogInformation("Scanning Destination Directory");
         string[] filesAtDestination = _fileLoader.GetFilePaths(_sortRunConfiguration.DestinationPath, out var _);
 
+        // now find conflicts where multiple files with the same name appear in the same directory after the grouping step
+        // this can happen if files are already present there and / or when files from different paths in the source
+        // have the same name and same date
         _logger.LogInformation("Searching for Conflicts");
         var conflicts = _conflictFinder.FindConflicts(rawSorting, filesAtDestination);
 
+        // try to reduce the conflicts as much as possible by e.g. skipping files which are equivalent
+        // the exact methods can be configured and differ in speed and accuracy
         _logger.LogInformation("Performing Conflict Reduction");
         var reducedConflicts = _conflictReducer.ReduceConflicts(conflicts);
-
         _summaryReportingService.ReportConflictSummary(reducedConflicts);
 
         // remaining conflicts after reduction
-        var sortConflictSummaryAfterReduction = new SortingConflictSummary
+        var sortConflictSummaryAfterReduction = RemoveObsoleteConflicts(reducedConflicts);
+
+        // resolve conflicts by e.g. renaming files, choosing arbitrarily or throwing an exception
+        var filesToWrite = _conflictResolver.ResolveConflicts(
+            sortConflictSummaryAfterReduction,
+            filesAtDestination,
+            out var discardedFiles);
+        _summaryReportingService.ReportConflictResolution(filesToWrite, discardedFiles, sortConflictSummaryAfterReduction);
+
+        var writeDtos = filesToWrite
+            .Select(x => new FileWriteDto
+            {
+                // this ensures that the casing of the writes are consistent with the input
+                // otherwise we may inadvertently change the casing of the file name after the operation
+                DestinationPath = _sortRunConfiguration.OriginalDestinationPath +
+                                  x.DestinationFilePath[_sortRunConfiguration.OriginalDestinationPath.Length..],
+                SourcePath = x.SourceFilePath,
+                DateTime = x.DateTime
+            }).ToArray();
+
+        var writeResults = await _resultWriter.Write(writeDtos, default);
+
+        // TODO implement error handling
+
+        // TODO implement write result reporting (maybe add option to exactly write which file got where and
+        // what happened to it) summarize total ops including renames
+
+        // TODO unit tests
+
+        // todo docs
+        _summaryReportingService.ReportWriteSummary(writeResults);
+        _logger.LogInformation("Finished");
+    }
+
+    private SortingConflictSummary RemoveObsoleteConflicts(
+        ReducedSortingConflictSummary reducedConflicts)
+    {
+        return new SortingConflictSummary
         {
             NonConflictingFiles = reducedConflicts.NonConflictingFiles
                 .Concat(reducedConflicts.ReducedSortingConflicts
@@ -101,34 +146,6 @@ public partial class Sorter : ISorter
                 })
                 .ToArray()
         };
-
-        var filesToWrite = _conflictResolver.ResolveConflicts(
-            sortConflictSummaryAfterReduction,
-            filesAtDestination,
-            out var discardedFiles);
-
-        // TODO log resolution result: total file count, number of renames and discards
-        
-        var writeDtos = filesToWrite.Select(x => new FileWriteDto
-        {
-            // this ensures that the casing of the writes are consistent with the input
-            DestinationPath = _sortRunConfiguration.OriginalDestinationPath + x.DestinationFilePath[_sortRunConfiguration.OriginalDestinationPath.Length..],
-            SourcePath = x.SourceFilePath,
-            DateTime = x.DateTime
-        }).ToArray();
-        
-        var writeResults = await _resultWriter.Write(writeDtos, default);
-        
-        // TODO implement error handling
-        
-        // TODO implement write result reporting (maybe add option to exactly write which file got where and
-        // what happened to it) summarize total ops inkluding renames
-        
-        // TODO unit tests
-        
-        // todo docs
-        _summaryReportingService.ReportWriteSummary(writeResults);
-        _logger.LogInformation("Finished");
     }
 
     private bool ConflictIsResolved(ReducedSortingConflict reducedSortingConflict)

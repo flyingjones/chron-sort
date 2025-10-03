@@ -62,12 +62,26 @@ public class SummaryReportingService : ISummaryReportingService
     public void ReportConflictSummary(ReducedSortingConflictSummary result)
     {
         var conflictSummaryTable = _summarizeService.SummarizeConflicts(result);
-        
+
         _logger.LogInformation(
             "Sort Conflict Summary {SortConflictSummary}",
             Environment.NewLine + _markdownTableRenderEngine.Render(conflictSummaryTable, false));
-        
+
         _markdownFileWriter.WriteHeading(MarkdownHeading.H2, "Sort Conflict Summary");
+        _markdownFileWriter.WriteTable(conflictSummaryTable);
+    }
+
+    public void ReportConflictResolution(ICollection<SortedFilePath> filesToWrite,
+        ICollection<SortedFilePath> discardedFiles, SortingConflictSummary sortingConflictsAfterReduction)
+    {
+        var conflictSummaryTable =
+            _summarizeService.SummarizeConflictResolution(filesToWrite, discardedFiles, sortingConflictsAfterReduction);
+
+        _logger.LogInformation(
+            "Sort Conflict Resolution Summary {SortConflictSummary}",
+            Environment.NewLine + _markdownTableRenderEngine.Render(conflictSummaryTable, false));
+
+        _markdownFileWriter.WriteHeading(MarkdownHeading.H2, "Sort Conflict Resolution Summary");
         _markdownFileWriter.WriteTable(conflictSummaryTable);
     }
 }
