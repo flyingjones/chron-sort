@@ -1,4 +1,4 @@
-namespace ImageSorter.FileHandling.CaseSensitivity;
+namespace ImageSorter.Services;
 
 public enum CaseSensitivityDetectionMode
 {

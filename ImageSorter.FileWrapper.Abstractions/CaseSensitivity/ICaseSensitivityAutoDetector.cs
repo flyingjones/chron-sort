@@ -1,4 +1,4 @@
-namespace ImageSorter.FileHandling.CaseSensitivity;
+namespace ImageSorter.FileWrapper.Abstractions.CaseSensitivity;
 
 public interface ICaseSensitivityAutoDetector
 {

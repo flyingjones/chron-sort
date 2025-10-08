@@ -1,4 +1,5 @@
 using ImageSorter.FileHandling.CaseSensitivity;
+using ImageSorter.Services;
 using ImageSorter.Sorting.Model;
 using ImageSorter.Sorting.Services;
 using Microsoft.Extensions.Logging;
