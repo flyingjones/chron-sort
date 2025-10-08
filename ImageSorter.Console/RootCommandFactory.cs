@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.DependencyInjection;
 using ImageSorter.FileHandling.CaseSensitivity;
+using ImageSorter.Services;
 using ImageSorter.Sorting.Model;
 using Microsoft.Extensions.Logging;
 

@@ -3,6 +3,7 @@ using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Helper;
+using ImageSorter.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.DependencyInjection;

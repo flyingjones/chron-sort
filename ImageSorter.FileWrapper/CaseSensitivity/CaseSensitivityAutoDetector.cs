@@ -1,4 +1,5 @@
 using ImageParser.Utils.RandomWrapper;
+using ImageSorter.FileWrapper.Abstractions.CaseSensitivity;
 
 namespace ImageSorter.FileHandling.CaseSensitivity;
 
