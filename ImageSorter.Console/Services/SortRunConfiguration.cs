@@ -13,4 +13,6 @@ public record SortRunConfiguration
     public required DestinationConflictMode DestinationConflictMode { get; init; }
     
     public required string OriginalDestinationPath { get; init; }
+    
+    public string[]? FileExtensions { get; init; }
 }

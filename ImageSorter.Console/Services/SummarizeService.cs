@@ -2,7 +2,6 @@ using ImageSorter.FileWrapper.Abstractions.Path;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Helper;
 using ImageSorter.ResultWriting.Abstractions.Model;
-using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
 using ImageSorter.Sorting.Model;
 using FileOperationResultStatus = ImageSorter.ResultWriting.Abstractions.Model.FileOperationResultStatus;
@@ -29,13 +28,13 @@ public class SummarizeService : ISummarizeService
         builder.AddRow("File Ending", "Used Count", "Ignored Count");
 
         var allFileEndingsCount = allFiles
-            .Select(path => _pathWrapper.GetExtension(path))
+            .Select(path => _pathWrapper.GetExtension(path).ToLower())
             .CountBy(x => x)
             .OrderByDescending(x => x.Value)
             .ToArray();
 
         var usedFileEndingsCount = filesToProcess
-            .Select(path => _pathWrapper.GetExtension(path))
+            .Select(path => _pathWrapper.GetExtension(path).ToLower())
             .CountBy(x => x)
             .ToDictionary();
 
@@ -254,36 +253,6 @@ public class SummarizeService : ISummarizeService
 
 
         return builder.Build();
-    }
-
-    /// <inheritdoc cref="ISummarizeService.DescribeWrites"/>
-    public ICollection<KeyValuePair<string, MarkdownTable>> DescribeWrites(
-        ICollection<FileOperationResult> fileOperationResults)
-    {
-        return fileOperationResults
-            .OrderBy(x => x.DestinationPath)
-            // the group key is the directory of the destination path
-            .GroupBy(x => Path.GetDirectoryName(x.DestinationPath) ?? string.Empty)
-            .Select(groupedResult =>
-            {
-                var tableBuilder = new MarkdownTableBuilder();
-                // table header for each group
-                tableBuilder.AddRow("Source Path", "Destination Path", "Status", "Parsed Date", "Parser Name");
-
-                // table body
-                foreach (var item in groupedResult)
-                {
-                    tableBuilder.AddRow(
-                        item.SourcePath,
-                        item.DestinationPath,
-                        item.Status.ToString("G"),
-                        item.FileDate.ToString("s"),
-                        item.ParserName);
-                }
-
-                return new KeyValuePair<string, MarkdownTable>(groupedResult.Key, tableBuilder.Build());
-            })
-            .ToList();
     }
 
     /// <inheritdoc cref="ISummarizeService.SummarizeWriteResults"/>

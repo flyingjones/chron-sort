@@ -7,7 +7,7 @@ namespace ImageSorter.FileWrapper.Abstractions.Path;
 /// </summary>
 public interface IPathWrapper
 {
-    /// <inheritdoc cref="System.IO.Path.GetFileName(string?)"/
+    /// <inheritdoc cref="System.IO.Path.GetFileName(string?)"/>
     [return: NotNullIfNotNull("path")]
     string? GetFileName( string? path);
 

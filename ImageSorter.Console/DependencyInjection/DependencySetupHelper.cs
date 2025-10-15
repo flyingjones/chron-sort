@@ -4,6 +4,7 @@ using ImageParser.Utils.RandomWrapper;
 using ImageSorter.DateParsing.Abstractions.Services;
 using ImageSorter.DateParsing.Abstractions.Services.MetaData;
 using ImageSorter.FileHandling;
+using ImageSorter.FileScanning;
 using ImageSorter.Logging;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
@@ -11,7 +12,6 @@ using ImageSorter.ProgressLogging;
 using ImageSorter.ResultWriting;
 using ImageSorter.ResultWriting.Abstractions;
 using ImageSorter.Services;
-using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting;
 using ImageSorter.Sorting.Model;
 using ImageSorter.Sorting.SubServices.PathBuilder;
@@ -31,6 +31,7 @@ public static class DependencySetupHelper
         serviceCollection.AddTransient<IMarkdownTableRenderEngine, MarkdownTableRenderEngine>();
 
         serviceCollection.AddFileWrappers(configuration.IsDryRun);
+        serviceCollection.AddFileScanning();
         
         serviceCollection.AddDateParsing(new DateParserConfiguration
         {
@@ -86,15 +87,6 @@ public static class DependencySetupHelper
             serviceCollection.AddTransient<IResultWriter, CopyFileResultWriter>();
         }
 
-        var fileEndings =
-            configuration.FileSystemIsCaseSensitive
-                ? configuration.FileEndings?.SelectMany(x => x.Split(" ")).ToArray()
-                : configuration.FileEndings?.SelectMany(x => x.ToLower().Split(" ")).ToArray();
-        serviceCollection.AddFileLoader(new FileLoaderOptions
-        {
-            FileEndings = fileEndings
-        }, configuration.IsDryRun);
-
         if (configuration.ScanParallel)
         {
             serviceCollection.AddSingleton<IDateParsingHandler, ParallelDateParsingHandler>();
@@ -129,7 +121,8 @@ public static class DependencySetupHelper
             DestinationConflictMode = configuration.DestinationConflictMode,
             SourcePath = configuration.SourcePath.FullName,
             DestinationPath = casingAwareDestPath,
-            OriginalDestinationPath = configuration.DestinationPath.FullName
+            OriginalDestinationPath = configuration.DestinationPath.FullName,
+            FileExtensions = configuration.FileEndings
         });
         serviceCollection.AddTransient<ISorter, Sorter>();
         serviceCollection.AddTransient<ISummarizeService, SummarizeService>();
