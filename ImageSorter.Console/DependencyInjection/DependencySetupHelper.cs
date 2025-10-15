@@ -25,6 +25,8 @@ public static class DependencySetupHelper
 {
     public static IServiceCollection SetupServices(this RunConfiguration configuration)
     {
+        PreprocessRunConfiguration(configuration);
+        
         var serviceCollection = new ServiceCollection();
         serviceCollection.AddTransient<IDateTimeProvider, DateTimeProvider>();
         serviceCollection.AddTransient<IRandomStringGenerator>(_ => RandomStringGenerator.CreateForLowerCaseLetters());
@@ -40,19 +42,6 @@ public static class DependencySetupHelper
         });
         serviceCollection.AddStopwatchLogger(configuration.LogLevel);
         serviceCollection.AddSingleton<ILazyFileMetaDataHandleFactory, LazyFileMetaDataHandleFactory>();
-        if (configuration.UseDefaultSortConfiguration)
-        {
-            configuration.SortConfiguration = SortConfigurationFactory.DefaultSorting.ToArray();
-        }
-
-        if (configuration.PreferFileNameParsing)
-        {
-            configuration.SortConfiguration = configuration.SortConfiguration!
-                .GroupBy(x => x.Split(':', 2)[0], x => x)
-                .OrderBy(x => x.Key == $"{SortType.FileName:G}" ? 0 : 1)
-                .SelectMany(x => x)
-                .ToArray();
-        }
 
         serviceCollection.ConfigureSorting(configuration.SortConfiguration!);
 
@@ -126,5 +115,22 @@ public static class DependencySetupHelper
             configuration.FileSystemIsCaseSensitive);
 
         return serviceCollection;
+    }
+
+    private static void PreprocessRunConfiguration(RunConfiguration configuration)
+    {
+        if (configuration.UseDefaultSortConfiguration)
+        {
+            configuration.SortConfiguration = SortConfigurationFactory.DefaultSorting.ToArray();
+        }
+
+        if (configuration.PreferFileNameParsing)
+        {
+            configuration.SortConfiguration = configuration.SortConfiguration!
+                .GroupBy(x => x.Split(':', 2)[0], x => x)
+                .OrderBy(x => x.Key == $"{SortType.FileName:G}" ? 0 : 1)
+                .SelectMany(x => x)
+                .ToArray();
+        }
     }
 }

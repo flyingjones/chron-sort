@@ -7,6 +7,7 @@ public class LazyFileMetaDataHandleFactory : ILazyFileMetaDataHandleFactory
 {
     private readonly ILogger<LazyFileMetaDataHandle> _handleLogger;
 
+    // ReSharper disable once ContextualLoggerProblem
     public LazyFileMetaDataHandleFactory(ILogger<LazyFileMetaDataHandle> handleLogger)
     {
         _handleLogger = handleLogger;
