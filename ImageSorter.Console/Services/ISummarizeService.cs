@@ -1,7 +1,6 @@
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.ResultWriting.Abstractions.Model;
-using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
 
 namespace ImageSorter.Services;

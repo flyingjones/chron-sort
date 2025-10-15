@@ -3,7 +3,6 @@ using ImageSorter.Markdown.Abstractions.Model;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
 using ImageSorter.ResultWriting.Abstractions.Model;
-using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
 using Microsoft.Extensions.Logging;
 

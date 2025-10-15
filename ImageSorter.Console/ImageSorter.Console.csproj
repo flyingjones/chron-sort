@@ -21,11 +21,11 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\ImageSorter.FileScanning\ImageSorter.FileScanning.csproj" />
       <ProjectReference Include="..\ImageSorter.ResultWriting\ImageSorter.ResultWriting.csproj" />
       <ProjectReference Include="..\ImageSorter.Sorting\ImageSorter.Sorting.csproj" />
       <ProjectReference Include="..\ImageSorter.Utils\ImageSorter.Utils.csproj" />
       <ProjectReference Include="..\ImageSorter.Markdown\ImageSorter.Markdown.csproj" />
-      <ProjectReference Include="..\ImageSorter.Services\ImageSorter.Services.csproj" />
       <ProjectReference Include="..\ImageSorter.DateParsing\ImageSorter.DateParsing.csproj" />
     </ItemGroup>
 
