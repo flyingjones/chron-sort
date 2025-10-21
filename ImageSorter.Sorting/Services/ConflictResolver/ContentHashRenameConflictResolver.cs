@@ -1,28 +1,28 @@
-using ImageSorter.FileWrapper.Abstractions.Directory;
+﻿using ImageSorter.FileWrapper.Abstractions.Directory;
+using ImageSorter.FileWrapper.Abstractions.FileHashing;
 using ImageSorter.FileWrapper.Abstractions.Path;
 using ImageSorter.Sorting.Abstractions.Model;
-using ImageSorter.Sorting.Services.ConflictResolver.PathHashing;
 using ImageSorter.Sorting.Services.FilePath;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Sorting.Services.ConflictResolver;
 
-public class HashRenameConflictResolver : AbstractRenameBasedConflictResolver
+public class ContentHashRenameConflictResolver : AbstractRenameBasedConflictResolver
 {
     private const int HashNameLength = 6;
-    private readonly IPathHashingService _pathHashingService;
+    private readonly IFileHashingService _fileHashingService;
     private readonly IPathWrapper _pathWrapper;
 
-    public HashRenameConflictResolver(
+    public ContentHashRenameConflictResolver(
         IPathWrapper pathWrapper,
         IDirectoryWrapper directoryWrapper,
-        ILogger<HashRenameConflictResolver> logger,
+        ILogger<ContentHashRenameConflictResolver> logger,
         IFilePathWrapperFactory filePathWrapperFactory,
-        IPathHashingService pathHashingService) 
+        IFileHashingService fileHashingService)
         : base(pathWrapper, directoryWrapper, logger, filePathWrapperFactory)
     {
         _pathWrapper = pathWrapper;
-        _pathHashingService = pathHashingService;
+        _fileHashingService = fileHashingService;
     }
 
     protected override ICollection<KeyValuePair<SortedFilePath, string>> GetProposedRenameNames(
@@ -37,12 +37,12 @@ public class HashRenameConflictResolver : AbstractRenameBasedConflictResolver
                 BuildHashBasedFileName(filePath.SourceFilePath)))
             .ToArray();
     }
-
+    
     private string BuildHashBasedFileName(string originalPath)
     {
         var fileName = _pathWrapper.GetFileNameWithoutExtension(originalPath);
         var fileExtension = _pathWrapper.GetExtension(originalPath);
-        var hash = _pathHashingService.HashPath(originalPath, HashNameLength);
+        var hash = _fileHashingService.ComputeMd5HashAsString(originalPath, HashNameLength);
         return $"{fileName}_{hash}{fileExtension}";
     }
 }

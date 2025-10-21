@@ -223,7 +223,7 @@ public static class RootCommandFactory
         public static readonly Option<ConflictResolverMode?> ConflictResolverModeOption = new(
             aliases: new[] { "--conflict-resolution-mode" },
             description: "How conflicts are resolved",
-            getDefaultValue: () => ConflictResolverMode.HashRename);
+            getDefaultValue: () => ConflictResolverMode.PathHashRename);
 
         public static readonly Option<CaseSensitivityDetectionMode?> CaseSensitivityDetectionOption = new(
             aliases: new[] { "--case-sensitivity" },
