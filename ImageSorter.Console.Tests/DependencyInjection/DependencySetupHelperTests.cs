@@ -3,6 +3,7 @@ using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
 using ImageSorter.Services;
 using ImageSorter.Sorting.Model;
+using ImageSorter.Test.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -30,10 +31,9 @@ public class DependencySetupHelperTests
             var sorter = serviceProvider.GetRequiredService<ISorter>();
         });
     }
-    
-    private static IEnumerable<DependencySetupHelperTestCase> GetTestCases()
-    {
-        yield return new DependencySetupHelperTestCase
+
+    private static Func<DependencySetupHelperTestCase> BaseTestCaseFactory => () =>
+        new DependencySetupHelperTestCase
         {
             IsDryRun = false,
             MoveFiles = false,
@@ -43,45 +43,36 @@ public class DependencySetupHelperTests
             ConflictReducerMode = ConflictReducerMode.None,
             ConflictResolverMode = ConflictResolverMode.Throw
         };
-        yield return new DependencySetupHelperTestCase
+    
+    private static IEnumerable<DependencySetupHelperTestCase> GetTestCases()
+    {
+        yield return BaseTestCaseFactory();
+
+        yield return BaseTestCaseFactory
+            .ConfigureProperty(x => x.IsDryRun, true);
+        yield return BaseTestCaseFactory
+            .ConfigureProperty(x => x.MoveFiles, true);
+        yield return BaseTestCaseFactory
+            .ConfigureProperty(x => x.ScanParallel, true);
+        yield return BaseTestCaseFactory
+            .ConfigureProperty(x => x.UseProgressBar, true);
+
+        foreach (var testCase in BaseTestCaseFactory
+                     .ConfigureEnum(x => x.DestinationConflictMode))
         {
-            IsDryRun = true,
-            MoveFiles = true,
-            ScanParallel = true,
-            UseProgressBar = true,
-            DestinationConflictMode = DestinationConflictMode.Overwrite,
-            ConflictReducerMode = ConflictReducerMode.FileLength,
-            ConflictResolverMode = ConflictResolverMode.ChooseOne
-        };
-        yield return new DependencySetupHelperTestCase
+            yield return testCase;
+        }
+        
+        foreach (var testCase in BaseTestCaseFactory
+                     .ConfigureEnum(x => x.ConflictResolverMode))
         {
-            IsDryRun = false,
-            MoveFiles = false,
-            ScanParallel = false,
-            UseProgressBar = true,
-            DestinationConflictMode = DestinationConflictMode.Joint,
-            ConflictReducerMode = ConflictReducerMode.FileContent,
-            ConflictResolverMode = ConflictResolverMode.RandomRename
-        };
-        yield return new DependencySetupHelperTestCase
+            yield return testCase;
+        }
+        
+        foreach (var testCase in BaseTestCaseFactory
+                     .ConfigureEnum(x => x.ConflictReducerMode))
         {
-            IsDryRun = false,
-            MoveFiles = false,
-            ScanParallel = false,
-            UseProgressBar = true,
-            DestinationConflictMode = DestinationConflictMode.Joint,
-            ConflictReducerMode = ConflictReducerMode.FileContent,
-            ConflictResolverMode = ConflictResolverMode.HashRename
-        };
-        yield return new DependencySetupHelperTestCase
-        {
-            IsDryRun = false,
-            MoveFiles = false,
-            ScanParallel = false,
-            UseProgressBar = true,
-            DestinationConflictMode = DestinationConflictMode.Joint,
-            ConflictReducerMode = ConflictReducerMode.FileContent,
-            ConflictResolverMode = ConflictResolverMode.SemanticRename
-        };
+            yield return testCase;
+        }
     }
 }

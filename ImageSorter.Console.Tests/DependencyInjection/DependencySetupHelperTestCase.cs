@@ -1,11 +1,12 @@
 ﻿using ImageSorter.DependencyInjection;
 using ImageSorter.Services;
 using ImageSorter.Sorting.Model;
+using ImageSorter.Test.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Tests.DependencyInjection;
 
-public class DependencySetupHelperTestCase
+public class DependencySetupHelperTestCase : AbstractTestCase
 {
     public bool IsDryRun { get; set; }
     
