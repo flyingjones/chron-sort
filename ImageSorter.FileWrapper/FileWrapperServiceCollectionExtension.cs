@@ -1,10 +1,12 @@
 using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.FileHandling.Directory;
 using ImageSorter.FileHandling.File;
+using ImageSorter.FileHandling.FileHashing;
 using ImageSorter.FileHandling.FileStream;
 using ImageSorter.FileHandling.Path;
 using ImageSorter.FileWrapper.Abstractions.Directory;
 using ImageSorter.FileWrapper.Abstractions.File;
+using ImageSorter.FileWrapper.Abstractions.FileHashing;
 using ImageSorter.FileWrapper.Abstractions.FileStream;
 using ImageSorter.FileWrapper.Abstractions.Path;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +34,7 @@ public static class FileWrapperServiceCollectionExtension
         
         serviceCollection.AddSingleton<IPathWrapper, PathWrapper>();
         serviceCollection.AddSingleton<IBufferedStreamWriterFactory, BufferedStreamWriterFactory>();
+        serviceCollection.AddSingleton<IFileHashingService, FileHashingService>();
         
         return serviceCollection;
     }

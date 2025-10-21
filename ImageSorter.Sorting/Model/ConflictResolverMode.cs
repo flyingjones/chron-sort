@@ -6,5 +6,6 @@ public enum ConflictResolverMode
     ChooseOne,
     SemanticRename,
     RandomRename,
-    HashRename
+    PathHashRename,
+    ContentHashRename
 }

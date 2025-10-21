@@ -88,8 +88,11 @@ public static class ServiceCollectionExtension
             case ConflictResolverMode.RandomRename:
                 serviceCollection.AddTransient<IConflictResolver, RandomRenameConflictResolver>();
                 break;
-            case ConflictResolverMode.HashRename:
-                serviceCollection.AddTransient<IConflictResolver, HashRenameConflictResolver>();
+            case ConflictResolverMode.PathHashRename:
+                serviceCollection.AddTransient<IConflictResolver, PathHashRenameConflictResolver>();
+                break;
+            case ConflictResolverMode.ContentHashRename:
+                serviceCollection.AddTransient<IConflictResolver, ContentHashRenameConflictResolver>();
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(conflictResolverMode), conflictResolverMode, null);

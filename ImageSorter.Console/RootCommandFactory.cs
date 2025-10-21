@@ -251,7 +251,7 @@ public static class RootCommandFactory
             new("--conflict-resolution-mode")
             {
                 Description = "How conflicts are resolved",
-                DefaultValueFactory = _ => ConflictResolverMode.HashRename
+                DefaultValueFactory = _ => ConflictResolverMode.PathHashRename
             };
 
         public static readonly Option<CaseSensitivityDetectionMode?> CaseSensitivityDetectionOption =
