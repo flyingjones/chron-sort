@@ -75,7 +75,7 @@ public static class DependencySetupHelper
                 ShouldOverwrite = configuration.DestinationConflictMode == DestinationConflictMode.Overwrite,
                 // skips should only happen if skip is selected, otherwise all conflicts should be resolved earlier!
                 ReportSkipAsWarning = configuration.DestinationConflictMode != DestinationConflictMode.Skip,
-                SourcePath = configuration.SourcePath.FullName
+                SourcePath = configuration.SourcePath
             });
         if (configuration.MoveFiles)
         {
@@ -122,14 +122,14 @@ public static class DependencySetupHelper
         }
 
         var casingAwareDestPath = configuration.FileSystemIsCaseSensitive
-            ? configuration.DestinationPath.FullName
-            : configuration.DestinationPath.FullName.ToLower();
+            ? configuration.DestinationPath
+            : configuration.DestinationPath.ToLower();
         serviceCollection.AddSingleton(new SortRunConfiguration
         {
             DestinationConflictMode = configuration.DestinationConflictMode,
-            SourcePath = configuration.SourcePath.FullName,
+            SourcePath = configuration.SourcePath,
             DestinationPath = casingAwareDestPath,
-            OriginalDestinationPath = configuration.DestinationPath.FullName
+            OriginalDestinationPath = configuration.DestinationPath
         });
         serviceCollection.AddTransient<ISorter, Sorter>();
         serviceCollection.AddTransient<ISummarizeService, SummarizeService>();

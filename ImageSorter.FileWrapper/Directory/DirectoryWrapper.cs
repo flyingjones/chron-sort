@@ -13,9 +13,9 @@ public class DirectoryWrapper : IDirectoryWrapper
     }
 
     /// <inheritdoc cref="IDirectoryWrapper.CreateDirectory"/>
-    public DirectoryInfo CreateDirectory(string path)
+    public void CreateDirectory(string path)
     {
-        return System.IO.Directory.CreateDirectory(path);
+        System.IO.Directory.CreateDirectory(path);
     }
 
     /// <inheritdoc cref="IDirectoryWrapper.Delete"/>

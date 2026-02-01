@@ -14,9 +14,9 @@ public class ReadOnlyDirectoryWrapper : IDirectoryWrapper
     /// <summary>
     /// Doesn't do anything
     /// </summary>
-    public DirectoryInfo CreateDirectory(string path)
+    public void CreateDirectory(string path)
     {
-        return null!;
+        // no op
     }
 
     /// <summary>

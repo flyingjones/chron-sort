@@ -70,13 +70,15 @@ public static class RootCommandFactory
 
         var runConfig = new RunConfiguration
         {
-            SourcePath = parsedContext.GetValueForArgument(Arguments.SourcePathArgument),
+            SourcePath = parsedContext.GetValueForArgument(Arguments.SourcePathArgument).FullName,
             SortConfiguration = parsedContext.GetValueForOption(Options.SortConfigurationOption),
             PreferFileNameParsing = parsedContext.GetValueForOption(Options.PreferFileNameParsingOption),
-            DestinationPath = destPath ?? parsedContext.GetValueForArgument(Arguments.SourcePathArgument),
+            DestinationPath = destPath?.FullName ?? parsedContext.GetValueForArgument(Arguments.SourcePathArgument).FullName,
             MoveFiles = isMoveFiles,
             FileEndings = parsedContext.GetValueForOption(Options.FileEndingFilterOption),
+            // TODO fix from filter
             From = parsedContext.GetValueForOption(Options.UseFromDateFilterOption),
+            // TODO fix to filter
             To = parsedContext.GetValueForOption(Options.UseToDateFilterOption),
             ScanParallel = parsedContext.GetValueForOption(Options.UseParallelScanningOption),
             LogLevel = parsedContext.GetValueForOption(Options.BeVerboseOption)

@@ -32,6 +32,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\ImageSorter.Console\ImageSorter.Console.csproj" />
+      <ProjectReference Include="..\ImageSorter.Test.Utils\ImageSorter.Test.Utils.csproj" />
     </ItemGroup>
 
 </Project>

@@ -9,7 +9,7 @@ public interface IDirectoryWrapper
     string[] GetFiles(string path, string searchPattern, SearchOption searchOption);
 
     /// <inheritdoc cref="Directory.CreateDirectory(string)"/>
-    DirectoryInfo CreateDirectory(string path);
+    void CreateDirectory(string path);
 
     /// <inheritdoc cref="Directory.Delete(string)"/>
     void Delete(string path);

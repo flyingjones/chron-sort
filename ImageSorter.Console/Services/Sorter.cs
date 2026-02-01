@@ -1,6 +1,7 @@
 using System.Reflection;
 using ImageSorter.DateParsing.Abstractions.Services;
 using ImageSorter.DependencyInjection;
+using ImageSorter.FileWrapper.Abstractions.Directory;
 using ImageSorter.ResultWriting.Abstractions;
 using ImageSorter.ResultWriting.Abstractions.Model;
 using ImageSorter.Services.FileHandling;
@@ -26,6 +27,7 @@ public partial class Sorter : ISorter
     private readonly IConflictResolver _conflictResolver;
     private readonly IResultWriter _resultWriter;
     private readonly IFilePathWrapperFactory _filePathWrapperFactory;
+    private readonly IDirectoryWrapper _directoryWrapper;
 
     public Sorter(
         ILogger<Sorter> logger,
@@ -38,7 +40,7 @@ public partial class Sorter : ISorter
         SortRunConfiguration sortRunConfiguration,
         IConflictResolver conflictResolver,
         IResultWriter resultWriter,
-        IFilePathWrapperFactory filePathWrapperFactory)
+        IFilePathWrapperFactory filePathWrapperFactory, IDirectoryWrapper directoryWrapper)
     {
         _logger = logger;
         _fileLoader = fileLoader;
@@ -51,9 +53,10 @@ public partial class Sorter : ISorter
         _conflictResolver = conflictResolver;
         _resultWriter = resultWriter;
         _filePathWrapperFactory = filePathWrapperFactory;
+        _directoryWrapper = directoryWrapper;
     }
 
-    public async Task PerformSorting(bool moveFiles, CancellationToken cancellationToken)
+    public async Task PerformSorting(CancellationToken cancellationToken)
     {
         // find all relevant files in the source directory and filter them by file extension if filtering is used
         _logger.LogInformation("Scanning Source Directory");
@@ -76,6 +79,7 @@ public partial class Sorter : ISorter
 
         // also load the file paths at the destination directory for better conflict handling
         _logger.LogInformation("Scanning Destination Directory");
+        _directoryWrapper.CreateDirectory(_sortRunConfiguration.DestinationPath);
         string[] filesAtDestination = _fileLoader.GetFilePaths(_sortRunConfiguration.DestinationPath, out var _);
 
         // now find conflicts where multiple files with the same name appear in the same directory after the grouping step

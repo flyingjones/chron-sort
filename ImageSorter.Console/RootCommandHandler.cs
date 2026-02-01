@@ -40,7 +40,7 @@ public static class RootCommandHandler
         
         // check file system sensitivity
         runConfiguration.FileSystemIsCaseSensitive = GetCaseSensitivity(
-            runConfiguration.DestinationPath.FullName,
+            runConfiguration.DestinationPath,
             runConfiguration.CaseSensitivityDetectionMode);
         
         // set up the service provider
@@ -58,7 +58,7 @@ public static class RootCommandHandler
 
         // get the sorter and perform the sorting
         var sorter = serviceProvider.GetRequiredService<ISorter>();
-        await sorter.PerformSorting(runConfiguration.MoveFiles, context.GetCancellationToken());
+        await sorter.PerformSorting(context.GetCancellationToken());
     }
 
     private static void WriteToSummaryFile(IMarkdownFileWriter writer, MarkdownTable runConfigurationTable)

@@ -13,9 +13,9 @@ public class RunConfiguration
 
     public bool UseDefaultSortConfiguration => SortConfiguration == null || SortConfiguration.Length == 0;
     
-    public required FileInfo SourcePath { get; set; }
+    public required string SourcePath { get; set; }
     
-    public required FileInfo DestinationPath { get; set; }
+    public required string DestinationPath { get; set; }
     
     public required string? SummaryFilePath { get; set; }
     

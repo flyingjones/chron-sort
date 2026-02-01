@@ -23,8 +23,8 @@ public static partial class RunConfigurationHelper
 
         builder.AddRow("Setting Name", "Setting Value");
         
-        builder.AddRow("Source Path", runConfiguration.SourcePath.ToString());
-        builder.AddRow("Destination Path", runConfiguration.DestinationPath?.FullName ?? "- (running in place)");
+        builder.AddRow("Source Path", runConfiguration.SourcePath);
+        builder.AddRow("Destination Path", runConfiguration.DestinationPath);
         builder.AddRow("Summary Report Path", runConfiguration.SummaryFilePath ?? "-");
         
         var fileEndingsString = runConfiguration.FilterFileEndings
