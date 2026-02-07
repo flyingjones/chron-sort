@@ -1,3 +1,4 @@
+using System.CommandLine;
 using System.CommandLine.Invocation;
 using ImageSorter.DependencyInjection;
 using ImageSorter.FileHandling.CaseSensitivity;
@@ -16,10 +17,9 @@ public static class RootCommandHandler
     /// <summary>
     /// Entrypoint into the program
     /// </summary>
-    public static async Task Handle(InvocationContext context)
+    public static async Task Handle(ParseResult parsedContext, CancellationToken cancellationToken)
     {
         // parse arguments and build run config
-        var parsedContext = context.ParseResult;
         var runConfiguration = RootCommandFactory.ParseRunConfiguration(parsedContext);
 
         // TODO add conflict resolution:
@@ -50,7 +50,7 @@ public static class RootCommandHandler
             .BuildServiceProvider();
             
         // log the configuration
-        var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+        var logger = serviceProvider.GetRequiredService<ILogger<Programm>>();
         var markDownRenderEngine = serviceProvider.GetRequiredService<IMarkdownTableRenderEngine>();
         var runConfigurationTable = RunConfigurationHelper.FormatRunConfigurationToTable(runConfiguration);
         RunConfigurationHelper.LogRunConfiguration(logger, markDownRenderEngine, runConfigurationTable);
@@ -58,7 +58,7 @@ public static class RootCommandHandler
 
         // get the sorter and perform the sorting
         var sorter = serviceProvider.GetRequiredService<ISorter>();
-        await sorter.PerformSorting(context.GetCancellationToken());
+        await sorter.PerformSorting(cancellationToken);
     }
 
     private static void WriteToSummaryFile(IMarkdownFileWriter writer, MarkdownTable runConfigurationTable)

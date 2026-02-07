@@ -1,11 +1,9 @@
 using System.CommandLine;
-using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
 using ImageSorter.DateParsing.Abstractions.Model.MetaData;
 using ImageSorter.DependencyInjection;
 using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.Sorting.Model;
-using ImageSorter.Sorting.Services;
 using Microsoft.Extensions.Logging;
 
 namespace ImageSorter;
@@ -23,45 +21,45 @@ public static class RootCommandFactory
         var rootCommand = new RootCommand(description: Description);
 
         // args
-        rootCommand.AddArgument(Arguments.SourcePathArgument);
+        rootCommand.Arguments.Add(Arguments.SourcePathArgument);
 
         // options
         // main settings
-        rootCommand.AddOption(Options.DestinationPathOption);
-        rootCommand.AddOption(Options.MoveOption);
-        rootCommand.AddOption(Options.IsDryRunOption);
-        rootCommand.AddOption(Options.FormatOption);
+        rootCommand.Options.Add(Options.DestinationPathOption);
+        rootCommand.Options.Add(Options.MoveOption);
+        rootCommand.Options.Add(Options.IsDryRunOption);
+        rootCommand.Options.Add(Options.FormatOption);
         // parser config
-        rootCommand.AddOption(Options.SortConfigurationOption);
-        rootCommand.AddOption(Options.SkipParserWhenDateBeforeOption);
-        rootCommand.AddOption(Options.SkipParserWhenDateAfterOption);
+        rootCommand.Options.Add(Options.SortConfigurationOption);
+        rootCommand.Options.Add(Options.SkipParserWhenDateBeforeOption);
+        rootCommand.Options.Add(Options.SkipParserWhenDateAfterOption);
         // file filter
-        rootCommand.AddOption(Options.FileEndingFilterOption);
-        rootCommand.AddOption(Options.UseFromDateFilterOption);
-        rootCommand.AddOption(Options.UseToDateFilterOption);
+        rootCommand.Options.Add(Options.FileEndingFilterOption);
+        rootCommand.Options.Add(Options.UseFromDateFilterOption);
+        rootCommand.Options.Add(Options.UseToDateFilterOption);
         // optimizations
-        rootCommand.AddOption(Options.PreferFileNameParsingOption);
-        rootCommand.AddOption(Options.UseParallelScanningOption);
+        rootCommand.Options.Add(Options.PreferFileNameParsingOption);
+        rootCommand.Options.Add(Options.UseParallelScanningOption);
         // conflict reduction
-        rootCommand.AddOption(Options.ConflictReducerModeOption);
-        rootCommand.AddOption(Options.DestinationConflictModeOption);
+        rootCommand.Options.Add(Options.ConflictReducerModeOption);
+        rootCommand.Options.Add(Options.DestinationConflictModeOption);
         // conflict resolution
-        rootCommand.AddOption(Options.ConflictResolverModeOption);
+        rootCommand.Options.Add(Options.ConflictResolverModeOption);
         // logging
-        rootCommand.AddOption(Options.LogLevelOption);
-        rootCommand.AddOption(Options.BeVerboseOption);
-        rootCommand.AddOption(Options.UseProgressBar);
-        rootCommand.AddOption(Options.ProgressBarString);
-        rootCommand.AddOption(Options.SummaryFilePathOption);
-        rootCommand.AddOption(Options.EscapeSummaryMarkdownTables);
-        
+        rootCommand.Options.Add(Options.LogLevelOption);
+        rootCommand.Options.Add(Options.BeVerboseOption);
+        rootCommand.Options.Add(Options.UseProgressBar);
+        rootCommand.Options.Add(Options.ProgressBarString);
+        rootCommand.Options.Add(Options.SummaryFilePathOption);
+        rootCommand.Options.Add(Options.EscapeSummaryMarkdownTables);
+
         return rootCommand;
     }
 
     public static RunConfiguration ParseRunConfiguration(ParseResult parsedContext)
     {
-        var destPath = parsedContext.GetValueForOption(Options.DestinationPathOption);
-        var isMoveFiles = parsedContext.GetValueForOption(Options.MoveOption);
+        var destPath = parsedContext.GetValue(Options.DestinationPathOption);
+        var isMoveFiles = parsedContext.GetValue(Options.MoveOption);
 
         if (destPath == null && !isMoveFiles)
         {
@@ -70,33 +68,36 @@ public static class RootCommandFactory
 
         var runConfig = new RunConfiguration
         {
-            SourcePath = parsedContext.GetValueForArgument(Arguments.SourcePathArgument).FullName,
-            SortConfiguration = parsedContext.GetValueForOption(Options.SortConfigurationOption),
-            PreferFileNameParsing = parsedContext.GetValueForOption(Options.PreferFileNameParsingOption),
-            DestinationPath = destPath?.FullName ?? parsedContext.GetValueForArgument(Arguments.SourcePathArgument).FullName,
+            SourcePath = parsedContext.GetRequiredValue(Arguments.SourcePathArgument).FullName,
+            SortConfiguration = parsedContext.GetValue(Options.SortConfigurationOption),
+            PreferFileNameParsing = parsedContext.GetValue(Options.PreferFileNameParsingOption),
+            DestinationPath = destPath?.FullName ?? parsedContext.GetRequiredValue(Arguments.SourcePathArgument).FullName,
             MoveFiles = isMoveFiles,
-            FileEndings = parsedContext.GetValueForOption(Options.FileEndingFilterOption),
+            FileEndings = parsedContext.GetValue(Options.FileEndingFilterOption),
             // TODO fix from filter
-            From = parsedContext.GetValueForOption(Options.UseFromDateFilterOption),
+            From = parsedContext.GetValue(Options.UseFromDateFilterOption),
             // TODO fix to filter
-            To = parsedContext.GetValueForOption(Options.UseToDateFilterOption),
-            ScanParallel = parsedContext.GetValueForOption(Options.UseParallelScanningOption),
-            LogLevel = parsedContext.GetValueForOption(Options.BeVerboseOption)
+            To = parsedContext.GetValue(Options.UseToDateFilterOption),
+            ScanParallel = parsedContext.GetValue(Options.UseParallelScanningOption),
+            LogLevel = parsedContext.GetValue(Options.BeVerboseOption)
                 ? LogLevel.Trace
-                : parsedContext.GetValueForOption(Options.LogLevelOption),
-            SkipParserBefore = parsedContext.GetValueForOption(Options.SkipParserWhenDateBeforeOption),
-            SkipParserAfter = parsedContext.GetValueForOption(Options.SkipParserWhenDateAfterOption),
-            IsDryRun = parsedContext.GetValueForOption(Options.IsDryRunOption),
-            OutputFormat = parsedContext.GetValueForOption(Options.FormatOption),
-            UseProgressBar = parsedContext.GetValueForOption(Options.UseProgressBar),
-            ProgressBarCharacters = parsedContext.GetValueForOption(Options.ProgressBarString),
-            SummaryFileDirectoryPath = parsedContext.GetValueForOption(Options.SummaryFilePathOption),
-            SummaryFilePath = GenerateSummaryFilePath(parsedContext.GetValueForOption(Options.SummaryFilePathOption)?.FullName),
-            EscapeSummaryFileTables = parsedContext.GetValueForOption(Options.EscapeSummaryMarkdownTables),
-            ConflictReducerMode = parsedContext.GetValueForOption(Options.ConflictReducerModeOption) ?? ConflictReducerMode.None,
-            DestinationConflictMode = parsedContext.GetValueForOption(Options.DestinationConflictModeOption) ?? DestinationConflictMode.Joint,
-            ConflictResolverMode = parsedContext.GetValueForOption(Options.ConflictResolverModeOption) ?? ConflictResolverMode.Throw,
-            CaseSensitivityDetectionMode = parsedContext.GetValueForOption(Options.CaseSensitivityDetectionOption) ?? CaseSensitivityDetectionMode.Auto
+                : parsedContext.GetValue(Options.LogLevelOption),
+            SkipParserBefore = parsedContext.GetValue(Options.SkipParserWhenDateBeforeOption),
+            SkipParserAfter = parsedContext.GetValue(Options.SkipParserWhenDateAfterOption),
+            IsDryRun = parsedContext.GetValue(Options.IsDryRunOption),
+            OutputFormat = parsedContext.GetValue(Options.FormatOption),
+            UseProgressBar = parsedContext.GetValue(Options.UseProgressBar),
+            ProgressBarCharacters = parsedContext.GetValue(Options.ProgressBarString),
+            SummaryFileDirectoryPath = parsedContext.GetValue(Options.SummaryFilePathOption),
+            SummaryFilePath = GenerateSummaryFilePath(parsedContext.GetValue(Options.SummaryFilePathOption)?.FullName),
+            EscapeSummaryFileTables = parsedContext.GetValue(Options.EscapeSummaryMarkdownTables),
+            ConflictReducerMode = parsedContext.GetValue(Options.ConflictReducerModeOption) ?? ConflictReducerMode.None,
+            DestinationConflictMode = parsedContext.GetValue(Options.DestinationConflictModeOption) ??
+                                      DestinationConflictMode.Joint,
+            ConflictResolverMode =
+                parsedContext.GetValue(Options.ConflictResolverModeOption) ?? ConflictResolverMode.Throw,
+            CaseSensitivityDetectionMode = parsedContext.GetValue(Options.CaseSensitivityDetectionOption) ??
+                                           CaseSensitivityDetectionMode.Auto
         };
         return runConfig;
     }
@@ -113,123 +114,150 @@ public static class RootCommandFactory
 
     private static class Arguments
     {
-        public static readonly Argument<FileInfo> SourcePathArgument = new (
-            name: "source path",
-            description: "The path of the source directory");
+        public static readonly Argument<FileInfo> SourcePathArgument = new("source path")
+        {
+            Description = "The path of the source directory"
+        };
     }
 
     private static class Options
     {
-        public static readonly Option<FileInfo?> DestinationPathOption = new(
-            aliases: new[] { "--dest", "--out" },
-            description: "The path of the destination directory (required if not --move)");
+        public static readonly Option<FileInfo?> DestinationPathOption = new("--dest", "--out")
+        {
+            Description = "The path of the destination directory (required if not --move)"
+        };
 
-        public static readonly Option<bool> MoveOption = new(
-            aliases: new[] { "--move" },
-            description: "Move files instead of copy",
-            getDefaultValue: () => false);
+        public static readonly Option<bool> MoveOption = new("--move")
+        {
+            Description = "Move files instead of copy",
+            DefaultValueFactory = _ => false
+        };
 
-        public static readonly Option<string[]> FileEndingFilterOption = new(
-            aliases: new[] { "--types", "-t" },
-            description: "Space seperated list of file endings to sort");
+        public static readonly Option<string[]> FileEndingFilterOption = new("--types", "-t")
+        {
+            Description = "Space seperated list of file endings to sort"
+        };
 
-        public static readonly Option<bool> UseParallelScanningOption = new(
-            aliases: new[] { "--scan-parallel" },
-            description: "Perform the scan part in parallel",
-            getDefaultValue: () => false);
+        public static readonly Option<bool> UseParallelScanningOption = new("--scan-parallel")
+        {
+            Description = "Perform the scan part in parallel",
+            DefaultValueFactory = _ => false
+        };
 
-        public static readonly Option<DateTime?> UseFromDateFilterOption = new(
-            aliases: new[] { "--from" },
-            description: "Minimum date for files to sort");
+        public static readonly Option<DateTime?> UseFromDateFilterOption = new("--from")
+        {
+            Description = "Minimum date for files to sort"
+        };
 
-        public static readonly Option<DateTime?> UseToDateFilterOption = new(
-            aliases: new[] { "--to" },
-            description: "Maximum date for files to sort");
+        public static readonly Option<DateTime?> UseToDateFilterOption = new("--to")
+        {
+            Description = "Maximum date for files to sort"
+        };
 
-        public static readonly Option<string[]> SortConfigurationOption = new(
-            aliases: new[] { "-c", "--configure" },
-            description: $"""
-                          Custom sort configuration. Parsers will be applied in order. Possible Formats:
-                          {SortType.ExifTag:G}:{ExifTagId.DateTimeOriginal:G}                                       [Tries to use the exif tag 0x{ExifTagId.DateTimeOriginal:X} to get a date]
-                          {SortType.ExifTag:G}:{ExifTagId.DateTimeDigitized:G}                                      [Tries to use the exif tag 0x{ExifTagId.DateTimeDigitized:X} to get a date]
-                          {SortType.ExifTag:G}:{ExifTagId.DateTime:G}                                               [Tries to use the exif tag 0x{ExifTagId.DateTime:X} to get a date]
-                          {SortType.QuickTimeMovieHeader:G}:{QuickTimeMovieHeader.CreationTime:G}                              [Tries to use the quick time movie header (mvhd) 'Creation time' to get a date]
-                          {SortType.QuickTimeMovieHeader:G}:{QuickTimeMovieHeader.ModificationTime:G}                          [Tries to use the quick time movie header (mvhd) 'Modification time' to get a date]
-                          {SortType.FileName:G}:<Regex with named capture groups year month and day>  [Tries to parse the file name using a regular expression to get a date]
-                          """);
+        public static readonly Option<string[]> SortConfigurationOption = new("-c", "--configure")
+        {
+            Description = $"""
+                           Custom sort configuration. Parsers will be applied in order. Possible Formats:
+                           {SortType.ExifTag:G}:{ExifTagId.DateTimeOriginal:G}                                       [Tries to use the exif tag 0x{ExifTagId.DateTimeOriginal:X} to get a date]
+                           {SortType.ExifTag:G}:{ExifTagId.DateTimeDigitized:G}                                      [Tries to use the exif tag 0x{ExifTagId.DateTimeDigitized:X} to get a date]
+                           {SortType.ExifTag:G}:{ExifTagId.DateTime:G}                                               [Tries to use the exif tag 0x{ExifTagId.DateTime:X} to get a date]
+                           {SortType.QuickTimeMovieHeader:G}:{QuickTimeMovieHeader.CreationTime:G}                              [Tries to use the quick time movie header (mvhd) 'Creation time' to get a date]
+                           {SortType.QuickTimeMovieHeader:G}:{QuickTimeMovieHeader.ModificationTime:G}                          [Tries to use the quick time movie header (mvhd) 'Modification time' to get a date]
+                           {SortType.FileName:G}:<Regex with named capture groups year month and day>  [Tries to parse the file name using a regular expression to get a date]
+                           """
+        };
 
-        public static readonly Option<string> FormatOption = new(
-            aliases: new[]{"--format"},
-            description: "Output directory structure (date format specifier separated by / )",
-            getDefaultValue: () => "yyyy/MM");
+        public static readonly Option<string> FormatOption = new("--format")
+        {
+            Description = "Output directory structure (date format specifier separated by / )",
+            DefaultValueFactory = _ => "yyyy/MM"
+        };
 
-        public static readonly Option<LogLevel> LogLevelOption = new(
-            aliases: new[] { "--log-level" },
-            description: "Log Level",
-            getDefaultValue: () => LogLevel.Information);
+        public static readonly Option<LogLevel> LogLevelOption = new("--log-level")
+        {
+            Description = "Log Level",
+            DefaultValueFactory = _ => LogLevel.Information
+        };
 
-        public static readonly Option<bool> BeVerboseOption = new(
-            new[] { "-v", "--verbose" },
-            description: "Same as --log-level Trace");
+        public static readonly Option<bool> BeVerboseOption = new("-v", "--verbose")
+        {
+            Description = "Same as --log-level Trace"
+        };
 
-        public static readonly Option<bool> PreferFileNameParsingOption = new(
-            new[] { "--fast-scan", "--prefer-file-name-parsing" },
-            description:
-            "Prefer FileName parsers over metadata-based parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)");
+        public static readonly Option<bool> PreferFileNameParsingOption =
+            new("--fast-scan", "--prefer-file-name-parsing")
+            {
+                Description =
+                    "Prefer FileName parsers over metadata-based parsers (which is significantly faster since parsing a file name which already is in memory doesn't use I/O)"
+            };
 
-        public static readonly Option<DateTime> SkipParserWhenDateBeforeOption = new(
-            aliases: new[] { "--skip-parser-when-before" },
-            description: "Skip the result of a parser when the resulting date is earlier",
-            getDefaultValue: () => DateTime.Parse("1950-01-01"));
+        public static readonly Option<DateTime> SkipParserWhenDateBeforeOption = new("--skip-parser-when-before")
+        {
+            Description = "Skip the result of a parser when the resulting date is earlier",
+            DefaultValueFactory = _ => DateTime.Parse("1950-01-01")
+        };
 
-        public static readonly Option<DateTime> SkipParserWhenDateAfterOption = new(
-            aliases: new[] { "--skip-parser-when-after" },
-            description: "Skip the result of a parser when the resulting date is later",
-            getDefaultValue: () => DateTime.Now.Date.AddYears(1));
+        public static readonly Option<DateTime> SkipParserWhenDateAfterOption = new("--skip-parser-when-after")
+        {
+            Description = "Skip the result of a parser when the resulting date is later",
+            DefaultValueFactory = _ => DateTime.Now.Date.AddYears(1)
+        };
 
-        public static readonly Option<bool> IsDryRunOption = new(
-            aliases: new[] { "--dry-run" },
-            description: "Don't move or copy any files, just print the planned operations to a file",
-            getDefaultValue: () => false);
-        
-        public static readonly Option<bool> UseProgressBar = new(
-            aliases: new[] { "--progress-bar" },
-            description: "Show animated progress bar",
-            getDefaultValue: () => true);
+        public static readonly Option<bool> IsDryRunOption = new("--dry-run")
+        {
+            Description = "Don't move or copy any files, just print the planned operations to a file",
+            DefaultValueFactory = _ => false
+        };
 
-        public static readonly Option<string> ProgressBarString = new(
-            aliases: new[] { "--progress-bar-chars" },
-            description: "Characters to use for rendering the progress bar",
-            getDefaultValue: () => " -=#");
-        
-        public static readonly Option<FileInfo?> SummaryFilePathOption = new(
-            aliases: new[] { "--summary-path" },
-            description: "The path where a summary file should be saved. In case of a directory, the file name is generated.");
+        public static readonly Option<bool> UseProgressBar = new("--progress-bar")
+        {
+            Description = "Show animated progress bar",
+            DefaultValueFactory = _ => true
+        };
 
-        public static readonly Option<bool> EscapeSummaryMarkdownTables = new(
-            aliases: new[] { "--escape-summary-tables" },
-            description: "Escape the content in Markdown tables in the summary file.",
-            getDefaultValue: () => true);
+        public static readonly Option<string> ProgressBarString = new("--progress-bar-chars")
+        {
+            Description = "Characters to use for rendering the progress bar",
+            DefaultValueFactory = _ => " -=#"
+        };
 
-        public static readonly Option<ConflictReducerMode?> ConflictReducerModeOption = new(
-            aliases: new[] { "--conflict-reduction-mode" },
-            description: "How conflicting files are compared to skip duplicate equal files",
-            getDefaultValue: () => ConflictReducerMode.FileContent);
-        
-        public static readonly Option<DestinationConflictMode?> DestinationConflictModeOption = new(
-            aliases: new[] { "--destination-conflict-mode" },
-            description: "How conflicting files between source and destination are handled",
-            getDefaultValue: () => DestinationConflictMode.Joint);
-        
-        public static readonly Option<ConflictResolverMode?> ConflictResolverModeOption = new(
-            aliases: new[] { "--conflict-resolution-mode" },
-            description: "How conflicts are resolved",
-            getDefaultValue: () => ConflictResolverMode.HashRename);
+        public static readonly Option<FileInfo?> SummaryFilePathOption = new("--summary-path")
+        {
+            Description =
+                "The path where a summary file should be saved. In case of a directory, the file name is generated."
+        };
 
-        public static readonly Option<CaseSensitivityDetectionMode?> CaseSensitivityDetectionOption = new(
-            aliases: new[] { "--case-sensitivity" },
-            description: "Whether file names differing only in casing should be treated as equal or not",
-            getDefaultValue: () => CaseSensitivityDetectionMode.Auto
-        );
+        public static readonly Option<bool> EscapeSummaryMarkdownTables = new("--escape-summary-tables")
+        {
+            Description = "Escape the content in Markdown tables in the summary file.",
+            DefaultValueFactory = _ => true
+        };
+
+        public static readonly Option<ConflictReducerMode?> ConflictReducerModeOption = new("--conflict-reduction-mode")
+        {
+            Description = "How conflicting files are compared to skip duplicate equal files",
+            DefaultValueFactory = _ => ConflictReducerMode.FileContent
+        };
+
+        public static readonly Option<DestinationConflictMode?> DestinationConflictModeOption =
+            new("--destination-conflict-mode")
+            {
+                Description = "How conflicting files between source and destination are handled",
+                DefaultValueFactory = _ => DestinationConflictMode.Joint
+            };
+
+        public static readonly Option<ConflictResolverMode?> ConflictResolverModeOption =
+            new("--conflict-resolution-mode")
+            {
+                Description = "How conflicts are resolved",
+                DefaultValueFactory = _ => ConflictResolverMode.HashRename
+            };
+
+        public static readonly Option<CaseSensitivityDetectionMode?> CaseSensitivityDetectionOption =
+            new("--case-sensitivity")
+            {
+                Description = "Whether file names differing only in casing should be treated as equal or not",
+                DefaultValueFactory = _ => CaseSensitivityDetectionMode.Auto
+            };
     }
 }
