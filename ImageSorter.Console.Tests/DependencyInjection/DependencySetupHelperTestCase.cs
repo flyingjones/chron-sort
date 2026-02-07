@@ -27,8 +27,8 @@ public class DependencySetupHelperTestCase
         {
             SortConfiguration = null,
             PreferFileNameParsing = false,
-            SourcePath = new FileInfo(TestContext.CurrentContext.TestDirectory),
-            DestinationPath = new FileInfo(TestContext.CurrentContext.TestDirectory),
+            SourcePath = TestContext.CurrentContext.TestDirectory,
+            DestinationPath = TestContext.CurrentContext.TestDirectory,
             SummaryFilePath = null,
             SummaryFileDirectoryPath = null,
             EscapeSummaryFileTables = false,
