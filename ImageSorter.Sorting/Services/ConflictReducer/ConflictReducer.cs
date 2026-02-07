@@ -25,21 +25,23 @@ public class ConflictReducer : IConflictReducer
         _equivalenceClassFinder = equivalenceClassFinder;
     }
 
-    public ReducedSortingConflict ReduceConflicts(SortingConflict sortingConflict)
+    public async Task<ReducedSortingConflict> ReduceConflicts(SortingConflict sortingConflict, CancellationToken cancellationToken)
     {
         if (_destinationConflictQuickResolver.TryQuickResolve(sortingConflict, out var reducedConflict))
         {
             return reducedConflict;
         }
 
-        var equalityClasses = _equivalenceClassFinder.GroupIntoEquivalenceClasses(
+        var equalityClasses = await _equivalenceClassFinder.GroupIntoEquivalenceClasses(
             sortingConflict.ConflictingFiles,
             // files are equal if they have the same source file path
             (a, b) => a.NormalizedSourceFilePath == b.NormalizedSourceFilePath,
             // files are equivalent if the given equivalence relation says so
-            (a, b) => _fileEquivalenceMetricImplementation.FilesAreEquivalent(
+            (a, b, innerToken) => _fileEquivalenceMetricImplementation.FilesAreEquivalent(
                 a.SourceFilePath,
-                b.SourceFilePath)
+                b.SourceFilePath,
+                innerToken),
+            cancellationToken
         );
 
         var chosenFiles = equalityClasses
@@ -66,7 +68,7 @@ public class ConflictReducer : IConflictReducer
         };
     }
 
-    public ReducedSortingConflictSummary ReduceConflicts(SortingConflictSummary sortingConflictSummary)
+    public async Task<ReducedSortingConflictSummary> ReduceConflicts(SortingConflictSummary sortingConflictSummary, CancellationToken cancellationToken)
     {
         // we need at max BinomialCoefficient(n, 2) comparisons since we need to check for each unique pair of files if
         // they are equal if all files are different.
@@ -85,7 +87,7 @@ public class ConflictReducer : IConflictReducer
         {
             completedCompares +=
                 BinomialCoefficient.CalculateBinomialCoefficient(conflict.ConflictingFiles.Count, 2);
-            reducedConflicts[idx] = ReduceConflicts(conflict);
+            reducedConflicts[idx] = await ReduceConflicts(conflict, cancellationToken);
             idx++;
             
             _progressLogger.LogProgress((double) completedCompares / totalCompareAmount);

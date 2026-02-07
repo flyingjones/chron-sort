@@ -8,8 +8,8 @@ namespace ImageSorter.Sorting.Services.ConflictReducer.FileEqualityMetricImpleme
 /// </summary>
 public class TrivialIFileContentEquivalenceMetricImplementation : IFileEquivalenceMetricImplementation
 {
-    public bool FilesAreEquivalent(string path1, string path2)
+    public Task<bool> FilesAreEquivalent(string path1, string path2, CancellationToken cancellationToken)
     {
-        return path1 == path2;
+        return Task.FromResult(path1 == path2);
     }
 }

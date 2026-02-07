@@ -16,7 +16,7 @@ public static class FastFileContentCompare
     /// <returns>
     /// <c>true</c> only if the files have the same binary content.
     /// </returns>
-    public static bool FileContentAreEqual(string firstPath, string secondPath)
+    public static async Task<bool> FileContentAreEqual(string firstPath, string secondPath, CancellationToken cancellationToken)
     {
         // TODO think (and profile) using the Vector256<> or Vector512<> classes instead
         // profile this on aot and not aot ... maybe there is an aot penalty since the compiler doesn't know the target
@@ -46,11 +46,13 @@ public static class FastFileContentCompare
         // to minimize cpu ops, we read the data in multiple byte sized chunks and compare them using vector ops
         var iterations = (int)Math.Ceiling((double)first.Length / bytesToRead);
 
-        using var fs1 = first.OpenRead();
-        using var fs2 = second.OpenRead();
+        await using var fs1 = first.OpenRead();
+        await using var fs2 = second.OpenRead();
         
         var one = new byte[bytesToRead];
+        var oneM = new Memory<byte>(one);
         var two = new byte[bytesToRead];
+        var twoM = new Memory<byte>(two);
 
         for (var i = 0; i < iterations; i++)
         {
@@ -60,9 +62,9 @@ public static class FastFileContentCompare
             // (or we would have returned false already)
 #pragma warning disable CA2022
             // ReSharper disable once MustUseReturnValue
-            fs1.Read(one, 0, bytesToRead);
+            await fs1.ReadAsync(oneM, cancellationToken);
             // ReSharper disable once MustUseReturnValue
-            fs2.Read(two, 0, bytesToRead);
+            await fs2.ReadAsync(twoM, cancellationToken);
 #pragma warning restore CA2022
 
             var vecOne = new Vector<byte>(one);

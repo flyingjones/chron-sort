@@ -1,6 +1,4 @@
-using System.Reflection;
 using ImageSorter.DateParsing.Abstractions.Services;
-using ImageSorter.DependencyInjection;
 using ImageSorter.FileWrapper.Abstractions.Directory;
 using ImageSorter.ResultWriting.Abstractions;
 using ImageSorter.ResultWriting.Abstractions.Model;
@@ -8,7 +6,6 @@ using ImageSorter.Services.FileHandling;
 using ImageSorter.Sorting.Abstractions.Model;
 using ImageSorter.Sorting.Abstractions.Services;
 using ImageSorter.Sorting.Model;
-using ImageSorter.Sorting.Services;
 using ImageSorter.Sorting.Services.FilePath;
 using Microsoft.Extensions.Logging;
 
@@ -91,7 +88,7 @@ public partial class Sorter : ISorter
         // try to reduce the conflicts as much as possible by e.g. skipping files which are equivalent
         // the exact methods can be configured and differ in speed and accuracy
         _logger.LogInformation("Performing Conflict Reduction");
-        var reducedConflicts = _conflictReducer.ReduceConflicts(conflicts);
+        var reducedConflicts = await _conflictReducer.ReduceConflicts(conflicts, cancellationToken);
         _summaryReportingService.ReportConflictSummary(reducedConflicts);
 
         // remaining conflicts after reduction

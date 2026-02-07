@@ -13,5 +13,5 @@ public interface IFileStreamService
     /// <returns>
     /// <c>true</c> only if the files have the same binary content.
     /// </returns>
-    bool FileContentAreEqual(string firstPath, string secondPath);
+    Task<bool> FileContentAreEqual(string firstPath, string secondPath, CancellationToken cancellationToken);
 }

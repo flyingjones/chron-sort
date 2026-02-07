@@ -47,7 +47,7 @@ public class FileStreamServiceTests
         var exists = File.Exists(destinationFilePath);
         Assert.That(exists, Is.True);
         
-        var areEqual = service.FileContentAreEqual(sourceFilePath, destinationFilePath);
+        var areEqual = await service.FileContentAreEqual(sourceFilePath, destinationFilePath, default);
         Assert.That(areEqual, Is.True);
     }
 
@@ -58,15 +58,16 @@ public class FileStreamServiceTests
     [TestCase("FileClass01File01.md", "EmptyFile01.md", ExpectedResult = false)]
     [TestCase("ShortFile01.md", "EmptyFile01.md", ExpectedResult = false)]
     [TestCase("FileClass01File01.md", "ShortFile01.md", ExpectedResult = false)]
-    public bool FileContentAreEqual(string path1, string path2)
+    public async Task<bool> FileContentAreEqual(string path1, string path2)
     {
         // arrange
         var service = new FileStreamService();
 
         // act
-        var result = service.FileContentAreEqual(
+        var result = await service.FileContentAreEqual(
             Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, path1),
-            Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, path2));
+            Path.Combine(TestContext.CurrentContext.TestDirectory, TestFileDirectoryPath, path2),
+            default);
 
         // assert
         return result;

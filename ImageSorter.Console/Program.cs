@@ -15,10 +15,9 @@ public class Programm
         {
             try
             {
-                // create a cancellation token source to handle cancel key presses (CTRL + C
+                // create a cancellation token source to handle cancel key presses (CTRL+C)
                 Console.CancelKeyPress += (_, eventArgs) =>
                 {
-                    // Console.WriteLine("Cancel event triggered");
                     CancellationTokenSource.Cancel();
                     eventArgs.Cancel = true;
                 };
@@ -27,7 +26,7 @@ public class Programm
             }
             finally
             {
-                // here so all log statements make it to the console
+                // so all log statements make it to the console
                 Thread.Sleep(50);
             }
 

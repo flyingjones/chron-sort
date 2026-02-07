@@ -5,24 +5,25 @@ public class EquivalenceClassFinderTests
     [TestCase(2)]
     [TestCase(3)]
     [TestCase(100)]
-    public void GroupIntoEquivalenceClasses_DistinctItems_Works(int dataLength)
+    public async Task GroupIntoEquivalenceClasses_DistinctItems_Works(int dataLength)
     {
         // arrange
         int comparisonCounter = 0;
-        var comparisonFunc = (int a, int b) =>
+        var comparisonFunc = (int a, int b, CancellationToken cancellationToken) =>
         {
             comparisonCounter++;
-            return a == b;
+            return Task.FromResult(a == b);
         };
 
         var items = Enumerable.Range(0, dataLength).ToArray();
         
         // act
         var service = new ImageSorter.Sorting.Services.EquivalenceClassFinder.EquivalenceClassFinder();
-        var equivalenceClasses = service.GroupIntoEquivalenceClasses(
+        var equivalenceClasses = await service.GroupIntoEquivalenceClasses(
             items, 
             (a, b) => a == b, 
-            comparisonFunc);
+            comparisonFunc,
+            default);
         
         // assert
         Assert.That(equivalenceClasses.Count, Is.EqualTo(items.Length));
@@ -39,24 +40,25 @@ public class EquivalenceClassFinderTests
     [TestCase(2)]
     [TestCase(3)]
     [TestCase(100)]
-    public void GroupIntoEquivalenceClasses_EqualvalentItems_Works(int dataLength)
+    public async Task GroupIntoEquivalenceClasses_EquivalentItems_Works(int dataLength)
     {
         // arrange
         int comparisonCounter = 0;
-        var comparisonFunc = (int a, int b) =>
+        var comparisonFunc = (int a, int b, CancellationToken cancellationToken) =>
         {
             comparisonCounter++;
-            return a % 2 == b % 2;
+            return Task.FromResult(a % 2 == b % 2);
         };
 
         var items = Enumerable.Range(0, dataLength).Select(x => 2 * x).ToArray();
         
         // act
         var service = new ImageSorter.Sorting.Services.EquivalenceClassFinder.EquivalenceClassFinder();
-        var equivalenceClasses = service.GroupIntoEquivalenceClasses(
+        var equivalenceClasses = await service.GroupIntoEquivalenceClasses(
             items, 
             (a, b) => a == b,
-            comparisonFunc);
+            comparisonFunc,
+            default);
         
         // assert
         Assert.That(equivalenceClasses.Count, Is.EqualTo(1));
@@ -71,24 +73,25 @@ public class EquivalenceClassFinderTests
     [TestCase(2)]
     [TestCase(3)]
     [TestCase(100)]
-    public void GroupIntoEquivalenceClasses_EqualItems_Works(int dataLength)
+    public async Task GroupIntoEquivalenceClasses_EqualItems_Works(int dataLength)
     {
         // arrange
         int comparisonCounter = 0;
-        var comparisonFunc = (int a, int b) =>
+        var comparisonFunc = (int a, int b, CancellationToken cancellationToken) =>
         {
             comparisonCounter++;
-            return a == b;
+            return Task.FromResult(a == b);
         };
 
         var items = Enumerable.Range(0, dataLength).Select(x => 1234).ToArray();
         
         // act
         var service = new ImageSorter.Sorting.Services.EquivalenceClassFinder.EquivalenceClassFinder();
-        var equivalenceClasses = service.GroupIntoEquivalenceClasses(
+        var equivalenceClasses = await service.GroupIntoEquivalenceClasses(
             items, 
             (a, b ) => a == b,
-            comparisonFunc);
+            comparisonFunc,
+            default);
         
         // assert
         Assert.That(equivalenceClasses.Count, Is.EqualTo(1));

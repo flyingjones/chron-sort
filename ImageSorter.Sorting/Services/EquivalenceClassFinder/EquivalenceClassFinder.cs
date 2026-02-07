@@ -8,6 +8,19 @@ public class EquivalenceClassFinder : IEquivalenceClassFinder
         Func<T, T, bool> equalityRelation,
         Func<T, T, bool> equivalenceRelation)
     {
+        var asyncEquivalenceRelation =
+            new Func<T, T, CancellationToken, Task<bool>>((left, right, _) =>
+                Task.FromResult(equalityRelation(left, right)));
+        return GroupIntoEquivalenceClasses(items, equalityRelation, asyncEquivalenceRelation, CancellationToken.None).Result;
+    }
+    
+    /// <inheritdoc/>
+    public async Task<ICollection<EquivalenceClass<T>>> GroupIntoEquivalenceClasses<T>(
+        ICollection<T> items,
+        Func<T, T, bool> equalityRelation,
+        Func<T, T, CancellationToken, Task<bool>> equivalenceRelation,
+        CancellationToken cancellationToken)
+    {
         var itemArray = items.ToArray();
 
         // first assemble the initial equivalence classes (one for each item)
@@ -50,9 +63,10 @@ public class EquivalenceClassFinder : IEquivalenceClassFinder
                     continue;
                 }
 
-                var classesAreEqual = equivalenceRelation(
+                var classesAreEqual = await equivalenceRelation(
                     leftEquivalenceClass.RepresentativeElement,
-                    rightEquivalenceClass.RepresentativeElement);
+                    rightEquivalenceClass.RepresentativeElement,
+                    cancellationToken);
 
                 if (classesAreEqual)
                 {

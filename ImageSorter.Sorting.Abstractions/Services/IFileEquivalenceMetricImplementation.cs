@@ -17,5 +17,5 @@ public interface IFileEquivalenceMetricImplementation
     /// <br/>
     /// - it is transitive: from <c>path1 ~= path2</c> and <c>path2 ~= path3</c> follows that <c>path1 ~= path3</c>
     /// </remarks>
-    bool FilesAreEquivalent(string path1, string path2);
+    Task<bool> FilesAreEquivalent(string path1, string path2, CancellationToken cancellationToken);
 }

@@ -10,7 +10,7 @@ public interface IConflictReducer
     /// <remarks>
     /// The equivalence relation is defined by the different implementations!
     /// </remarks>
-    ReducedSortingConflict ReduceConflicts(SortingConflict sortingConflict);
+    Task<ReducedSortingConflict> ReduceConflicts(SortingConflict sortingConflict, CancellationToken cancellationToken);
 
     /// <summary>
     /// Reduces the amount of conflicts by checking if conflicting files are equivalent and one can be safely discarded
@@ -18,5 +18,5 @@ public interface IConflictReducer
     /// <remarks>
     /// The equivalence relation is defined by the different implementations!
     /// </remarks>
-    ReducedSortingConflictSummary ReduceConflicts(SortingConflictSummary sortingConflictSummary);
+    Task<ReducedSortingConflictSummary> ReduceConflicts(SortingConflictSummary sortingConflictSummary, CancellationToken cancellationToken);
 }

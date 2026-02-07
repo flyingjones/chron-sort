@@ -16,4 +16,10 @@ public interface IEquivalenceClassFinder
         ICollection<T> items,
         Func<T, T, bool> equalityRelation,
         Func<T, T, bool> equivalenceRelation);
+    
+    Task<ICollection<EquivalenceClass<T>>> GroupIntoEquivalenceClasses<T>(
+        ICollection<T> items,
+        Func<T, T, bool> equalityRelation,
+        Func<T, T, CancellationToken, Task<bool>> equivalenceRelation,
+        CancellationToken cancellationToken);
 }

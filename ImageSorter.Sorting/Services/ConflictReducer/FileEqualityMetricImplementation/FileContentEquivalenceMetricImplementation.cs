@@ -24,15 +24,15 @@ public class FileContentEquivalenceMetricImplementation : IFileEquivalenceMetric
         _logger = logger;
     }
 
-    public bool FilesAreEquivalent(string path1, string path2)
+    public Task<bool> FilesAreEquivalent(string path1, string path2, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Comparing content of {Path1} and {Path2}", path1, path2);
 
         if (path1 == path2)
         {
-            return true;
+            return Task.FromResult(true);
         }
 
-        return _fileStreamService.FileContentAreEqual(path1, path2);
+        return _fileStreamService.FileContentAreEqual(path1, path2, cancellationToken);
     }
 }

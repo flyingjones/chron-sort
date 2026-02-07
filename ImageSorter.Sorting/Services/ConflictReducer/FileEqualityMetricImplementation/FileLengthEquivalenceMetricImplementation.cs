@@ -27,15 +27,15 @@ public class FileLengthEquivalenceMetricImplementation : IFileEquivalenceMetricI
         _logger = logger;
     }
 
-    public bool FilesAreEquivalent(string path1, string path2)
+    public Task<bool> FilesAreEquivalent(string path1, string path2, CancellationToken cancellationToken)
     {
         _logger.LogDebug("Comparing length of {Path1} and {Path2}", path1, path2);
         
         if (path1 == path2)
         {
-            return true;
+            return Task.FromResult(true);
         }
-        
-        return _fileWrapper.FileSize(path1) == _fileWrapper.FileSize(path2);
+
+        return Task.FromResult(_fileWrapper.FileSize(path1) == _fileWrapper.FileSize(path2));
     }
 }

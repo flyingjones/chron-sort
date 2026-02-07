@@ -18,8 +18,8 @@ public class InMemoryFileStreamService : IFileStreamService
         return Task.CompletedTask;
     }
 
-    public bool FileContentAreEqual(string firstPath, string secondPath)
+    public Task<bool> FileContentAreEqual(string firstPath, string secondPath, CancellationToken cancellationToken)
     {
-        return _inMemoryFileSystem.FileContentAreEqual(firstPath, secondPath);
+        return Task.FromResult(_inMemoryFileSystem.FileContentAreEqual(firstPath, secondPath));
     }
 }
