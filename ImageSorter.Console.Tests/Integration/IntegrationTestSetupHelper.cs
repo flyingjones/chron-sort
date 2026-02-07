@@ -6,6 +6,7 @@ using ImageSorter.FileWrapper.Abstractions.FileStream;
 using ImageSorter.Markdown.Abstractions.Services;
 using ImageSorter.Markdown.Services;
 using ImageSorter.Tests.InMemory;
+using ImageSorter.Tests.InMemory.Model;
 using ImageSorter.Tests.InMemory.ServiceImpl;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;

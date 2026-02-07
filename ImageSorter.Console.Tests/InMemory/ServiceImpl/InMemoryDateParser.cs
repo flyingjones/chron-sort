@@ -1,4 +1,5 @@
 using ImageSorter.DateParsing.Abstractions.Services;
+using ImageSorter.Tests.InMemory.Model;
 
 namespace ImageSorter.Tests.InMemory.ServiceImpl;
 

@@ -1,4 +1,5 @@
 using ImageSorter.FileWrapper.Abstractions.FileStream;
+using ImageSorter.Tests.InMemory.Model;
 
 namespace ImageSorter.Tests.InMemory.ServiceImpl;
 

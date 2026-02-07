@@ -1,5 +1,5 @@
-$projectPath = "../ImageSorter.sln"  # Path to your .NET 9 project
-$outputPath = "../out"                 # Path to the output directory
+$projectPath = "../ImageSorter.sln" 
+$outputPath = "../out"
 
 # Create output directory if it doesn't exist
 if (-not (Test-Path -Path $outputPath)) {

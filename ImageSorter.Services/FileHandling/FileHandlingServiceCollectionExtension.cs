@@ -6,8 +6,7 @@ public static class FileHandlingServiceCollectionExtension
 {
     public static IServiceCollection AddFileLoader(
         this IServiceCollection serviceCollection,
-        FileLoaderOptions options,
-        bool readOnly)
+        FileLoaderOptions options)
     {
         serviceCollection.AddSingleton(options);
         serviceCollection.AddSingleton<IFileLoader, FileLoader>();

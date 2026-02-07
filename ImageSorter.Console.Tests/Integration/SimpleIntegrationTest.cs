@@ -3,6 +3,7 @@ using ImageSorter.FileHandling.CaseSensitivity;
 using ImageSorter.Services;
 using ImageSorter.Sorting.Model;
 using ImageSorter.Tests.InMemory;
+using ImageSorter.Tests.InMemory.Model;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ImageSorter.Tests.Integration;
@@ -16,12 +17,12 @@ public class SimpleIntegrationTest
         // arrange
         var fs = new InMemoryFileSystem();
 
-        fs.CreateDirectory($"{InMemoryFileSystem.RootDirName}/images/share");
-        fs.CreateDirectory($"{InMemoryFileSystem.RootDirName}/images/phone");
+        fs.CreateDirectory("/images/share");
+        fs.CreateDirectory("/images/phone");
         var filesToAdd = new[]
         {
-            new KeyValuePair<string, DateTime>($"{InMemoryFileSystem.RootDirName}/images/share/img01.jpg", DateTime.Parse("2025-01-01")),
-            new KeyValuePair<string, DateTime>($"{InMemoryFileSystem.RootDirName}/images/phone/img02.jpg", DateTime.Parse("2025-02-01"))
+            new KeyValuePair<string, DateTime>("/images/share/img01.jpg", DateTime.Parse("2025-01-01")),
+            new KeyValuePair<string, DateTime>("/images/phone/img02.jpg", DateTime.Parse("2025-02-01"))
         };
         AddEmptyFiles(fs, filesToAdd);
 
@@ -29,8 +30,8 @@ public class SimpleIntegrationTest
         {
             SortConfiguration = [],
             PreferFileNameParsing = false,
-            SourcePath = $"{InMemoryFileSystem.RootDirName}{Path.DirectorySeparatorChar}images",
-            DestinationPath = $"{InMemoryFileSystem.RootDirName}{Path.DirectorySeparatorChar}out",
+            SourcePath = InMemoryFileSystem.NormalizePath("/images"),
+            DestinationPath = InMemoryFileSystem.NormalizePath("/out"),
             SummaryFilePath = null,
             SummaryFileDirectoryPath = null,
             EscapeSummaryFileTables = false,
@@ -57,8 +58,8 @@ public class SimpleIntegrationTest
         // assert
         var resultingFiles = fs.GetFiles("/out", "*", SearchOption.AllDirectories);
         Assert.That(resultingFiles, Has.Length.EqualTo(2));
-        Assert.That(resultingFiles, Contains.Item($"{InMemoryFileSystem.RootDirName}{Path.DirectorySeparatorChar}out{Path.DirectorySeparatorChar}2025{Path.DirectorySeparatorChar}01{Path.DirectorySeparatorChar}01{Path.DirectorySeparatorChar}img01.jpg"));
-        Assert.That(resultingFiles, Contains.Item($"{InMemoryFileSystem.RootDirName}{Path.DirectorySeparatorChar}out{Path.DirectorySeparatorChar}2025{Path.DirectorySeparatorChar}02{Path.DirectorySeparatorChar}01{Path.DirectorySeparatorChar}img02.jpg"));
+        Assert.That(resultingFiles, Contains.Item(InMemoryFileSystem.NormalizePath("/out/2025/01/01/img01.jpg")));
+        Assert.That(resultingFiles, Contains.Item(InMemoryFileSystem.NormalizePath("/out/2025/02/01/img02.jpg")));
     }
 
     private static void AddEmptyFiles(

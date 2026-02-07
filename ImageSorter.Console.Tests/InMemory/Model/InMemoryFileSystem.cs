@@ -1,7 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO.Enumeration;
 
-namespace ImageSorter.Tests.InMemory;
+namespace ImageSorter.Tests.InMemory.Model;
 
 public class InMemoryFileSystem
 {
@@ -14,7 +14,23 @@ public class InMemoryFileSystem
     
     public static string RootDirName => Path.DirectorySeparatorChar == '\\' ? "M:" : "";
 
-    private static string NormalizePath(string path)
+    [return: NotNullIfNotNull(nameof(unixStylePath))]
+    public static string? NormalizePath(string? unixStylePath)
+    {
+        if (unixStylePath == null)
+        {
+            return null;
+        }
+        
+        if (Path.DirectorySeparatorChar == '/')
+        {
+            return unixStylePath;
+        }
+
+        return $"M:{unixStylePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)}";
+    }
+    
+    private static string NormalizePathInternal(string path)
     {
         var normalizedPath = path.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
         if (normalizedPath.Contains(':'))
@@ -32,12 +48,24 @@ public class InMemoryFileSystem
             throw new ArgumentNullException();
         }
 
-        var normalizedPath = NormalizePath(path);
+        var normalizedPath = NormalizePathInternal(path);
         var directoryArray = normalizedPath.Split(Path.DirectorySeparatorChar);
 
         var currentDirectory = _rootDirectory;
         foreach (var level in directoryArray)
         {
+            if (level == "..")
+            {
+                if (currentDirectory.Parent != null)
+                {
+                    currentDirectory = currentDirectory.Parent;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            
             if (!currentDirectory.Directories.TryGetValue(level, out var directory))
             {
                 return null;
@@ -59,12 +87,24 @@ public class InMemoryFileSystem
             throw new ArgumentNullException();
         }
 
-        var normalizedPath = NormalizePath(path);
+        var normalizedPath = NormalizePathInternal(path);
         var directoryArray = normalizedPath.Split(Path.DirectorySeparatorChar);
 
         var currentDirectory = _rootDirectory;
         foreach (var level in directoryArray)
         {
+            if (level == "..")
+            {
+                if (currentDirectory.Parent != null)
+                {
+                    currentDirectory = currentDirectory.Parent;
+                }
+                else
+                {
+                    throw new DirectoryNotFoundException("invalid path (directory has no parent)");
+                }
+            }
+            
             if (!currentDirectory.Directories.ContainsKey(level))
             {
                 currentDirectory.AddDirectory(level);
@@ -120,16 +160,6 @@ public class InMemoryFileSystem
         return directory.Directories.Keys.Concat(directory.Files.Keys);
     }
 
-    public string? GetParentDirectory(string path)
-    {
-        var directory = GetDirectory(path);
-        if (directory == null)
-        {
-            throw new DirectoryNotFoundException($"directory {path} not found");
-        }
-        return directory.Parent?.Path;
-    }
-
     public string[] GetFiles(string path, string searchPattern, SearchOption searchOption)
     {
         var directory = GetDirectory(path);
@@ -140,7 +170,7 @@ public class InMemoryFileSystem
         return GetFiles(directory, searchPattern, searchOption);
     }
     
-    private string[] GetFiles(InMemoryDirectory directory, string searchPattern, SearchOption searchOption)
+    private static string[] GetFiles(InMemoryDirectory directory, string searchPattern, SearchOption searchOption)
     {
         var filesInCurrentDir = directory.Files.Values
             .Where(file => FileSystemName.MatchesSimpleExpression(searchPattern, file.Name))
@@ -163,22 +193,19 @@ public class InMemoryFileSystem
     private InMemoryDirectory? GetParentDirOfFilePath(string path)
     {
         // get the path of the parent directory of the file
-        var pathArray = NormalizePath(path).Split(Path.DirectorySeparatorChar);
+        var pathArray = NormalizePathInternal(path).Split(Path.DirectorySeparatorChar);
 
-        InMemoryDirectory directory;
         if (pathArray.Length == 1)
         {
             return _rootDirectory;
         }
-        else
-        {
-            return GetDirectory(string.Join('/', pathArray[..^1]));
-        }
+
+        return GetDirectory(string.Join(Path.DirectorySeparatorChar, pathArray[..^1]));
     }
 
     private static string GetFileName(string path)
     {
-        return NormalizePath(path).Split(Path.DirectorySeparatorChar)[^1];
+        return NormalizePathInternal(path).Split(Path.DirectorySeparatorChar)[^1];
     }
 
     public InMemoryFile? GetFile(string path)
@@ -209,38 +236,44 @@ public class InMemoryFileSystem
         return GetFile(path)!.Content.Length;
     }
 
-    public void MoveFile(string sourceFileName, string destFileName, bool overwrite)
+    public void MoveFile(string sourceFilePath, string destinationFilePath, bool overwrite)
     {
-        if (sourceFileName == null || destFileName == null)
+        if (sourceFilePath == null || destinationFilePath == null)
         {
             throw new ArgumentNullException();
         }
         
-        var sourceFile = GetFile(sourceFileName);
+        var sourceFile = GetFile(sourceFilePath);
         if (sourceFile == null)
         {
-            throw new FileNotFoundException($"File {sourceFileName} not found");
+            throw new FileNotFoundException($"File {sourceFilePath} not found");
         }
 
-        var destinationDir = GetParentDirOfFilePath(destFileName);
+        var destinationDir = GetParentDirOfFilePath(destinationFilePath);
         if (destinationDir == null)
         {
-            throw new DirectoryNotFoundException($"directory {destFileName} not found");
+            throw new DirectoryNotFoundException($"directory {destinationFilePath} not found");
         }
 
-        var destinationFileNameWithoutPath = GetFileName(destFileName);
-        var fileExistsAtDestination = destinationDir.Files.ContainsKey(destinationFileNameWithoutPath);
+        var destinationFileName = GetFileName(destinationFilePath);
+
+        if (destinationDir.Directories.ContainsKey(destinationFileName))
+        {
+            throw new IOException($"Directory already exists name {destinationFileName} at {destinationDir.Path}");
+        }
+        
+        var fileExistsAtDestination = destinationDir.Files.ContainsKey(destinationFileName);
 
         if (fileExistsAtDestination && !overwrite)
         {
-            throw new IOException($"File already exists at {destFileName}");
+            throw new IOException($"File {destinationFileName} already exists at {destinationDir.Path}");
         }
 
         var sourceParentDir = sourceFile.Parent;
         sourceParentDir.Files.Remove(sourceFile.Name);
         
-        sourceFile.Name = destinationFileNameWithoutPath;
-        destinationDir.Files[destinationFileNameWithoutPath] = sourceFile;
+        sourceFile.Name = destinationFileName;
+        destinationDir.Files[destinationFileName] = sourceFile;
     }
 
     public void CopyFile(string sourceFileName, string destinationFileName)
@@ -263,6 +296,11 @@ public class InMemoryFileSystem
         }
 
         var destFileName = GetFileName(destinationFileName);
+        if (destinationDir.Directories.ContainsKey(destFileName))
+        {
+            throw new IOException($"Directory already exists name {destFileName} at {destinationDir.Path}");
+        }
+        
         if (destinationDir.Files.TryGetValue(destFileName, out var destFile))
         {
             destFile.Content = sourceFile.Content;
@@ -330,9 +368,14 @@ public class InMemoryFileSystem
         
         var fileName = GetFileName(path);
 
+        if (parentDir.Directories.ContainsKey(fileName))
+        {
+            throw new IOException($"Directory {path} already exists");
+        }
+        
         if (parentDir.Files.ContainsKey(fileName))
         {
-            throw new IOException($"file {path} already exists");
+            throw new IOException($"File {path} already exists");
         }
 
         var file = new InMemoryFile

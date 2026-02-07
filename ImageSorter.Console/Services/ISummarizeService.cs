@@ -64,18 +64,4 @@ public interface ISummarizeService
     /// </code>
     /// </remarks>
     MarkdownTable SummarizeWriteResults(ICollection<FileWriteResultDto> fileOperationResults);
-
-    /// <summary>
-    /// Describe each write operation as a row in a <see cref="MarkdownTable"/> grouped by the result directory path.
-    /// </summary>
-    /// <remarks>
-    /// The key will be the result directory path
-    ///
-    /// The table has the following columns:
-    ///
-    /// <code>
-    /// | Source Path | Destination Path | Status | Parsed Date | Parser Name |
-    /// </code>
-    /// </remarks>
-    ICollection<KeyValuePair<string, MarkdownTable>> DescribeWrites(ICollection<FileOperationResult> fileOperationResults);
 }

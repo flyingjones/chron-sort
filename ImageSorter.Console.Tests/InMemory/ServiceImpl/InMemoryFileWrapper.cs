@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using ImageSorter.FileWrapper.Abstractions.File;
+using ImageSorter.Tests.InMemory.Model;
 
 namespace ImageSorter.Tests.InMemory.ServiceImpl;
 

@@ -1,3 +1,5 @@
+using ImageSorter.Tests.InMemory.Model;
+
 namespace ImageSorter.Tests.InMemory.Tests;
 
 [TestFixture]

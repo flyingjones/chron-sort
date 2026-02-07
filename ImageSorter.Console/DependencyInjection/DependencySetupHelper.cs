@@ -93,7 +93,7 @@ public static class DependencySetupHelper
         serviceCollection.AddFileLoader(new FileLoaderOptions
         {
             FileEndings = fileEndings
-        }, configuration.IsDryRun);
+        });
 
         if (configuration.ScanParallel)
         {
