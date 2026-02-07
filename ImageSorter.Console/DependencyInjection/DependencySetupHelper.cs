@@ -55,20 +55,6 @@ public static class DependencySetupHelper
 
         serviceCollection.ConfigureSorting(configuration.SortConfiguration!);
 
-        // serviceCollection.AddDestinationWriter(new DestinationWriterOptions
-        //     {
-        //         SourcePath = configuration.SourcePath.FullName,
-        //         DestinationPath = configuration.DestinationPath.FullName,
-        //         OverwriteExistingFiles = configuration.DestinationConflictMode == DestinationConflictMode.Overwrite,
-        //         From = configuration.From,
-        //         To = configuration.To,
-        //         ProgressCount = configuration.ProgressAt > 0 ? configuration.ProgressAt.Value : int.MaxValue
-        //     },
-        //     new DateDirectoryOptions
-        //     {
-        //         DestinationPath = configuration.DestinationPath.FullName,
-        //         Format = configuration.OutputFormat,
-        //     });
         serviceCollection.AddSingleton(
             new ResultWriterConfig
             {

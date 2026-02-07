@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ImageSorter.DateParsing.Abstractions.Services;
 using ImageSorter.DependencyInjection;
 using ImageSorter.FileWrapper.Abstractions.Directory;
@@ -10,6 +11,7 @@ using ImageSorter.Tests.InMemory.Model;
 using ImageSorter.Tests.InMemory.ServiceImpl;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace ImageSorter.Tests.Integration;
 
@@ -21,6 +23,8 @@ public static class IntegrationTestSetupHelper
     {
         // mock fs is case-sensitive
         runConfiguration.FileSystemIsCaseSensitive = true;
+        // enable logging only if a debugger is attached, otherwise the output is too much
+        runConfiguration.LogLevel = Debugger.IsAttached ? LogLevel.Trace : LogLevel.None;
 
         // set up the service provider
         var serviceProvider = runConfiguration
