@@ -20,7 +20,7 @@ public class FileScanningService : IFileScanningService
     {
         var allFiles = _directoryWrapper.GetFiles(directoryPath, "*", SearchOption.AllDirectories);
 
-        if (fileExtensions == null)
+        if (fileExtensions == null || fileExtensions.Length == 0)
         {
             return new FileScanResultDto
             {
